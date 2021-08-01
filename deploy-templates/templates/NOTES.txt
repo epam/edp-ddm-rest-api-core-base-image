@@ -1,0 +1,1 @@
+1. Application rest-api-core-base-image has been successfully deployed!!

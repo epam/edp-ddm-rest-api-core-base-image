@@ -1,0 +1,98 @@
+package com.epam.digital.data.platform.restapi.core.controller;
+
+import com.epam.digital.data.platform.model.core.kafka.Request;
+import com.epam.digital.data.platform.model.core.kafka.RequestContext;
+import com.epam.digital.data.platform.model.core.kafka.SecurityContext;
+import com.epam.digital.data.platform.restapi.core.annotation.HttpRequestContext;
+import com.epam.digital.data.platform.restapi.core.annotation.HttpSecurityContext;
+import com.epam.digital.data.platform.restapi.core.service.MockService;
+import com.epam.digital.data.platform.restapi.core.dto.MockEntity;
+import com.epam.digital.data.platform.restapi.core.utils.ResponseResolverUtil;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import javax.validation.Valid;
+import java.util.UUID;
+
+@RestController
+@RequestMapping("/mock")
+public class MockController {
+
+  private MockService mockService;
+
+  public MockController(MockService mockService) {
+    this.mockService = mockService;
+  }
+
+  @GetMapping
+  public ResponseEntity<MockEntity> searchEntity(Object searchConditions,
+      @HttpRequestContext RequestContext context,
+      @HttpSecurityContext SecurityContext securityContext) {
+    var response = mockService.search(searchConditions);
+    return ResponseResolverUtil.getHttpResponseFromKafka(response);
+  }
+
+  @GetMapping("/{id}")
+  public ResponseEntity<MockEntity> findByIdMockEntity(
+      @PathVariable("id") UUID id,
+      @HttpRequestContext RequestContext context,
+      @HttpSecurityContext SecurityContext securityContext) {
+    Request<UUID> request = new Request<>(id, context, securityContext);
+    var response = mockService.read(request);
+    return ResponseResolverUtil.getHttpResponseFromKafka(response);
+  }
+
+  @PostMapping
+  public ResponseEntity<Void> createMockEntity(
+      @Valid @RequestBody MockEntity mockEntity,
+      @HttpRequestContext RequestContext context,
+      @HttpSecurityContext SecurityContext securityContext) {
+    Request<MockEntity> request = new Request<>(mockEntity, context, securityContext);
+    var response = mockService.create(request);
+    return ResponseResolverUtil.getHttpResponseFromKafka(response);
+  }
+
+  @PutMapping("/{id}")
+  public ResponseEntity<Void> updateMockEntity(
+      @PathVariable("id") UUID id,
+      @Valid @RequestBody MockEntity mockEntity,
+      @HttpRequestContext RequestContext context,
+      @HttpSecurityContext SecurityContext securityContext) {
+    mockEntity.setConsentId(id);
+    Request<MockEntity> request = new Request<>(mockEntity, context, securityContext);
+    var response = mockService.update(request);
+    return ResponseResolverUtil.getHttpResponseFromKafka(response);
+  }
+
+  @PatchMapping("/{id}")
+  public ResponseEntity<Void> patchMockEntity(
+      @PathVariable("id") UUID id,
+      @Valid @RequestBody MockEntity mockEntity,
+      @HttpRequestContext RequestContext context,
+      @HttpSecurityContext SecurityContext securityContext) {
+    mockEntity.setConsentId(id);
+    Request<MockEntity> request = new Request<>(mockEntity, context, securityContext);
+    var response = mockService.update(request);
+    return ResponseResolverUtil.getHttpResponseFromKafka(response);
+  }
+
+  @DeleteMapping("/{id}")
+  public ResponseEntity<Void> deleteByIdMockEntity(
+      @PathVariable("id") UUID id,
+      @HttpRequestContext RequestContext context,
+      @HttpSecurityContext SecurityContext securityContext) {
+    MockEntity mockEntity = new MockEntity();
+    mockEntity.setConsentId(id);
+    Request<MockEntity> request = new Request<>(mockEntity, context, securityContext);
+    var response = mockService.delete(request);
+    return ResponseResolverUtil.getHttpResponseFromKafka(response);
+  }
+}

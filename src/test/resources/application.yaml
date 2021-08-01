@@ -1,0 +1,4 @@
+data-platform:
+  signature:
+    validation:
+      enabled: false
