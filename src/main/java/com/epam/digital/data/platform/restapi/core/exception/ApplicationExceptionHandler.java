@@ -1,6 +1,6 @@
 package com.epam.digital.data.platform.restapi.core.exception;
 
-import com.epam.digital.data.platform.integration.ceph.exception.CephCommuncationException;
+import com.epam.digital.data.platform.integration.ceph.exception.CephCommunicationException;
 import com.epam.digital.data.platform.integration.ceph.exception.MisconfigurationException;
 import com.epam.digital.data.platform.model.core.kafka.Response;
 import com.epam.digital.data.platform.model.core.kafka.Status;
@@ -60,8 +60,8 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
     this.traceProvider = traceProvider;
   }
 
-  @ExceptionHandler(CephCommuncationException.class)
-  public ResponseEntity<DetailedErrorResponse<Void>> handleCephCommuncationException(
+  @ExceptionHandler(CephCommunicationException.class)
+  public ResponseEntity<DetailedErrorResponse<Void>> handleCephCommunicationException(
       Exception exception) {
     log.error("Exception while communication with ceph", exception);
     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

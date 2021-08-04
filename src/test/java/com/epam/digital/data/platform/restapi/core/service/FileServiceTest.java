@@ -10,7 +10,7 @@ import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 
 import com.amazonaws.services.s3.model.AmazonS3Exception;
 import com.epam.digital.data.platform.integration.ceph.dto.CephObject;
-import com.epam.digital.data.platform.integration.ceph.exception.CephCommuncationException;
+import com.epam.digital.data.platform.integration.ceph.exception.CephCommunicationException;
 import com.epam.digital.data.platform.integration.ceph.service.CephService;
 import com.epam.digital.data.platform.model.core.kafka.File;
 import com.epam.digital.data.platform.restapi.core.dto.MockEntityFile;
@@ -146,7 +146,7 @@ class FileServiceTest {
       amazonS3Exception.setErrorCode(ResponseCode.CLIENT_ERROR);
       amazonS3Exception.setStatusCode(INTERNAL_SERVER_ERROR.value());
       when(lowcodeCephService.getObject(LOWCODE_BUCKET_NAME, COMPOSITE_FILE_ID))
-          .thenThrow(new CephCommuncationException("", amazonS3Exception));
+          .thenThrow(new CephCommunicationException("", amazonS3Exception));
 
       File file = mockFile(FILE_ID);
 
@@ -227,7 +227,7 @@ class FileServiceTest {
       amazonS3Exception.setErrorCode(ResponseCode.CLIENT_ERROR);
       amazonS3Exception.setStatusCode(INTERNAL_SERVER_ERROR.value());
       when(datafactoryCephService.getObject(DATA_BUCKET_NAME, FILE_ID))
-          .thenThrow(new CephCommuncationException("", amazonS3Exception));
+          .thenThrow(new CephCommunicationException("", amazonS3Exception));
 
       File file = mockFile(FILE_ID);
 

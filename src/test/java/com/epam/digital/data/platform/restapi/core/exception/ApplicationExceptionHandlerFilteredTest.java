@@ -15,7 +15,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.amazonaws.services.s3.model.AmazonS3Exception;
-import com.epam.digital.data.platform.integration.ceph.exception.CephCommuncationException;
+import com.epam.digital.data.platform.integration.ceph.exception.CephCommunicationException;
 import com.epam.digital.data.platform.integration.ceph.exception.MisconfigurationException;
 import com.epam.digital.data.platform.restapi.core.config.SecurityConfiguration;
 import com.epam.digital.data.platform.restapi.core.config.TestBeansConfig;
@@ -116,7 +116,7 @@ class ApplicationExceptionHandlerFilteredTest {
 
   @Test
   void shouldReturn500WhenCephCommunicationException() throws Exception {
-    doThrow(CephCommuncationException.class)
+    doThrow(CephCommunicationException.class)
         .when(digitalSignatureService).checkSignature(any(), any());
 
     mockMvc.perform(delete(BASE_URL + "/{id}", CONSENT_ID)

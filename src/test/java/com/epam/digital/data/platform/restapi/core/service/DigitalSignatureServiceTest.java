@@ -20,7 +20,7 @@ import com.epam.digital.data.platform.dso.client.DigitalSealRestClient;
 import com.epam.digital.data.platform.dso.client.DigitalSignatureRestClient;
 import com.epam.digital.data.platform.dso.client.exception.BadRequestException;
 import com.epam.digital.data.platform.dso.client.exception.InternalServerErrorException;
-import com.epam.digital.data.platform.integration.ceph.exception.CephCommuncationException;
+import com.epam.digital.data.platform.integration.ceph.exception.CephCommunicationException;
 import com.epam.digital.data.platform.integration.ceph.exception.MisconfigurationException;
 import com.epam.digital.data.platform.integration.ceph.service.CephService;
 
@@ -128,9 +128,9 @@ class DigitalSignatureServiceTest {
   @Test
   void cephServiceThrowsExceptionTest() {
     when(lowcodeCephService.getContent(LOWCODE_BUCKET, X_DIG_SIG))
-        .thenThrow(new CephCommuncationException("", new RuntimeException()));
+        .thenThrow(new CephCommunicationException("", new RuntimeException()));
 
-    assertThrows(CephCommuncationException.class,
+    assertThrows(CephCommunicationException.class,
         () -> digitalSignatureService.checkSignature(DATA, securityContext));
   }
 
@@ -156,12 +156,12 @@ class DigitalSignatureServiceTest {
   }
 
   @Test
-  void cephServiceShouldNotThrowCephCommuncationExceptionWhenValidationDisabled() {
+  void cephServiceShouldNotThrowCephCommunicationExceptionWhenValidationDisabled() {
     digitalSignatureService = new DigitalSignatureService(lowcodeCephService,
         datafactoryCephService, LOWCODE_BUCKET, DATAFACTORY_BUCKET, digitalSignatureRestClient,
         digitalSealRestClient, false, OBJECT_MAPPER, restAuditEventsFacade);
     when(lowcodeCephService.getContent(LOWCODE_BUCKET, X_DIG_SIG))
-        .thenThrow(new CephCommuncationException("", new RuntimeException()));
+        .thenThrow(new CephCommunicationException("", new RuntimeException()));
 
     assertDoesNotThrow(() -> digitalSignatureService.checkSignature(DATA, securityContext));
   }
