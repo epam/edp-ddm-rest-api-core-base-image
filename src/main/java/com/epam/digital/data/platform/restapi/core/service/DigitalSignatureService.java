@@ -38,7 +38,6 @@ public class DigitalSignatureService {
   private final DigitalSealRestClient digitalSealRestClient;
   private final boolean isEnabled;
   private final ObjectMapper objectMapper;
-  private final RestAuditEventsFacade restAuditEventsFacade;
 
   public DigitalSignatureService(
       CephService lowcodeCephService,
@@ -48,8 +47,7 @@ public class DigitalSignatureService {
       DigitalSignatureRestClient digitalSignatureRestClient,
       DigitalSealRestClient digitalSealRestClient,
       @Value("${data-platform.signature.validation.enabled}") boolean isEnabled,
-      ObjectMapper objectMapper,
-      RestAuditEventsFacade restAuditEventsFacade) {
+      ObjectMapper objectMapper) {
     this.lowcodeCephService = lowcodeCephService;
     this.datafactoryCephService = datafactoryCephService;
     this.lowcodeBucket = lowcodeBucket;
@@ -58,7 +56,6 @@ public class DigitalSignatureService {
     this.digitalSealRestClient = digitalSealRestClient;
     this.isEnabled = isEnabled;
     this.objectMapper = objectMapper;
-    this.restAuditEventsFacade = restAuditEventsFacade;
   }
 
   public void checkSignature(String data, SecurityContext sc) throws JsonProcessingException {
@@ -80,7 +77,7 @@ public class DigitalSignatureService {
     signature = (String) cephResponse.get(SIGNATURE);
 
     verify(
-        signature, data, StringUtils.isEmpty(sc.getDigitalSignatureDerived()), sc.getAccessToken());
+        signature, data, StringUtils.isEmpty(sc.getDigitalSignatureDerived()));
   }
 
   public <I> String sign(I input) {
@@ -112,7 +109,7 @@ public class DigitalSignatureService {
     return value;
   }
 
-  private void verify(String signature, String data, boolean emptyDerivedHeader, String jwt) {
+  private void verify(String signature, String data, boolean emptyDerivedHeader) {
     try {
       VerifyResponseDto responseDto;
       if (emptyDerivedHeader) {
@@ -121,7 +118,6 @@ public class DigitalSignatureService {
         responseDto = digitalSealRestClient.verify(new VerifyRequestDto(signature, data));
       }
       if (!responseDto.isValid) {
-        restAuditEventsFacade.auditSignatureInvalid(jwt);
         throw new InvalidSignatureException(responseDto.error.getMessage());
       }
     } catch (BadRequestException e) {

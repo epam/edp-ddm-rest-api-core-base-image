@@ -2,18 +2,22 @@ package com.epam.digital.data.platform.restapi.core.aspect;
 
 import com.epam.digital.data.platform.model.core.kafka.RequestContext;
 import com.epam.digital.data.platform.model.core.kafka.SecurityContext;
+import com.epam.digital.data.platform.restapi.core.annotation.AuditableException;
 import com.epam.digital.data.platform.restapi.core.model.DetailedErrorResponse;
+import com.epam.digital.data.platform.restapi.core.model.audit.ExceptionAuditEvent;
 import com.epam.digital.data.platform.restapi.core.service.RestAuditEventsFacade;
 import com.epam.digital.data.platform.restapi.core.utils.ResponseCode;
 import com.epam.digital.data.platform.starter.audit.model.EventType;
 import java.util.Set;
 import java.util.UUID;
+
+import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
-import org.aspectj.lang.annotation.AfterThrowing;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
+import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
@@ -50,12 +54,8 @@ public class ControllerAuditAspect {
   public void withinRestControllerPointcut() {
   }
 
-  @Pointcut("execution(* com.epam.digital.data.platform.restapi.core.exception.ApplicationExceptionHandler.*(..))")
-  public void exceptionHandlerPointcut() {
-  }
-
-  @Pointcut("execution(public * com.epam.digital.data.platform.starter.security.jwt.TokenParser.parseClaims(..))")
-  public void jwtParsingPointcut() {
+  @Pointcut("@annotation(com.epam.digital.data.platform.restapi.core.annotation.AuditableException)")
+  public void auditableExceptionPointcut() {
   }
 
   @Pointcut("@annotation(org.springframework.web.bind.annotation.GetMapping) && withinRestControllerPointcut()")
@@ -78,9 +78,11 @@ public class ControllerAuditAspect {
   public void deletePointcut() {
   }
 
-  @AfterReturning(pointcut = "exceptionHandlerPointcut()", returning = "response")
-  void exceptionAudit(ResponseEntity<?> response) {
-    prepareAndSendExceptionAudit(response);
+  @AfterReturning(pointcut = "auditableExceptionPointcut()", returning = "response")
+  void exceptionAudit(JoinPoint joinPoint, ResponseEntity<?> response) {
+    var auditableExceptionAnnotation = ((MethodSignature)joinPoint.getSignature()).getMethod()
+            .getAnnotation(AuditableException.class);
+    prepareAndSendExceptionAudit(response, auditableExceptionAnnotation);
   }
 
   @Around("postPointcut() && args(dto, context, securityContext)")
@@ -101,11 +103,6 @@ public class ControllerAuditAspect {
     return prepareAndSendRestAudit(joinPoint, DELETE, id, securityContext);
   }
 
-  @AfterThrowing("jwtParsingPointcut()")
-  void auditInvalidJwt() {
-    restAuditEventsFacade.auditInvalidAccessToken();
-  }
-
   @Around("getPointcut() && args(dto, context, securityContext)")
   Object auditGetSearch(ProceedingJoinPoint joinPoint, Object dto, RequestContext context,
       SecurityContext securityContext) throws Throwable {
@@ -120,19 +117,31 @@ public class ControllerAuditAspect {
     return prepareAndSendRestAudit(joinPoint, action, id, securityContext);
   }
 
-  private void prepareAndSendExceptionAudit(ResponseEntity<?> response) {
-    var eventType = EventType.USER_ACTION;
-
-    String action = response.getStatusCode().getReasonPhrase();
-    if (response.getBody() instanceof DetailedErrorResponse) {
-      action = ((DetailedErrorResponse) response.getBody()).getCode();
+  private void prepareAndSendExceptionAudit(ResponseEntity<?> response, AuditableException auditableException) {
+    var exceptionAuditEvent = new ExceptionAuditEvent();
+    String action;
+    if (auditableException.action().isBlank()) {
+      if (response.getBody() instanceof DetailedErrorResponse) {
+        action = ((DetailedErrorResponse) response.getBody()).getCode();
+      } else {
+        action = response.getStatusCode().getReasonPhrase();
+      }
+    } else {
+      action = auditableException.action();
     }
+    exceptionAuditEvent.setAction(action);
 
+    EventType eventType;
     if (httpStatusOfSecurityAudit.contains(response.getStatusCodeValue()) ||
         responseCodeOfSecurityAudit.contains(action)) {
       eventType = EventType.SECURITY_EVENT;
+    } else {
+      eventType = EventType.USER_ACTION;
     }
-    restAuditEventsFacade.sendExceptionAudit(eventType, action);
+    exceptionAuditEvent.setEventType(eventType);
+    exceptionAuditEvent.setUserInfoEnabled(auditableException.userInfoEnabled());
+
+    restAuditEventsFacade.sendExceptionAudit(exceptionAuditEvent);
   }
 
   private Object prepareAndSendRestAudit(ProceedingJoinPoint joinPoint, String action, UUID id,

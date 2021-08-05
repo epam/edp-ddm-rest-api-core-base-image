@@ -1,5 +1,6 @@
 package com.epam.digital.data.platform.restapi.core.service;
 
+import com.epam.digital.data.platform.restapi.core.model.audit.ExceptionAuditEvent;
 import com.epam.digital.data.platform.starter.audit.model.AuditEvent;
 import com.epam.digital.data.platform.starter.audit.model.EventType;
 import com.epam.digital.data.platform.starter.audit.service.AuditService;
@@ -76,39 +77,6 @@ class RestAuditEventsFacadeTest {
   }
 
   @Test
-  void expectCorrectAuditEventWhenNoAccessToken() {
-    String CODE_JWT_INVALID = "JWT_INVALID";
-    restAuditEventsFacade.auditInvalidAccessToken();
-
-    verify(auditService).sendAudit(auditEventCaptor.capture());
-    AuditEvent actualEvent = auditEventCaptor.getValue();
-    assertThat(actualEvent.getRequestId()).isEqualTo(REQUEST_ID);
-    assertThat(actualEvent.getApplication()).isEqualTo(APP_NAME);
-    assertThat(actualEvent.getEventType()).isEqualTo(EventType.SECURITY_EVENT);
-    assertThat(actualEvent.getCurrentTime()).isEqualTo(clock.millis());
-    assertThat(actualEvent.getUserId()).isBlank();
-    assertThat(actualEvent.getUserName()).isBlank();
-    assertThat(actualEvent.getName()).isEqualTo(INVALID_ACCESS_TOKEN_EVENT_NAME);
-    assertThat(actualEvent.getContext()).containsEntry("action", CODE_JWT_INVALID);
-  }
-
-  @Test
-  void expectCorrectAuditEventWhenInvalidSignature() {
-    restAuditEventsFacade.auditSignatureInvalid(ACCESS_TOKEN);
-
-    verify(auditService).sendAudit(auditEventCaptor.capture());
-    AuditEvent actualEvent = auditEventCaptor.getValue();
-    assertThat(actualEvent.getRequestId()).isEqualTo(REQUEST_ID);
-    assertThat(actualEvent.getApplication()).isEqualTo(APP_NAME);
-    assertThat(actualEvent.getEventType()).isEqualTo(EventType.SECURITY_EVENT);
-    assertThat(actualEvent.getCurrentTime()).isEqualTo(clock.millis());
-    assertThat(actualEvent.getUserId()).isEqualTo(USER_ID);
-    assertThat(actualEvent.getUserName()).isEqualTo(USER_NAME);
-    assertThat(actualEvent.getName()).isEqualTo(INVALID_SIGNATURE_EVENT_NAME);
-    assertThat(actualEvent.getContext()).containsEntry("action", "SIGN_BREACH");
-  }
-
-  @Test
   void expectCorrectAuditEventWithIdAndJwt() {
     Map<String, Object> context = Map.of("action", ACTION, "step", STEP, "row_id", 54, "result", RESULT);
     when(auditService.createContext(ACTION, STEP, null, "54", null, RESULT)).thenReturn(context);
@@ -150,12 +118,18 @@ class RestAuditEventsFacadeTest {
   }
 
   @Test
-  void expectCorrectExceptionAudit() {
+  void expectExceptionAuditWithUserInfo() {
+    when(traceProvider.getAccessToken()).thenReturn(ACCESS_TOKEN);
     Map<String, Object> context = Map.of("action", ACTION);
     when(auditService.createContext(ACTION, null, null, null, null, null))
         .thenReturn(context);
 
-    restAuditEventsFacade.sendExceptionAudit(EventType.USER_ACTION, ACTION);
+    var exceptionAuditEvent = new ExceptionAuditEvent();
+    exceptionAuditEvent.setEventType(EventType.USER_ACTION);
+    exceptionAuditEvent.setAction(ACTION);
+    exceptionAuditEvent.setUserInfoEnabled(true);
+
+    restAuditEventsFacade.sendExceptionAudit(exceptionAuditEvent);
 
     verify(auditService).sendAudit(auditEventCaptor.capture());
     AuditEvent actualEvent = auditEventCaptor.getValue();
@@ -164,8 +138,8 @@ class RestAuditEventsFacadeTest {
     assertThat(actualEvent.getApplication()).isEqualTo(APP_NAME);
     assertThat(actualEvent.getEventType()).isEqualTo(EventType.USER_ACTION);
     assertThat(actualEvent.getCurrentTime()).isEqualTo(clock.millis());
-    assertThat(actualEvent.getUserId()).isNull();
-    assertThat(actualEvent.getUserName()).isNull();
+    assertThat(actualEvent.getUserId()).isEqualTo(USER_ID);
+    assertThat(actualEvent.getUserName()).isEqualTo(USER_NAME);
     assertThat(actualEvent.getName()).isEqualTo("EXCEPTION");
     assertThat(actualEvent.getContext()).isEqualTo(context);
   }

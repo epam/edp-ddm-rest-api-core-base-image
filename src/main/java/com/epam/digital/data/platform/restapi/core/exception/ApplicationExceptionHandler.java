@@ -1,9 +1,15 @@
 package com.epam.digital.data.platform.restapi.core.exception;
 
+import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toList;
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
+
 import com.epam.digital.data.platform.integration.ceph.exception.CephCommunicationException;
 import com.epam.digital.data.platform.integration.ceph.exception.MisconfigurationException;
 import com.epam.digital.data.platform.model.core.kafka.Response;
 import com.epam.digital.data.platform.model.core.kafka.Status;
+import com.epam.digital.data.platform.restapi.core.annotation.AuditableException;
 import com.epam.digital.data.platform.restapi.core.model.ConstraintErrorDetails;
 import com.epam.digital.data.platform.restapi.core.model.DetailedErrorResponse;
 import com.epam.digital.data.platform.restapi.core.model.FieldsValidationErrorDetails;
@@ -11,6 +17,10 @@ import com.epam.digital.data.platform.restapi.core.service.TraceProvider;
 import com.epam.digital.data.platform.restapi.core.utils.ResponseCode;
 import com.fasterxml.jackson.databind.JsonMappingException.Reference;
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
+import java.time.format.DateTimeParseException;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.TypeMismatchException;
@@ -19,6 +29,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.BindException;
 import org.springframework.validation.FieldError;
 import org.springframework.validation.ObjectError;
@@ -30,16 +41,6 @@ import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.NoHandlerFoundException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
-
-import java.time.format.DateTimeParseException;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
-import static java.util.stream.Collectors.joining;
-import static java.util.stream.Collectors.toList;
-import static org.springframework.http.HttpStatus.BAD_REQUEST;
-import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @RestControllerAdvice
 public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler {
@@ -60,6 +61,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
     this.traceProvider = traceProvider;
   }
 
+  @AuditableException
   @ExceptionHandler(CephCommunicationException.class)
   public ResponseEntity<DetailedErrorResponse<Void>> handleCephCommunicationException(
       Exception exception) {
@@ -68,6 +70,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
         .body(newDetailedResponse(ResponseCode.THIRD_PARTY_SERVICE_UNAVAILABLE));
   }
 
+  @AuditableException
   @ExceptionHandler(MisconfigurationException.class)
   public ResponseEntity<DetailedErrorResponse<Void>> handleMisconfigurationException(
       Exception exception) {
@@ -84,6 +87,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
         .body(newDetailedResponse(ResponseCode.INTERNAL_CONTRACT_VIOLATION));
   }
 
+  @AuditableException
   @ExceptionHandler(KepServiceInternalServerErrorException.class)
   public ResponseEntity<DetailedErrorResponse<Void>> handleInternalServerErrorException(
       Exception exception) {
@@ -92,6 +96,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
         .body(newDetailedResponse(ResponseCode.THIRD_PARTY_SERVICE_UNAVAILABLE));
   }
 
+  @AuditableException
   @ExceptionHandler(KepServiceBadRequestException.class)
   public ResponseEntity<DetailedErrorResponse<Void>> handleBadRequestException(
       Exception exception) {
@@ -101,6 +106,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
         .body(newDetailedResponse(ResponseCode.INTERNAL_CONTRACT_VIOLATION));
   }
 
+  @AuditableException(action = "SIGN_BREACH")
   @ExceptionHandler(InvalidSignatureException.class)
   public ResponseEntity<DetailedErrorResponse<Void>> handleSignatureValidationException(
       InvalidSignatureException exception) {
@@ -109,6 +115,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
         .body(newDetailedResponse(ResponseCode.SIGNATURE_VIOLATION));
   }
 
+  @AuditableException
   @ExceptionHandler(NoKafkaResponseException.class)
   public ResponseEntity<DetailedErrorResponse<Void>> handleNoKafkaResponseExceptionException(
       NoKafkaResponseException exception) {
@@ -117,6 +124,16 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
         .body(newDetailedResponse(ResponseCode.TIMEOUT_ERROR));
   }
 
+  @AuditableException(userInfoEnabled = false)
+  @ExceptionHandler(AuthenticationException.class)
+  public ResponseEntity<DetailedErrorResponse<Void>> handleAuthenticationException(
+      AuthenticationException exception) {
+    log.error("Authentication failure", exception);
+    return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+        .body(newDetailedResponse(ResponseCode.AUTHENTICATION_FAILED));
+  }
+
+  @AuditableException
   @ExceptionHandler(AccessDeniedException.class)
   public ResponseEntity<DetailedErrorResponse<Void>> handleAccessDeniedException(
       AccessDeniedException exception) {
@@ -125,6 +142,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
         .body(newDetailedResponse(ResponseCode.FORBIDDEN_OPERATION));
   }
 
+  @AuditableException
   @Override
   protected ResponseEntity<Object> handleMethodArgumentNotValid(
       MethodArgumentNotValidException exception, HttpHeaders headers, HttpStatus status,
@@ -143,6 +161,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
     return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(invalidFieldsResponse);
   }
 
+  @AuditableException
   @ExceptionHandler(Exception.class)
   public ResponseEntity<DetailedErrorResponse<Void>> handleException(Exception exception) {
     log.error("Runtime error occurred", exception);
@@ -150,6 +169,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
         .body(newDetailedResponse(ResponseCode.RUNTIME_ERROR));
   }
 
+  @AuditableException
   @Override
   protected ResponseEntity<Object> handleHttpMessageNotReadable(
       HttpMessageNotReadableException exception, HttpHeaders headers, HttpStatus status,
@@ -195,6 +215,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
     return Optional.empty();
   }
 
+  @AuditableException
   @Override
   protected ResponseEntity<Object> handleHttpMediaTypeNotSupported(
       HttpMediaTypeNotSupportedException ex, HttpHeaders headers, HttpStatus status,
@@ -204,6 +225,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
         .body(newDetailedResponse(ResponseCode.UNSUPPORTED_MEDIA_TYPE));
   }
 
+  @AuditableException
   @Override
   protected ResponseEntity<Object> handleNoHandlerFoundException(
       NoHandlerFoundException exception, HttpHeaders headers, HttpStatus status,
@@ -213,6 +235,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
         .body(newDetailedResponse(ResponseCode.NOT_FOUND));
   }
 
+  @AuditableException
   @ExceptionHandler(KafkaInternalServerException.class)
   public ResponseEntity<DetailedErrorResponse<Void>> handleKafkaInternalException(
       KafkaInternalServerException kafkaInternalServerException) {
@@ -225,6 +248,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
         .body(newDetailedResponse(code));
   }
 
+  @AuditableException
   @ExceptionHandler(DigitalSignatureNotFoundException.class)
   public ResponseEntity<DetailedErrorResponse<Void>> handleCephNoSuchObjectException(
       DigitalSignatureNotFoundException exception) {
@@ -234,17 +258,19 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
     return ResponseEntity.status(BAD_REQUEST).body(responseBody);
   }
 
+  @AuditableException
   @ExceptionHandler(FileNotExistsException.class)
   public ResponseEntity<DetailedErrorResponse<List<String>>> handleFileNotExistsException(
-          FileNotExistsException exception) {
+      FileNotExistsException exception) {
     log.error("Some files were not found in ceph", exception);
     DetailedErrorResponse<List<String>> responseBody =
-            newDetailedResponse(ResponseCode.FILE_NOT_FOUND);
+        newDetailedResponse(ResponseCode.FILE_NOT_FOUND);
     responseBody.setDetails(exception.getFieldsWithNotExistsFiles());
     return ResponseEntity.status(BAD_REQUEST)
-            .body(responseBody);
+        .body(responseBody);
   }
 
+  @AuditableException
   @ExceptionHandler(KafkaConstraintViolationException.class)
   public ResponseEntity<DetailedErrorResponse<ConstraintErrorDetails>> handleKafkaConstraintException(
       KafkaConstraintViolationException exception) {
@@ -257,6 +283,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
         .body(responseBody);
   }
 
+  @AuditableException
   @ExceptionHandler(KafkaSecurityValidationFailedException.class)
   public ResponseEntity<DetailedErrorResponse<Void>> handleKafkaSecurityException(
       KafkaSecurityValidationFailedException exception) {
@@ -267,6 +294,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
         .body(newDetailedResponse(code));
   }
 
+  @AuditableException
   @ExceptionHandler(NotFoundException.class)
   public ResponseEntity<DetailedErrorResponse<Void>> handleNotFoundException(
       NotFoundException exception) {
@@ -275,6 +303,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
         .body(newDetailedResponse(ResponseCode.NOT_FOUND));
   }
 
+  @AuditableException
   @ExceptionHandler(MandatoryHeaderMissingException.class)
   public ResponseEntity<DetailedErrorResponse<Void>> handleMandatoryHeaderMissingException(
       Exception exception) {
@@ -283,9 +312,10 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
         .body(newDetailedResponse(ResponseCode.HEADERS_ARE_MISSING));
   }
 
+  @AuditableException
   @ExceptionHandler(MandatoryAccessTokenClaimMissingException.class)
   public ResponseEntity<DetailedErrorResponse<Void>>
-      handleMandatoryAccessTokenClaimMissingException(Exception exception) {
+  handleMandatoryAccessTokenClaimMissingException(Exception exception) {
     log.error("Mandatory access token claim(s) missed", exception);
     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
         .body(newDetailedResponse(ResponseCode.INVALID_HEADER_VALUE));
@@ -299,12 +329,13 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
         .body(newDetailedResponse(ResponseCode.METHOD_ARGUMENT_TYPE_MISMATCH));
   }
 
+  @AuditableException
   @ExceptionHandler(ChecksumInconsistencyException.class)
   public ResponseEntity<DetailedErrorResponse<Void>> handleFileWasChangedException(
-          ChecksumInconsistencyException exception) {
+      ChecksumInconsistencyException exception) {
     log.error("File was changed between processing stages ", exception);
     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-            .body(newDetailedResponse(ResponseCode.FILE_WAS_CHANGED));
+        .body(newDetailedResponse(ResponseCode.FILE_WAS_CHANGED));
   }
 
   @Override

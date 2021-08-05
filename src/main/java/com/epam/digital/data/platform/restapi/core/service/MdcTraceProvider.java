@@ -26,4 +26,9 @@ public class MdcTraceProvider implements TraceProvider {
   public String getSourceBusinessProcess() {
     return MDC.get(Header.X_SOURCE_BUSINESS_PROCESS.getHeaderName().toLowerCase());
   }
+
+  @Override
+  public String getAccessToken() {
+    return MDC.get(Header.X_ACCESS_TOKEN.getHeaderName().toLowerCase());
+  }
 }

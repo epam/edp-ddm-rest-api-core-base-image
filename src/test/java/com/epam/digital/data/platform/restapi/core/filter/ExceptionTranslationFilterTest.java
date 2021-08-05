@@ -10,6 +10,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.epam.digital.data.platform.restapi.core.config.UnauthorizedRequestHandler;
 import com.epam.digital.data.platform.restapi.core.controller.MockController;
+import com.epam.digital.data.platform.restapi.core.exception.ApplicationExceptionHandler;
 import com.epam.digital.data.platform.restapi.core.service.MockService;
 import com.epam.digital.data.platform.restapi.core.service.RestAuditEventsFacade;
 import com.epam.digital.data.platform.restapi.core.service.TraceProvider;
@@ -34,7 +35,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest
 @ContextConfiguration(classes = {MockController.class, UnauthorizedRequestHandler.class, WebSecurityConfig.class,
-        Whitelist.class, SecurityProperties.class})
+        Whitelist.class, SecurityProperties.class, ApplicationExceptionHandler.class})
 @ComponentScan(basePackages = {"com.epam.digital.data.platform.starter.security.jwt"},
     excludeFilters = {
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = RestAuthenticationEntryPoint.class)})

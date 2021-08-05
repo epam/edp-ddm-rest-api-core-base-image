@@ -9,4 +9,6 @@ public interface TraceProvider {
   String getSourceBusinessProcessInstanceId();
 
   String getSourceBusinessProcess();
+
+  String getAccessToken();
 }

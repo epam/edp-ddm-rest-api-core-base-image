@@ -56,8 +56,6 @@ class DigitalSignatureServiceTest {
   private DigitalSignatureRestClient digitalSignatureRestClient;
   @Mock
   private DigitalSealRestClient digitalSealRestClient;
-  @Mock
-  private RestAuditEventsFacade restAuditEventsFacade;
 
   private DigitalSignatureService digitalSignatureService;
   private SecurityContext securityContext;
@@ -68,7 +66,7 @@ class DigitalSignatureServiceTest {
     MockitoAnnotations.initMocks(this);
     digitalSignatureService = new DigitalSignatureService(lowcodeCephService,
         datafactoryCephService, LOWCODE_BUCKET, DATAFACTORY_BUCKET, digitalSignatureRestClient,
-        digitalSealRestClient, true, OBJECT_MAPPER, restAuditEventsFacade);
+        digitalSealRestClient, true, OBJECT_MAPPER);
     securityContext = new SecurityContext(null, X_DIG_SIG, null);
     when(digitalSignatureRestClient.verify(any())).
         thenReturn(VerifyResponseDto.builder().isValid(true).build());
@@ -106,7 +104,6 @@ class DigitalSignatureServiceTest {
         .forClass(VerifyRequestDto.class);
     verify(digitalSignatureRestClient).verify(requestCaptor.capture());
 
-    verify(restAuditEventsFacade).auditSignatureInvalid(null);
     assertEquals("DRFO mismatch", exceptionMessage);
     assertEquals(INVALID_SIGNATURE, requestCaptor.getValue().signature());
     assertEquals(DATA, requestCaptor.getValue().data());
@@ -116,7 +113,7 @@ class DigitalSignatureServiceTest {
   void invalidSignatureVerificationShouldNotThrowExceptionWhenValidationDisabled() {
     digitalSignatureService = new DigitalSignatureService(lowcodeCephService,
         datafactoryCephService, LOWCODE_BUCKET, DATAFACTORY_BUCKET, digitalSignatureRestClient,
-        digitalSealRestClient, false, OBJECT_MAPPER, restAuditEventsFacade);
+        digitalSealRestClient, false, OBJECT_MAPPER);
     when(lowcodeCephService.getContent(LOWCODE_BUCKET, X_DIG_SIG))
         .thenReturn(Optional.of(INVALID_RESPONSE_FROM_CEPH));
     when(digitalSignatureRestClient.verify(any())).
@@ -159,7 +156,7 @@ class DigitalSignatureServiceTest {
   void cephServiceShouldNotThrowCephCommunicationExceptionWhenValidationDisabled() {
     digitalSignatureService = new DigitalSignatureService(lowcodeCephService,
         datafactoryCephService, LOWCODE_BUCKET, DATAFACTORY_BUCKET, digitalSignatureRestClient,
-        digitalSealRestClient, false, OBJECT_MAPPER, restAuditEventsFacade);
+        digitalSealRestClient, false, OBJECT_MAPPER);
     when(lowcodeCephService.getContent(LOWCODE_BUCKET, X_DIG_SIG))
         .thenThrow(new CephCommunicationException("", new RuntimeException()));
 
@@ -170,7 +167,7 @@ class DigitalSignatureServiceTest {
   void cephServiceShouldNotThrowMisconfigurationExceptionWhenValidationDisabled() {
     digitalSignatureService = new DigitalSignatureService(lowcodeCephService,
         datafactoryCephService, LOWCODE_BUCKET, DATAFACTORY_BUCKET, digitalSignatureRestClient,
-        digitalSealRestClient, false, OBJECT_MAPPER, restAuditEventsFacade);
+        digitalSealRestClient, false, OBJECT_MAPPER);
     when(lowcodeCephService.getContent(LOWCODE_BUCKET, X_DIG_SIG))
         .thenThrow(new MisconfigurationException("Bucket A not found"));
 
@@ -192,7 +189,7 @@ class DigitalSignatureServiceTest {
         .thenReturn(Optional.of(INVALID_RESPONSE_FROM_CEPH));
     digitalSignatureService = new DigitalSignatureService(lowcodeCephService,
         datafactoryCephService, LOWCODE_BUCKET, DATAFACTORY_BUCKET, digitalSignatureRestClient,
-        digitalSealRestClient, false, OBJECT_MAPPER, restAuditEventsFacade);
+        digitalSealRestClient, false, OBJECT_MAPPER);
     when(digitalSignatureRestClient.verify(any())).thenThrow(BadRequestException.class);
 
     assertDoesNotThrow(() -> digitalSignatureService.checkSignature(DATA, securityContext));
@@ -222,7 +219,7 @@ class DigitalSignatureServiceTest {
         .thenReturn(Optional.of(INVALID_RESPONSE_FROM_CEPH));
     digitalSignatureService = new DigitalSignatureService(lowcodeCephService,
         datafactoryCephService, LOWCODE_BUCKET, DATAFACTORY_BUCKET, digitalSignatureRestClient,
-        digitalSealRestClient, false, OBJECT_MAPPER, restAuditEventsFacade);
+        digitalSealRestClient, false, OBJECT_MAPPER);
     when(digitalSignatureRestClient.verify(any())).thenThrow(InternalServerErrorException.class);
 
     assertDoesNotThrow(() -> digitalSignatureService.checkSignature(DATA, securityContext));

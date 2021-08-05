@@ -9,8 +9,6 @@ import com.epam.digital.data.platform.restapi.core.controller.MockController;
 import com.epam.digital.data.platform.restapi.core.dto.MockEntity;
 import com.epam.digital.data.platform.restapi.core.service.MockService;
 import com.epam.digital.data.platform.restapi.core.service.TraceProvider;
-import com.epam.digital.data.platform.starter.security.exception.JwtParsingException;
-import com.epam.digital.data.platform.starter.security.jwt.TokenParser;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -40,8 +38,7 @@ import static org.mockito.Mockito.when;
     MockController.class,
     ControllerAuditAspectTest.MockNonControllerClient.class,
     ControllerAuditAspect.class,
-    ApplicationExceptionHandler.class,
-    TokenParser.class
+    ApplicationExceptionHandler.class
 })
 class ControllerAuditAspectTest {
 
@@ -53,8 +50,6 @@ class ControllerAuditAspectTest {
   private ApplicationExceptionHandler applicationExceptionHandler;
   @Autowired
   private MockNonControllerClient nonControllerClient;
-  @Autowired
-  private TokenParser tokenParser;
 
   @MockBean
   private ObjectMapper objectMapper;
@@ -231,16 +226,7 @@ class ControllerAuditAspectTest {
   void expectAuditAspectBeforeGetAndAfterExceptionHandler(){
     applicationExceptionHandler.handleException(new RuntimeException());
 
-    verify(restAuditEventsFacade).sendExceptionAudit(any(), any());
-  }
-
-  @Test
-  void expectAuditAspectWhenExceptionWhileTokenParsing() {
-    assertThrows(
-        JwtParsingException.class,
-        () -> tokenParser.parseClaims("incorrectToken"));
-
-    verify(restAuditEventsFacade).auditInvalidAccessToken();
+    verify(restAuditEventsFacade).sendExceptionAudit(any());
   }
 
   private MockEntity mockPayload() {
