@@ -1,6 +1,7 @@
 package com.epam.digital.data.platform.restapi.core.service;
 
 import static com.epam.digital.data.platform.restapi.core.service.GenericService.KAFKA_HEADER;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -22,10 +23,12 @@ import com.epam.digital.data.platform.starter.restapi.config.properties.KafkaPro
 import com.epam.digital.data.platform.starter.restapi.config.properties.KafkaProperties.Handler;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.RuntimeJsonMappingException;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.header.internals.RecordHeader;
@@ -100,17 +103,32 @@ class GenericServiceTest {
     }
 
     @Test
-    void shouldThrowExceptionWhenTimeout() throws ExecutionException, InterruptedException {
+    void shouldThrowExceptionWhenTimeout()
+        throws ExecutionException, InterruptedException, TimeoutException {
       RequestReplyFuture mockReplyFuture = Mockito.mock(RequestReplyFuture.class);
       when(replyingKafkaTemplate.sendAndReceive(any())).thenReturn(mockReplyFuture);
 
-      Mockito.doThrow(new InterruptedException()).when(mockReplyFuture).get();
+      Mockito.doThrow(new InterruptedException()).when(mockReplyFuture).get(30L, SECONDS);
 
       Exception exception = assertThrows(NoKafkaResponseException.class, () -> {
         instance.request(new Request<>(ID, null, null));
       });
 
       assertThat(exception.getCause()).isInstanceOf(InterruptedException.class);
+    }
+
+    @Test
+    void shouldThrowExceptionWhenInvalidJson() throws ExecutionException, InterruptedException {
+      Request<UUID> request = new Request<>(ID, null, null);
+
+      RequestReplyFuture<String, Request<UUID>, String>
+          replyFuture =
+          wrapResponseObjectAsKafkaReplay(request, "invalid json");
+      when(replyingKafkaTemplate.sendAndReceive(any())).thenReturn(replyFuture);
+
+      Exception exception = assertThrows(RuntimeJsonMappingException.class, () -> {
+        instance.request(request);
+      });
     }
   }
 

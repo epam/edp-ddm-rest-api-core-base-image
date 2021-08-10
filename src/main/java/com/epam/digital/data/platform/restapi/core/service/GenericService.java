@@ -13,6 +13,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.RuntimeJsonMappingException;
+import java.util.concurrent.TimeUnit;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.header.internals.RecordHeader;
@@ -103,7 +104,7 @@ public abstract class GenericService<I, O> {
     var replyFuture = replyingKafkaTemplate.sendAndReceive(request);
 
     try {
-      return replyFuture.get();
+      return replyFuture.get(30L, TimeUnit.SECONDS);
     } catch (Exception e) {
       throw new NoKafkaResponseException("No response for request: " + input, e);
     }
