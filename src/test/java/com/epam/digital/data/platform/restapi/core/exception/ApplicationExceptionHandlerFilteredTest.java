@@ -3,6 +3,7 @@ package com.epam.digital.data.platform.restapi.core.exception;
 import static com.epam.digital.data.platform.restapi.core.utils.Header.X_ACCESS_TOKEN;
 import static com.epam.digital.data.platform.restapi.core.utils.Header.X_DIGITAL_SIGNATURE;
 import static com.epam.digital.data.platform.restapi.core.utils.Header.X_SOURCE_APPLICATION;
+import static com.epam.digital.data.platform.restapi.core.utils.Header.X_SOURCE_BUSINESS_ACTIVITY_INSTANCE_ID;
 import static com.epam.digital.data.platform.restapi.core.utils.Header.X_SOURCE_BUSINESS_PROCESS;
 import static com.epam.digital.data.platform.restapi.core.utils.Header.X_SOURCE_SYSTEM;
 import static org.hamcrest.Matchers.is;
@@ -14,7 +15,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.amazonaws.services.s3.model.AmazonS3Exception;
 import com.epam.digital.data.platform.integration.ceph.exception.CephCommunicationException;
 import com.epam.digital.data.platform.integration.ceph.exception.MisconfigurationException;
 import com.epam.digital.data.platform.restapi.core.config.SecurityConfiguration;
@@ -148,6 +148,17 @@ class ApplicationExceptionHandlerFilteredTest {
         .header(X_SOURCE_SYSTEM.getHeaderName(), "SomeSS")
         .header(X_SOURCE_BUSINESS_PROCESS.getHeaderName(), "SomeBP")
         .header(X_SOURCE_APPLICATION.getHeaderName(), "SomeSA"))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.code").value(ResponseCode.INVALID_HEADER_VALUE))
+        .andExpect(jsonPath("$.traceId").value(is(TRACE_ID)))
+        .andExpect(jsonPath("$.details").doesNotExist());
+  }
+
+  @Test
+  void shouldReturn400WhenInvalidHeaderValue() throws Exception {
+    mockMvc.perform(delete(BASE_URL + "/{id}", CONSENT_ID)
+            .headers(MANDATORY_HEADERS)
+            .header(X_SOURCE_BUSINESS_ACTIVITY_INSTANCE_ID.getHeaderName(), "not a UUID"))
         .andExpect(status().isBadRequest())
         .andExpect(jsonPath("$.code").value(ResponseCode.INVALID_HEADER_VALUE))
         .andExpect(jsonPath("$.traceId").value(is(TRACE_ID)))
