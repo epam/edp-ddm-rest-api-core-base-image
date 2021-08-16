@@ -42,7 +42,7 @@ import org.springframework.test.web.servlet.MockMvc;
     classes = {FilterChainExceptionHandler.class, ApplicationExceptionHandler.class})
 @Import(TestBeansConfig.class)
 @TestPropertySource(properties = {
-    "data-platform.header.validation.enabled=true"
+    "data-platform.header.format.validation.enabled=true"
 })
 @SecurityConfiguration
 class ApplicationExceptionHandlerFilteredTest {

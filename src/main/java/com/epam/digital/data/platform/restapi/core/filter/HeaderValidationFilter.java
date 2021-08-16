@@ -28,6 +28,7 @@ import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
@@ -55,7 +56,12 @@ public class HeaderValidationFilter extends AbstractFilter {
 
   private final TokenParser tokenParser;
 
-  public HeaderValidationFilter(TokenParser tokenParser) {
+  private final boolean isFormatValidationEnabled;
+
+  public HeaderValidationFilter(
+      @Value("${data-platform.header.format.validation.enabled}") boolean isFormatValidationEnabled,
+      TokenParser tokenParser) {
+    this.isFormatValidationEnabled = isFormatValidationEnabled;
     this.tokenParser = tokenParser;
   }
 
@@ -71,7 +77,9 @@ public class HeaderValidationFilter extends AbstractFilter {
   }
 
   private void validateHeaderFormat(HttpServletRequest request) {
-    HEADER_VALIDATOR.forEach((key, validator) -> validate(request, key, validator));
+    if (isFormatValidationEnabled) {
+      HEADER_VALIDATOR.forEach((key, validator) -> validate(request, key, validator));
+    }
   }
 
   private void validate(HttpServletRequest request, Header header, HeaderValidator validator) {

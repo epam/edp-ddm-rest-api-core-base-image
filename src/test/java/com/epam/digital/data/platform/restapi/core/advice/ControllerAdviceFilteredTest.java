@@ -62,8 +62,8 @@ import org.springframework.test.web.servlet.MockMvc;
     })
 @Import({TestBeansConfig.class, AopAutoConfiguration.class})
 @TestPropertySource(properties = {
-    "data-platform.header.validation.enabled=false",
     "data-platform.signature.validation.enabled=false",
+    "data-platform.header.format.validation.enabled=true",
     "data-platform.files.processing.enabled=true"
 })
 @SecurityConfiguration
