@@ -15,15 +15,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.epam.digital.data.platform.model.core.kafka.Response;
 import com.epam.digital.data.platform.model.core.kafka.Status;
-import com.epam.digital.data.platform.restapi.core.advice.FileRequestBodyAspect;
 import com.epam.digital.data.platform.restapi.core.config.SecurityConfiguration;
 import com.epam.digital.data.platform.restapi.core.controller.MockController;
 import com.epam.digital.data.platform.restapi.core.dto.MockEntity;
 import com.epam.digital.data.platform.restapi.core.model.DetailedErrorResponse;
 import com.epam.digital.data.platform.restapi.core.model.FieldsValidationErrorDetails;
-import com.epam.digital.data.platform.restapi.core.service.FileService;
 import com.epam.digital.data.platform.restapi.core.service.MockService;
-import com.epam.digital.data.platform.restapi.core.service.RestAuditEventsFacade;
+import com.epam.digital.data.platform.restapi.core.audit.RestAuditEventsFacade;
 import com.epam.digital.data.platform.restapi.core.service.TraceProvider;
 import com.epam.digital.data.platform.restapi.core.utils.ResponseCode;
 import com.epam.digital.data.platform.starter.security.config.SecurityProperties;

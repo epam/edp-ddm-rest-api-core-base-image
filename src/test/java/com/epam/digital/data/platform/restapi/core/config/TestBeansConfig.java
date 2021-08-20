@@ -3,7 +3,7 @@ package com.epam.digital.data.platform.restapi.core.config;
 import static org.mockito.Mockito.mock;
 
 import com.epam.digital.data.platform.restapi.core.service.FileService;
-import com.epam.digital.data.platform.restapi.core.service.RestAuditEventsFacade;
+import com.epam.digital.data.platform.restapi.core.audit.RestAuditEventsFacade;
 import com.epam.digital.data.platform.starter.actuator.livenessprobe.LivenessStateHandler;
 import com.epam.digital.data.platform.starter.audit.service.AuditService;
 import com.epam.digital.data.platform.starter.security.config.SecurityProperties;

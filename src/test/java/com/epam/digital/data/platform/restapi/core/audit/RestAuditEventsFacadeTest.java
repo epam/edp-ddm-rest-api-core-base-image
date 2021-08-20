@@ -1,7 +1,10 @@
-package com.epam.digital.data.platform.restapi.core.service;
+package com.epam.digital.data.platform.restapi.core.audit;
 
 import com.epam.digital.data.platform.restapi.core.model.audit.ExceptionAuditEvent;
+import com.epam.digital.data.platform.restapi.core.service.TraceProvider;
 import com.epam.digital.data.platform.starter.audit.model.AuditEvent;
+import com.epam.digital.data.platform.starter.audit.model.AuditSourceInfo;
+import com.epam.digital.data.platform.starter.audit.model.AuditUserInfo;
 import com.epam.digital.data.platform.starter.audit.model.EventType;
 import com.epam.digital.data.platform.starter.audit.service.AuditService;
 import com.epam.digital.data.platform.starter.security.jwt.TokenParser;
@@ -24,8 +27,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import static com.epam.digital.data.platform.restapi.core.service.RestAuditEventsFacade.INVALID_ACCESS_TOKEN_EVENT_NAME;
-import static com.epam.digital.data.platform.restapi.core.service.RestAuditEventsFacade.INVALID_SIGNATURE_EVENT_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -36,13 +37,20 @@ class RestAuditEventsFacadeTest {
 
   private static final String APP_NAME = "application";
   private static final String REQUEST_ID = "1";
+  private static final String SOURCE_SYSTEM = "system";
+  private static final String SOURCE_APPLICATION = "source_app";
+  private static final String BUSINESS_PROCESS = "bp";
+  private static final String BUSINESS_PROCESS_DEFINITION_ID = "bp_def_id";
+  private static final String BUSINESS_PROCESS_INSTANCE_ID = "bp_id";
+  private static final String BUSINESS_ACTIVITY = "act";
+  private static final String BUSINESS_ACTIVITY_INSTANCE_ID = "bp_act";
   private static final String METHOD_NAME = "method";
   private static final String ACTION = "CREATE";
   private static final String STEP = "BEFORE";
-  private static final String USER_ID = "1010101014";
+  private static final String USER_DRFO = "1010101014";
+  private static final String USER_KEYCLOAK_ID = "496fd2fd-3497-4391-9ead-41410522d06f";
   private static final String USER_NAME = "Сидоренко Василь Леонідович";
   private static final String RESULT = "RESULT";
-
 
   private static final LocalDateTime CURR_TIME = LocalDateTime.of(2021, 4, 1, 11, 50);
 
@@ -51,6 +59,8 @@ class RestAuditEventsFacadeTest {
 
   @Mock
   private AuditService auditService;
+  @Mock
+  private AuditSourceInfoProvider auditSourceInfoProvider;
   @Mock
   private TraceProvider traceProvider;
   @Autowired
@@ -62,6 +72,8 @@ class RestAuditEventsFacadeTest {
   @Captor
   private ArgumentCaptor<AuditEvent> auditEventCaptor;
 
+  private AuditSourceInfo mockSourceInfo;
+
   @BeforeAll
   static void init() throws IOException {
     ACCESS_TOKEN = new String(ByteStreams.toByteArray(
@@ -70,10 +82,24 @@ class RestAuditEventsFacadeTest {
 
   @BeforeEach
   void beforeEach() {
-    restAuditEventsFacade = new RestAuditEventsFacade(APP_NAME, auditService, traceProvider, clock,
-        tokenParser);
+    restAuditEventsFacade =
+        new RestAuditEventsFacade(
+            auditService, APP_NAME, clock, traceProvider, auditSourceInfoProvider, tokenParser);
 
     when(traceProvider.getRequestId()).thenReturn(REQUEST_ID);
+
+    mockSourceInfo =
+        AuditSourceInfo.AuditSourceInfoBuilder.anAuditSourceInfo()
+            .system(SOURCE_SYSTEM)
+            .application(SOURCE_APPLICATION)
+            .businessProcess(BUSINESS_PROCESS)
+            .businessProcessDefinitionId(BUSINESS_PROCESS_DEFINITION_ID)
+            .businessProcessInstanceId(BUSINESS_PROCESS_INSTANCE_ID)
+            .businessActivity(BUSINESS_ACTIVITY)
+            .businessActivityInstanceId(BUSINESS_ACTIVITY_INSTANCE_ID)
+            .build();
+    when(auditSourceInfoProvider.getAuditSourceInfo())
+            .thenReturn(mockSourceInfo);
   }
 
   @Test
@@ -86,14 +112,18 @@ class RestAuditEventsFacadeTest {
     verify(auditService).sendAudit(auditEventCaptor.capture());
     AuditEvent actualEvent = auditEventCaptor.getValue();
 
-    assertThat(actualEvent.getRequestId()).isEqualTo(REQUEST_ID);
-    assertThat(actualEvent.getApplication()).isEqualTo(APP_NAME);
-    assertThat(actualEvent.getEventType()).isEqualTo(EventType.USER_ACTION);
-    assertThat(actualEvent.getCurrentTime()).isEqualTo(clock.millis());
-    assertThat(actualEvent.getUserId()).isEqualTo(USER_ID);
-    assertThat(actualEvent.getUserName()).isEqualTo(USER_NAME);
-    assertThat(actualEvent.getName()).isEqualTo("HTTP request. Method: method");
-    assertThat(actualEvent.getContext()).isEqualTo(context);
+    var expectedEvent = AuditEvent.AuditEventBuilder.anAuditEvent()
+            .application(APP_NAME)
+            .name("HTTP request. Method: method")
+            .requestId(REQUEST_ID)
+            .sourceInfo(mockSourceInfo)
+            .userInfo(createUserInfo())
+            .currentTime(clock.millis())
+            .eventType(EventType.USER_ACTION)
+            .context(context)
+            .build();
+
+    assertThat(actualEvent).usingRecursiveComparison().isEqualTo(expectedEvent);
   }
 
   @Test
@@ -107,14 +137,18 @@ class RestAuditEventsFacadeTest {
     verify(auditService).sendAudit(auditEventCaptor.capture());
     AuditEvent actualEvent = auditEventCaptor.getValue();
 
-    assertThat(actualEvent.getRequestId()).isEqualTo(REQUEST_ID);
-    assertThat(actualEvent.getApplication()).isEqualTo(APP_NAME);
-    assertThat(actualEvent.getEventType()).isEqualTo(EventType.USER_ACTION);
-    assertThat(actualEvent.getCurrentTime()).isEqualTo(clock.millis());
-    assertThat(actualEvent.getUserId()).isNull();
-    assertThat(actualEvent.getUserName()).isNull();
-    assertThat(actualEvent.getName()).isEqualTo("HTTP request. Method: method");
-    assertThat(actualEvent.getContext()).isEqualTo(context);
+    var expectedEvent = AuditEvent.AuditEventBuilder.anAuditEvent()
+            .application(APP_NAME)
+            .name("HTTP request. Method: method")
+            .requestId(REQUEST_ID)
+            .sourceInfo(mockSourceInfo)
+            .userInfo(null)
+            .currentTime(clock.millis())
+            .eventType(EventType.USER_ACTION)
+            .context(context)
+            .build();
+
+    assertThat(actualEvent).usingRecursiveComparison().isEqualTo(expectedEvent);
   }
 
   @Test
@@ -134,13 +168,21 @@ class RestAuditEventsFacadeTest {
     verify(auditService).sendAudit(auditEventCaptor.capture());
     AuditEvent actualEvent = auditEventCaptor.getValue();
 
-    assertThat(actualEvent.getRequestId()).isEqualTo(REQUEST_ID);
-    assertThat(actualEvent.getApplication()).isEqualTo(APP_NAME);
-    assertThat(actualEvent.getEventType()).isEqualTo(EventType.USER_ACTION);
-    assertThat(actualEvent.getCurrentTime()).isEqualTo(clock.millis());
-    assertThat(actualEvent.getUserId()).isEqualTo(USER_ID);
-    assertThat(actualEvent.getUserName()).isEqualTo(USER_NAME);
-    assertThat(actualEvent.getName()).isEqualTo("EXCEPTION");
-    assertThat(actualEvent.getContext()).isEqualTo(context);
+    var expectedEvent = AuditEvent.AuditEventBuilder.anAuditEvent()
+            .application(APP_NAME)
+            .name("EXCEPTION")
+            .requestId(REQUEST_ID)
+            .sourceInfo(mockSourceInfo)
+            .userInfo(createUserInfo())
+            .currentTime(clock.millis())
+            .eventType(EventType.USER_ACTION)
+            .context(context)
+            .build();
+
+    assertThat(actualEvent).usingRecursiveComparison().isEqualTo(expectedEvent);
+  }
+
+  private AuditUserInfo createUserInfo() {
+    return new AuditUserInfo(USER_NAME, USER_KEYCLOAK_ID, USER_DRFO);
   }
 }

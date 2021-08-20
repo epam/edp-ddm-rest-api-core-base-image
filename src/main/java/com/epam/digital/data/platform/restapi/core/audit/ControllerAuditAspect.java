@@ -1,11 +1,10 @@
-package com.epam.digital.data.platform.restapi.core.aspect;
+package com.epam.digital.data.platform.restapi.core.audit;
 
 import com.epam.digital.data.platform.model.core.kafka.RequestContext;
 import com.epam.digital.data.platform.model.core.kafka.SecurityContext;
 import com.epam.digital.data.platform.restapi.core.annotation.AuditableException;
 import com.epam.digital.data.platform.restapi.core.model.DetailedErrorResponse;
 import com.epam.digital.data.platform.restapi.core.model.audit.ExceptionAuditEvent;
-import com.epam.digital.data.platform.restapi.core.service.RestAuditEventsFacade;
 import com.epam.digital.data.platform.restapi.core.utils.ResponseCode;
 import com.epam.digital.data.platform.starter.audit.model.EventType;
 import java.util.Set;

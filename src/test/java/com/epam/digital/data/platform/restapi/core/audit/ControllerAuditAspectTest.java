@@ -1,10 +1,9 @@
-package com.epam.digital.data.platform.restapi.core.aspect;
+package com.epam.digital.data.platform.restapi.core.audit;
 
 import com.epam.digital.data.platform.model.core.kafka.RequestContext;
 import com.epam.digital.data.platform.model.core.kafka.SecurityContext;
 import com.epam.digital.data.platform.model.core.kafka.Status;
 import com.epam.digital.data.platform.restapi.core.exception.ApplicationExceptionHandler;
-import com.epam.digital.data.platform.restapi.core.service.RestAuditEventsFacade;
 import com.epam.digital.data.platform.restapi.core.controller.MockController;
 import com.epam.digital.data.platform.restapi.core.dto.MockEntity;
 import com.epam.digital.data.platform.restapi.core.service.MockService;

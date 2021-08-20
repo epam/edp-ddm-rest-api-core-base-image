@@ -4,11 +4,5 @@ public interface TraceProvider {
 
   String getRequestId();
 
-  String getSourceSystem();
-
-  String getSourceBusinessProcessInstanceId();
-
-  String getSourceBusinessProcess();
-
   String getAccessToken();
 }
