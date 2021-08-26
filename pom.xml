@@ -13,9 +13,9 @@
 
 	<properties>
 		<model.core.version>1.4.0-SNAPSHOT</model.core.version>
-		<ddm.starter.rest.api.version>1.4.0-SNAPSHOT</ddm.starter.rest.api.version>
+		<ddm.starter.rest.api.version>1.4.1-SNAPSHOT</ddm.starter.rest.api.version>
 		<ddm.starter.logger.version>1.3.0-SNAPSHOT</ddm.starter.logger.version>
-		<ddm.starter.actuator.version>1.3.0-SNAPSHOT</ddm.starter.actuator.version>
+		<ddm.starter.actuator.version>1.4.0-SNAPSHOT</ddm.starter.actuator.version>
 		<ddm.starter.swagger.version>1.3.0-SNAPSHOT</ddm.starter.swagger.version>
 		<ddm.starter.audit.version>1.4.0-SNAPSHOT</ddm.starter.audit.version>
 		<ddm.starter.security.version>1.3.0-SNAPSHOT</ddm.starter.security.version>
