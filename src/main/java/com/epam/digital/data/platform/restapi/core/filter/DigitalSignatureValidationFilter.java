@@ -1,29 +1,28 @@
 package com.epam.digital.data.platform.restapi.core.filter;
 
+import static com.epam.digital.data.platform.restapi.core.utils.Header.X_ACCESS_TOKEN;
+import static com.epam.digital.data.platform.restapi.core.utils.Header.X_DIGITAL_SIGNATURE;
+import static com.epam.digital.data.platform.restapi.core.utils.Header.X_DIGITAL_SIGNATURE_DERIVED;
+import static org.springframework.util.StringUtils.isEmpty;
+
 import com.epam.digital.data.platform.model.core.kafka.SecurityContext;
 import com.epam.digital.data.platform.restapi.core.service.DigitalSignatureService;
-import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.commons.lang3.RegExUtils;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.annotation.Order;
-import org.springframework.stereotype.Component;
-import org.springframework.web.util.UrlPathHelper;
-
+import java.io.IOException;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
-import java.io.IOException;
-import java.util.Set;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
-import static com.epam.digital.data.platform.restapi.core.utils.Header.X_ACCESS_TOKEN;
-import static com.epam.digital.data.platform.restapi.core.utils.Header.X_DIGITAL_SIGNATURE;
-import static com.epam.digital.data.platform.restapi.core.utils.Header.X_DIGITAL_SIGNATURE_DERIVED;
-import static org.springframework.util.StringUtils.isEmpty;
+import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.lang3.RegExUtils;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
+import org.springframework.web.util.UrlPathHelper;
 
 @Component
 @Order(FiltersOrder.digitalSignatureValidationFilter)
@@ -84,6 +83,7 @@ public class DigitalSignatureValidationFilter implements Filter {
       String signatureDerived = digitalSignatureService.saveSignature(sc.getDigitalSignatureDerived());
       sc.setDigitalSignatureDerivedChecksum(DigestUtils.sha256Hex(signatureDerived));
     }
+
     return sc;
   }
 
@@ -105,6 +105,7 @@ public class DigitalSignatureValidationFilter implements Filter {
     if (isEmpty(xDigitalSignature)) {
       throw new IllegalArgumentException("Missing required Header X-Digital-Signature");
     }
+
     return securityContext;
   }
 }

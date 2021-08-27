@@ -113,6 +113,7 @@ public class ControllerAuditAspect {
       action = READ;
       id = (UUID)dto;
     }
+
     return prepareAndSendRestAudit(joinPoint, action, id, securityContext);
   }
 
@@ -153,6 +154,7 @@ public class ControllerAuditAspect {
         .sendRestAudit(EventType.USER_ACTION, methodName, action, jwt, BEFORE, id, null);
 
     Object result = joinPoint.proceed();
+
     var resultStatus = ((ResponseEntity<?>) result).getStatusCode().getReasonPhrase();
 
     restAuditEventsFacade.sendRestAudit(EventType.USER_ACTION, methodName,

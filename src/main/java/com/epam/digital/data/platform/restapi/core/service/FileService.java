@@ -13,6 +13,8 @@ import java.util.List;
 import java.util.Objects;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -20,6 +22,8 @@ import org.springframework.util.ReflectionUtils;
 
 @Component
 public class FileService {
+
+  private final Logger log = LoggerFactory.getLogger(FileService.class);
 
   private final boolean isFileProcessingEnabled;
   private final String lowcodeFileBucket;
@@ -43,6 +47,8 @@ public class FileService {
 
   public boolean store(String instanceId, File file) {
     if (isFileProcessingEnabled) {
+      log.info("Storing file from lowcode to data ceph bucket");
+
       var lowcodeId = createCompositeObjectId(instanceId, file.getId());
 
       var cephResponseOpt = lowcodeFileCephService.getObject(lowcodeFileBucket, lowcodeId);
@@ -94,6 +100,8 @@ public class FileService {
 
   public boolean retrieve(String instanceId, File file) {
     if (isFileProcessingEnabled) {
+      log.info("Storing file from data to lowcode ceph bucket");
+
       var cephResponseOpt =
           datafactoryFileCephService.getObject(datafactoryFileBucket, file.getId());
       if (cephResponseOpt.isEmpty()) {

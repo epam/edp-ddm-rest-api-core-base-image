@@ -1,5 +1,7 @@
 package com.epam.digital.data.platform.restapi.core.service;
 
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
+
 import com.epam.digital.data.platform.dso.api.dto.SignRequestDto;
 import com.epam.digital.data.platform.dso.api.dto.VerifyRequestDto;
 import com.epam.digital.data.platform.dso.api.dto.VerifyResponseDto;
@@ -13,20 +15,22 @@ import com.epam.digital.data.platform.restapi.core.exception.DigitalSignatureNot
 import com.epam.digital.data.platform.restapi.core.exception.InvalidSignatureException;
 import com.epam.digital.data.platform.restapi.core.exception.KepServiceBadRequestException;
 import com.epam.digital.data.platform.restapi.core.exception.KepServiceInternalServerErrorException;
+import com.epam.digital.data.platform.restapi.core.utils.Header;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.RuntimeJsonMappingException;
+import java.util.Map;
+import java.util.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
-import java.util.Map;
-import java.util.UUID;
-
-import static org.apache.commons.lang3.StringUtils.isNotEmpty;
-
 @Component
 public class DigitalSignatureService {
+
+  private final Logger log = LoggerFactory.getLogger(DigitalSignatureService.class);
 
   private static final String SIGNATURE = "signature";
   private static final String PREFIX = "datafactory-";
@@ -67,17 +71,19 @@ public class DigitalSignatureService {
         ? sc.getDigitalSignatureDerived()
         : sc.getDigitalSignature();
 
-    String signature;
+    String signature = getSignature(key);
+    verify(signature, data, StringUtils.isEmpty(sc.getDigitalSignatureDerived()));
+  }
+
+  private String getSignature(String key) throws JsonProcessingException {
+    log.info("Reading Signature from Ceph");
     String responseFromCeph =
         lowcodeCephService
             .getContent(lowcodeBucket, key)
             .orElseThrow(
                 () -> new DigitalSignatureNotFoundException("Signature does not exist in ceph bucket"));
     Map<String, Object> cephResponse = objectMapper.readValue(responseFromCeph, Map.class);
-    signature = (String) cephResponse.get(SIGNATURE);
-
-    verify(
-        signature, data, StringUtils.isEmpty(sc.getDigitalSignatureDerived()));
+    return (String) cephResponse.get(SIGNATURE);
   }
 
   public <I> String sign(I input) {
@@ -87,11 +93,17 @@ public class DigitalSignatureService {
     } catch (JsonProcessingException e) {
       throw new RuntimeJsonMappingException(e.getMessage());
     }
+
+    log.info("Signing content");
     return digitalSealRestClient.sign(signRequestDto).getSignature();
   }
 
   public String store(String value) {
+    log.info("Storing object to Ceph");
+
     String key = PREFIX + UUID.randomUUID();
+    log.debug("Generated key: {}", key);
+
     datafactoryCephService.putContent(datafactoryBucket, key, value);
     return key;
   }
@@ -100,6 +112,8 @@ public class DigitalSignatureService {
     if (!isEnabled) {
       return "";
     }
+
+    log.info("Copy Signature from lowcode to data ceph bucket");
     String value =
         lowcodeCephService
             .getContent(lowcodeBucket, key)
@@ -113,10 +127,13 @@ public class DigitalSignatureService {
     try {
       VerifyResponseDto responseDto;
       if (emptyDerivedHeader) {
+        log.info("Verifying {}", Header.X_DIGITAL_SIGNATURE.getHeaderName());
         responseDto = digitalSignatureRestClient.verify(new VerifyRequestDto(signature, data));
       } else {
+        log.info("Verifying {}", Header.X_DIGITAL_SIGNATURE_DERIVED.getHeaderName());
         responseDto = digitalSealRestClient.verify(new VerifyRequestDto(signature, data));
       }
+
       if (!responseDto.isValid) {
         throw new InvalidSignatureException(responseDto.error.getMessage());
       }

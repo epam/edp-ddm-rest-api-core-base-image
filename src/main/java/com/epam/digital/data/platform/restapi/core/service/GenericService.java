@@ -26,7 +26,7 @@ import org.springframework.kafka.support.KafkaHeaders;
 
 public abstract class GenericService<I, O> {
 
-  static final String KAFKA_HEADER = "digital-seal";
+  static final String DIGITAL_SEAL_KAFKA_HEADER = "digital-seal";
 
   private final Logger log = LoggerFactory.getLogger(GenericService.class);
 
@@ -81,7 +81,7 @@ public abstract class GenericService<I, O> {
       String digitalSeal = digitalSignatureService.sign(input);
       String cephKey = digitalSignatureService.store(digitalSeal);
 
-      var signatureHeader = new RecordHeader(KAFKA_HEADER, cephKey.getBytes(UTF_8));
+      var signatureHeader = new RecordHeader(DIGITAL_SEAL_KAFKA_HEADER, cephKey.getBytes(UTF_8));
       request.headers().add(signatureHeader);
     }
 
@@ -90,6 +90,7 @@ public abstract class GenericService<I, O> {
     var cephResponseKeyHeaderValue =
         getKafkaHeader(responseRecord, ResponseHeaders.CEPH_RESPONSE_KEY);
     if (cephResponseKeyHeaderValue.isPresent()) {
+      log.info("Reading large response from Ceph");
       return getResponseFromStorage(cephResponseKeyHeaderValue.get());
     } else {
       return fromString(responseRecord.value());
@@ -101,10 +102,13 @@ public abstract class GenericService<I, O> {
     var header = new RecordHeader(KafkaHeaders.REPLY_TOPIC, topics.getReplay().getBytes());
     request.headers().add(header);
 
+    log.info("Sending to Kafka...");
     var replyFuture = replyingKafkaTemplate.sendAndReceive(request);
 
     try {
-      return replyFuture.get(30L, TimeUnit.SECONDS);
+      var response = replyFuture.get(30L, TimeUnit.SECONDS);
+      log.info("Successfully got response from Kafka");
+      return response;
     } catch (Exception e) {
       throw new NoKafkaResponseException("No response for request: " + input, e);
     }
@@ -133,6 +137,7 @@ public abstract class GenericService<I, O> {
 
   private void deleteProcessedContentFromStorage(String key) {
     try {
+      log.info("Deleting large payload from Ceph");
       datafactoryResponseCephService.deleteObject(datafactoryResponseBucket, key);
     } catch (Exception e) {
       log.error("Exception while deleting processed message from ceph", e);

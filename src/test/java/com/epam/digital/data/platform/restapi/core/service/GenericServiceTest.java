@@ -1,6 +1,6 @@
 package com.epam.digital.data.platform.restapi.core.service;
 
-import static com.epam.digital.data.platform.restapi.core.service.GenericService.KAFKA_HEADER;
+import static com.epam.digital.data.platform.restapi.core.service.GenericService.DIGITAL_SEAL_KAFKA_HEADER;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
@@ -241,7 +241,7 @@ class GenericServiceTest {
 
       // then
       verify(replyingKafkaTemplate).sendAndReceive(captor.capture());
-      assertThat(captor.getValue().headers().lastHeader(KAFKA_HEADER).value())
+      assertThat(captor.getValue().headers().lastHeader(DIGITAL_SEAL_KAFKA_HEADER).value())
           .isEqualTo(expected.getBytes());
     }
   }

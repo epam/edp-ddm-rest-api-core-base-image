@@ -8,18 +8,25 @@ import com.epam.digital.data.platform.starter.audit.service.AbstractAuditFacade;
 import com.epam.digital.data.platform.starter.audit.service.AuditService;
 import com.epam.digital.data.platform.starter.security.jwt.TokenParser;
 import java.time.Clock;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 @Component
 public class RestAuditEventsFacade extends AbstractAuditFacade {
 
-  private final TraceProvider traceProvider;
-  private final AuditSourceInfoProvider auditSourceInfoProvider;
-  private final TokenParser tokenParser;
+  private final Logger log = LoggerFactory.getLogger(RestAuditEventsFacade.class);
 
   static final String HTTP_REQUEST = "HTTP request. Method: ";
   static final String EXCEPTION = "EXCEPTION";
+
+  static final String INVALID_ACCESS_TOKEN_EVENT_NAME = "Access Token is not valid";
+  static final String INVALID_SIGNATURE_EVENT_NAME = "Invalid signature";
+
+  private final TraceProvider traceProvider;
+  private final AuditSourceInfoProvider auditSourceInfoProvider;
+  private final TokenParser tokenParser;
 
   public RestAuditEventsFacade(
       AuditService auditService,
@@ -46,6 +53,8 @@ public class RestAuditEventsFacade extends AbstractAuditFacade {
     if (exceptionAuditEvent.isUserInfoEnabled()) {
       setUserInfoToEvent(event, traceProvider.getAccessToken());
     }
+
+    log.info("Sending Exception to Audit");
     auditService.sendAudit(event.build());
   }
 
@@ -66,6 +75,7 @@ public class RestAuditEventsFacade extends AbstractAuditFacade {
     event.setContext(context);
     setUserInfoToEvent(event, jwt);
 
+    log.info("Sending {} {} event to Audit", step, action);
     auditService.sendAudit(event.build());
   }
 
