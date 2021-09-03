@@ -330,15 +330,6 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
         .body(newDetailedResponse(ResponseCode.INVALID_HEADER_VALUE));
   }
 
-  @AuditableException
-  @ExceptionHandler(HeaderValidationException.class)
-  public ResponseEntity<DetailedErrorResponse<Void>>
-  handleHeaderValidationException(Exception exception) {
-    log.error("Header validation failed", exception);
-    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-        .body(newDetailedResponse(ResponseCode.INVALID_HEADER_VALUE));
-  }
-
   @ExceptionHandler(MethodArgumentTypeMismatchException.class)
   public ResponseEntity<DetailedErrorResponse<Void>> handleMethodArgumentTypeMismatchException(
       Exception exception) {

@@ -65,16 +65,13 @@ import org.springframework.test.web.servlet.MockMvc;
 @Import({TestBeansConfig.class, AopAutoConfiguration.class})
 @TestPropertySource(properties = {
     "data-platform.signature.validation.enabled=false",
-    "data-platform.header.format.validation.enabled=true",
     "data-platform.files.processing.enabled=true"
 })
 @SecurityConfiguration
 class ControllerAdviceFilteredTest {
 
   private static final String BASE_URL = "/mock-file";
-  private static final String TYPICAL_UUID = "123e4567-e89b-12d3-a456-426655440001";
-  private static final String TYPICAL_UUID_2 = "123e4567-e89b-12d3-a456-426655440002";
-  private static final UUID ID = UUID.fromString(TYPICAL_UUID);
+  private static final UUID ID = UUID.fromString("123e4567-e89b-12d3-a456-426655440000");
 
   private static final HttpHeaders MANDATORY_HEADERS = new HttpHeaders();
 
@@ -92,8 +89,8 @@ class ControllerAdviceFilteredTest {
       MANDATORY_HEADERS.add(X_SOURCE_SYSTEM.getHeaderName(), "SomeSS");
       MANDATORY_HEADERS.add(X_SOURCE_APPLICATION.getHeaderName(), "SomeSA");
       MANDATORY_HEADERS.add(X_SOURCE_BUSINESS_PROCESS.getHeaderName(), "SomeBP");
-      MANDATORY_HEADERS.add(X_SOURCE_BUSINESS_PROCESS_INSTANCE_ID.getHeaderName(), TYPICAL_UUID);
-      MANDATORY_HEADERS.add(X_SOURCE_BUSINESS_PROCESS_DEFINITION_ID.getHeaderName(), TYPICAL_UUID_2);
+      MANDATORY_HEADERS.add(X_SOURCE_BUSINESS_PROCESS_INSTANCE_ID.getHeaderName(), "SomeIId");
+      MANDATORY_HEADERS.add(X_SOURCE_BUSINESS_PROCESS_DEFINITION_ID.getHeaderName(), "SomeDId");
     } catch (IOException e) {
       throw new ExceptionInInitializerError(e);
     }
