@@ -22,6 +22,7 @@ public final class ResponseCode {
   public static final String JWT_EXPIRED = "JWT_EXPIRED";
   public static final String FORBIDDEN_OPERATION = "FORBIDDEN_OPERATION";
   public static final String FILE_WAS_CHANGED = "FILE_WAS_CHANGED";
+  public static final String FILE_ID_NOT_EXCLUSIVE = "FILE_ID_NOT_EXCLUSIVE";
 
   private ResponseCode() {
   }

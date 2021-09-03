@@ -15,7 +15,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.ResultMatcher.matchAll;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -134,6 +136,34 @@ class ControllerAdviceFilteredTest {
         .contentType(MediaType.APPLICATION_JSON)
         .content("{}"))
         .andExpect(status().isCreated());
+
+    verify(fileService).store(any(), any());
+  }
+
+  @Test
+  void storeFilesOnPut() throws Exception {
+    when(mockFileService.update(any()))
+            .thenReturn(mockResponse(Status.NO_CONTENT));
+
+    mockMvc.perform(put(BASE_URL + "/{id}", ID)
+            .headers(MANDATORY_HEADERS)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("{}"))
+            .andExpect(status().isNoContent());
+
+    verify(fileService).store(any(), any());
+  }
+
+  @Test
+  void storeFilesOnPatch() throws Exception {
+    when(mockFileService.update(any()))
+            .thenReturn(mockResponse(Status.NO_CONTENT));
+
+    mockMvc.perform(patch(BASE_URL + "/{id}", ID)
+            .headers(MANDATORY_HEADERS)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("{}"))
+            .andExpect(status().isNoContent());
 
     verify(fileService).store(any(), any());
   }

@@ -29,7 +29,19 @@ public class FileRequestBodyAspect {
   public void postPointcut() {
   }
 
-  @Before("postPointcut() && args(dto, context, securityContext)")
+  @Pointcut("restController() && @annotation(org.springframework.web.bind.annotation.PutMapping)")
+  public void putPointcut() {
+  }
+
+  @Pointcut("restController() && @annotation(org.springframework.web.bind.annotation.PatchMapping)")
+  public void patchPointcut() {
+  }
+
+  @Pointcut("postPointcut() || putPointcut() || patchPointcut()")
+  public void modifyingPointcut() {
+  }
+
+  @Before("modifyingPointcut() && args(.., dto, context, securityContext)")
   void process(JoinPoint joinPoint, Object dto, RequestContext context,
       SecurityContext securityContext) {
 
