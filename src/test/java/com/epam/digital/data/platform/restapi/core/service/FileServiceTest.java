@@ -15,7 +15,6 @@ import com.epam.digital.data.platform.integration.ceph.service.CephService;
 import com.epam.digital.data.platform.model.core.kafka.File;
 import com.epam.digital.data.platform.restapi.core.dto.MockEntityFile;
 import com.epam.digital.data.platform.restapi.core.exception.ChecksumInconsistencyException;
-import com.epam.digital.data.platform.restapi.core.exception.FileNotExclusiveException;
 import com.epam.digital.data.platform.restapi.core.utils.ResponseCode;
 import java.util.List;
 import java.util.Map;
@@ -108,8 +107,6 @@ class FileServiceTest {
     void copyContentFromLowcodeBucketToDatafactoryBucket() {
       when(lowcodeCephService.getObject(LOWCODE_BUCKET_NAME, COMPOSITE_FILE_ID))
           .thenReturn(Optional.of(new CephObject(FILE_CONTENT, FILE_METADATA)));
-      when(datafactoryCephService.doesObjectExist(DATA_BUCKET_NAME, FILE_ID))
-              .thenReturn(false);
 
       File file = mockFile(FILE_ID);
 
@@ -123,8 +120,6 @@ class FileServiceTest {
     void expectTrueWhenSuccess() {
       when(lowcodeCephService.getObject(LOWCODE_BUCKET_NAME, COMPOSITE_FILE_ID))
           .thenReturn(Optional.of(new CephObject(FILE_CONTENT, FILE_METADATA)));
-      when(datafactoryCephService.doesObjectExist(DATA_BUCKET_NAME, FILE_ID))
-              .thenReturn(false);
 
       File file = mockFile(FILE_ID);
 
@@ -134,7 +129,7 @@ class FileServiceTest {
     }
 
     @Test
-    void expectFalseIfFileNotExistsInLowcodeCeph() {
+    void expectFalseIfFileNotExistsInCeph() {
       when(lowcodeCephService.getObject(LOWCODE_BUCKET_NAME, COMPOSITE_FILE_ID))
           .thenReturn(Optional.empty());
 
@@ -143,18 +138,6 @@ class FileServiceTest {
       var success = instance.store(INSTANCE_ID, file);
 
       assertThat(success).isFalse();
-    }
-
-    @Test
-    void expectExceptionIfFileExistsInDataCeph() {
-      when(lowcodeCephService.getObject(LOWCODE_BUCKET_NAME, COMPOSITE_FILE_ID))
-              .thenReturn(Optional.of(new CephObject(FILE_CONTENT, FILE_METADATA)));
-      when(datafactoryCephService.doesObjectExist(DATA_BUCKET_NAME, FILE_ID))
-              .thenReturn(true);
-
-      File file = mockFile(FILE_ID);
-
-      assertThrows(FileNotExclusiveException.class, () -> instance.store(INSTANCE_ID, file));
     }
 
     @Test

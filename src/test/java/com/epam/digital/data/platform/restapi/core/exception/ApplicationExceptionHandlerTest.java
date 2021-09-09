@@ -168,23 +168,6 @@ class ApplicationExceptionHandlerTest extends ResponseEntityExceptionHandler {
   }
 
   @Test
-  void shouldReturn400WhenFileIdNotExclusiveException() throws Exception {
-    when(mockService.create(any())).thenThrow(new FileNotExclusiveException(""));
-
-    var inputBody = new MockEntity();
-    String inputStringBody = objectMapper.writeValueAsString(inputBody);
-
-    mockMvc
-        .perform(post(BASE_URL).contentType(MediaType.APPLICATION_JSON).content(inputStringBody))
-        .andExpect(status().isBadRequest())
-        .andExpect(
-            matchAll(
-                jsonPath("$.traceId").value(is(TRACE_ID)),
-                jsonPath("$.code").value(is("FILE_ID_NOT_EXCLUSIVE")),
-                jsonPath("$.details").doesNotExist()));
-  }
-
-  @Test
   void shouldReturn422WithBodyWhenMethodArgumentNotValid() throws Exception {
     var inputBody = new MockEntity();
     inputBody.setPersonPassNumber("AA12345");

@@ -271,15 +271,6 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
   }
 
   @AuditableException
-  @ExceptionHandler(FileNotExclusiveException.class)
-  public ResponseEntity<DetailedErrorResponse<Void>> handleNonExclusiveFileException(
-          FileNotExclusiveException exception) {
-    log.error("Attempt to process file with existing id ", exception);
-    return ResponseEntity.status(BAD_REQUEST)
-            .body(newDetailedResponse(ResponseCode.FILE_ID_NOT_EXCLUSIVE));
-  }
-
-  @AuditableException
   @ExceptionHandler(KafkaConstraintViolationException.class)
   public ResponseEntity<DetailedErrorResponse<ConstraintErrorDetails>> handleKafkaConstraintException(
       KafkaConstraintViolationException exception) {

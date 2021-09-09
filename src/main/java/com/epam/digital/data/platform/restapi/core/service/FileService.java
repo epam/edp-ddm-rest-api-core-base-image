@@ -6,7 +6,6 @@ import static java.util.stream.Collectors.toList;
 import com.epam.digital.data.platform.integration.ceph.service.CephService;
 import com.epam.digital.data.platform.model.core.kafka.File;
 import com.epam.digital.data.platform.restapi.core.exception.ChecksumInconsistencyException;
-import com.epam.digital.data.platform.restapi.core.exception.FileNotExclusiveException;
 import com.epam.digital.data.platform.restapi.core.model.FileProperty;
 import java.util.Arrays;
 import java.util.Collection;
@@ -62,12 +61,7 @@ public class FileService {
         throw new ChecksumInconsistencyException("Checksum from ceph and from request do not match");
       }
 
-      if (!datafactoryFileCephService.doesObjectExist(datafactoryFileBucket, file.getId())) {
-        datafactoryFileCephService.putObject(datafactoryFileBucket, file.getId(), cephResponse);
-      } else {
-        throw new FileNotExclusiveException(
-            "Datafactory file bucket already contain file with id: " + file.getId());
-      }
+      datafactoryFileCephService.putObject(datafactoryFileBucket, file.getId(), cephResponse);
     }
 
     return true;
