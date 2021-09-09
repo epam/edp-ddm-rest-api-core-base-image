@@ -2,6 +2,7 @@ package com.epam.digital.data.platform.restapi.core.exception;
 
 import static com.epam.digital.data.platform.restapi.core.utils.Header.X_ACCESS_TOKEN;
 import static com.epam.digital.data.platform.restapi.core.utils.Header.X_DIGITAL_SIGNATURE;
+import static com.epam.digital.data.platform.restapi.core.utils.Header.X_DIGITAL_SIGNATURE_DERIVED;
 import static com.epam.digital.data.platform.restapi.core.utils.Header.X_SOURCE_APPLICATION;
 import static com.epam.digital.data.platform.restapi.core.utils.Header.X_SOURCE_BUSINESS_PROCESS;
 import static com.epam.digital.data.platform.restapi.core.utils.Header.X_SOURCE_SYSTEM;
@@ -33,12 +34,16 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest(FilterChainExceptionHandler.class)
 @ContextConfiguration(
     classes = {FilterChainExceptionHandler.class, ApplicationExceptionHandler.class})
 @Import(TestBeansConfig.class)
+@TestPropertySource(properties = {
+    "data-platform.signature.validation.enabled=true"
+})
 @SecurityConfiguration
 class ApplicationExceptionHandlerFilteredTest {
 
@@ -61,6 +66,7 @@ class ApplicationExceptionHandlerFilteredTest {
 
       MANDATORY_HEADERS.add(X_ACCESS_TOKEN.getHeaderName(), ACCESS_TOKEN);
       MANDATORY_HEADERS.add(X_DIGITAL_SIGNATURE.getHeaderName(), "SomeDS");
+      MANDATORY_HEADERS.add(X_DIGITAL_SIGNATURE_DERIVED.getHeaderName(), "SomeDSD");
       MANDATORY_HEADERS.add(X_SOURCE_SYSTEM.getHeaderName(), "SomeSS");
       MANDATORY_HEADERS.add(X_SOURCE_APPLICATION.getHeaderName(), "SomeSA");
       MANDATORY_HEADERS.add(X_SOURCE_BUSINESS_PROCESS.getHeaderName(), "SomeBP");
@@ -140,6 +146,7 @@ class ApplicationExceptionHandlerFilteredTest {
     mockMvc.perform(delete(BASE_URL + "/{id}", CONSENT_ID)
         .header(X_ACCESS_TOKEN.getHeaderName(), ACCESS_TOKEN_WITHOUT_DRFO)
         .header(X_DIGITAL_SIGNATURE.getHeaderName(), "SomeDS")
+        .header(X_DIGITAL_SIGNATURE_DERIVED.getHeaderName(), "SomeDSD")
         .header(X_SOURCE_SYSTEM.getHeaderName(), "SomeSS")
         .header(X_SOURCE_BUSINESS_PROCESS.getHeaderName(), "SomeBP")
         .header(X_SOURCE_APPLICATION.getHeaderName(), "SomeSA"))

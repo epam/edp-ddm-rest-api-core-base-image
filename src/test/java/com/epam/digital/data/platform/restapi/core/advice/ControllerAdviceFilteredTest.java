@@ -3,6 +3,7 @@ package com.epam.digital.data.platform.restapi.core.advice;
 import static com.epam.digital.data.platform.restapi.core.util.ControllerTestUtils.mockResponse;
 import static com.epam.digital.data.platform.restapi.core.utils.Header.X_ACCESS_TOKEN;
 import static com.epam.digital.data.platform.restapi.core.utils.Header.X_DIGITAL_SIGNATURE;
+import static com.epam.digital.data.platform.restapi.core.utils.Header.X_DIGITAL_SIGNATURE_DERIVED;
 import static com.epam.digital.data.platform.restapi.core.utils.Header.X_SOURCE_APPLICATION;
 import static com.epam.digital.data.platform.restapi.core.utils.Header.X_SOURCE_BUSINESS_PROCESS;
 import static com.epam.digital.data.platform.restapi.core.utils.Header.X_SOURCE_BUSINESS_PROCESS_DEFINITION_ID;
@@ -86,6 +87,7 @@ class ControllerAdviceFilteredTest {
 
       MANDATORY_HEADERS.add(X_ACCESS_TOKEN.getHeaderName(), ACCESS_TOKEN);
       MANDATORY_HEADERS.add(X_DIGITAL_SIGNATURE.getHeaderName(), "SomeDS");
+      MANDATORY_HEADERS.add(X_DIGITAL_SIGNATURE_DERIVED.getHeaderName(), "SomeDSD");
       MANDATORY_HEADERS.add(X_SOURCE_SYSTEM.getHeaderName(), "SomeSS");
       MANDATORY_HEADERS.add(X_SOURCE_APPLICATION.getHeaderName(), "SomeSA");
       MANDATORY_HEADERS.add(X_SOURCE_BUSINESS_PROCESS.getHeaderName(), "SomeBP");
@@ -114,7 +116,7 @@ class ControllerAdviceFilteredTest {
   @BeforeEach
   void beforeEach() {
     when(traceProvider.getRequestId()).thenReturn(TRACE_ID);
-    when(digitalSignatureService.saveSignature(any())).thenReturn(SIGNATURE);
+    when(digitalSignatureService.copySignature(any())).thenReturn(SIGNATURE);
 
     when(fileService.getFileProperties(any())).thenReturn(List.of(
         new FileProperty("scanCopy", new File())

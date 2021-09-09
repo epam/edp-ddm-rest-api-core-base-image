@@ -51,9 +51,9 @@ public class DigitalSignatureValidationFilter implements Filter {
 
     if (applicableHttpMethods.contains(method)) {
 
-      try {
-        fillContextSignatures(securityContext, request);
+      fillContextSignatures(securityContext, request);
 
+      if (isEnabled) {
         String data;
         if (method.equals("DELETE")) {
           data = getDataForDelete(request);
@@ -64,25 +64,19 @@ public class DigitalSignatureValidationFilter implements Filter {
 
         digitalSignatureService.checkSignature(data, securityContext);
         saveSignatures(securityContext);
-
-      } catch (IllegalArgumentException e) {
-        if (isEnabled) {
-          throw e;
-        }
       }
     }
+
     request.setAttribute(SecurityContext.class.getSimpleName(), securityContext);
     filterChain.doFilter(request, servletResponse);
   }
 
   private SecurityContext saveSignatures(SecurityContext sc) {
-    String signature = digitalSignatureService.saveSignature(sc.getDigitalSignature());
+    String signature = digitalSignatureService.copySignature(sc.getDigitalSignature());
     sc.setDigitalSignatureChecksum(DigestUtils.sha256Hex(signature));
 
-    if(!isEmpty(sc.getDigitalSignatureDerived())) {
-      String signatureDerived = digitalSignatureService.saveSignature(sc.getDigitalSignatureDerived());
-      sc.setDigitalSignatureDerivedChecksum(DigestUtils.sha256Hex(signatureDerived));
-    }
+    String signatureDerived = digitalSignatureService.copySignature(sc.getDigitalSignatureDerived());
+    sc.setDigitalSignatureDerivedChecksum(DigestUtils.sha256Hex(signatureDerived));
 
     return sc;
   }
@@ -96,15 +90,16 @@ public class DigitalSignatureValidationFilter implements Filter {
 
   private SecurityContext fillContextSignatures(SecurityContext securityContext, HttpServletRequest request) {
     String xDigitalSignature = request.getHeader(X_DIGITAL_SIGNATURE.getHeaderName());
-    String xDigitalSignatureDerived = request
-        .getHeader(X_DIGITAL_SIGNATURE_DERIVED.getHeaderName());
-
-    securityContext.setDigitalSignature(xDigitalSignature);
-    securityContext.setDigitalSignatureDerived(xDigitalSignatureDerived);
-
-    if (isEmpty(xDigitalSignature)) {
+    if (isEmpty(xDigitalSignature) && isEnabled) {
       throw new IllegalArgumentException("Missing required Header X-Digital-Signature");
     }
+    securityContext.setDigitalSignature(xDigitalSignature);
+
+    String xDigitalSignatureDerived = request.getHeader(X_DIGITAL_SIGNATURE_DERIVED.getHeaderName());
+    if (isEmpty(xDigitalSignatureDerived) && isEnabled) {
+      throw new IllegalArgumentException("Missing required Header X-Digital-Signature-Derived");
+    }
+    securityContext.setDigitalSignatureDerived(xDigitalSignatureDerived);
 
     return securityContext;
   }

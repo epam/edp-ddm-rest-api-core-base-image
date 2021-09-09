@@ -2,6 +2,7 @@ package com.epam.digital.data.platform.restapi.core.filter;
 
 import static com.epam.digital.data.platform.restapi.core.utils.Header.X_ACCESS_TOKEN;
 import static com.epam.digital.data.platform.restapi.core.utils.Header.X_DIGITAL_SIGNATURE;
+import static com.epam.digital.data.platform.restapi.core.utils.Header.X_DIGITAL_SIGNATURE_DERIVED;
 import static com.epam.digital.data.platform.restapi.core.utils.Header.X_SOURCE_APPLICATION;
 import static com.epam.digital.data.platform.restapi.core.utils.Header.X_SOURCE_BUSINESS_PROCESS;
 import static com.epam.digital.data.platform.restapi.core.utils.Header.X_SOURCE_SYSTEM;
@@ -37,6 +38,7 @@ public class HeaderValidationFilter extends AbstractFilter {
 
   private static final List<Header> MODIFYING_MANDATORY_HEADERS = List.of(
       X_DIGITAL_SIGNATURE,
+      X_DIGITAL_SIGNATURE_DERIVED,
       X_SOURCE_SYSTEM,
       X_SOURCE_APPLICATION,
       X_SOURCE_BUSINESS_PROCESS

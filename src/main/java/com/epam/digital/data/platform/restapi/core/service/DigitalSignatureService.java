@@ -1,12 +1,9 @@
 package com.epam.digital.data.platform.restapi.core.service;
 
-import static org.apache.commons.lang3.StringUtils.isNotEmpty;
-
 import com.epam.digital.data.platform.dso.api.dto.SignRequestDto;
 import com.epam.digital.data.platform.dso.api.dto.VerifyRequestDto;
 import com.epam.digital.data.platform.dso.api.dto.VerifyResponseDto;
 import com.epam.digital.data.platform.dso.client.DigitalSealRestClient;
-import com.epam.digital.data.platform.dso.client.DigitalSignatureRestClient;
 import com.epam.digital.data.platform.dso.client.exception.BadRequestException;
 import com.epam.digital.data.platform.dso.client.exception.InternalServerErrorException;
 import com.epam.digital.data.platform.integration.ceph.service.CephService;
@@ -25,7 +22,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 
 @Component
 public class DigitalSignatureService {
@@ -38,9 +34,7 @@ public class DigitalSignatureService {
   private final CephService datafactoryCephService;
   private final String lowcodeBucket;
   private final String datafactoryBucket;
-  private final DigitalSignatureRestClient digitalSignatureRestClient;
   private final DigitalSealRestClient digitalSealRestClient;
-  private final boolean isEnabled;
   private final ObjectMapper objectMapper;
 
   public DigitalSignatureService(
@@ -48,42 +42,56 @@ public class DigitalSignatureService {
       CephService datafactoryCephService,
       @Value("${ceph.bucket}") String lowcodeBucket,
       @Value("${datafactoryceph.bucket}") String datafactoryBucket,
-      DigitalSignatureRestClient digitalSignatureRestClient,
       DigitalSealRestClient digitalSealRestClient,
-      @Value("${data-platform.signature.validation.enabled}") boolean isEnabled,
       ObjectMapper objectMapper) {
     this.lowcodeCephService = lowcodeCephService;
     this.datafactoryCephService = datafactoryCephService;
     this.lowcodeBucket = lowcodeBucket;
     this.datafactoryBucket = datafactoryBucket;
-    this.digitalSignatureRestClient = digitalSignatureRestClient;
     this.digitalSealRestClient = digitalSealRestClient;
-    this.isEnabled = isEnabled;
     this.objectMapper = objectMapper;
   }
 
   public void checkSignature(String data, SecurityContext sc) throws JsonProcessingException {
-    if (!isEnabled) {
-      return;
-    }
-
-    String key = isNotEmpty(sc.getDigitalSignatureDerived())
-        ? sc.getDigitalSignatureDerived()
-        : sc.getDigitalSignature();
-
-    String signature = getSignature(key);
-    verify(signature, data, StringUtils.isEmpty(sc.getDigitalSignatureDerived()));
+    String signature = getSignature(sc);
+    verify(signature, data);
   }
 
-  private String getSignature(String key) throws JsonProcessingException {
+  private String getSignature(SecurityContext sc) throws JsonProcessingException {
     log.info("Reading Signature from Ceph");
     String responseFromCeph =
         lowcodeCephService
-            .getContent(lowcodeBucket, key)
+            .getContent(lowcodeBucket, sc.getDigitalSignatureDerived())
             .orElseThrow(
                 () -> new DigitalSignatureNotFoundException("Signature does not exist in ceph bucket"));
     Map<String, Object> cephResponse = objectMapper.readValue(responseFromCeph, Map.class);
     return (String) cephResponse.get(SIGNATURE);
+  }
+
+  private void verify(String signature, String data) {
+    try {
+      log.info("Verifying {}", Header.X_DIGITAL_SIGNATURE_DERIVED.getHeaderName());
+      VerifyResponseDto responseDto = digitalSealRestClient.verify(new VerifyRequestDto(signature, data));
+
+      if (!responseDto.isValid) {
+        throw new InvalidSignatureException(responseDto.error.getMessage());
+      }
+    } catch (BadRequestException e) {
+      throw new KepServiceBadRequestException(e.getMessage());
+    } catch (InternalServerErrorException e) {
+      throw new KepServiceInternalServerErrorException(e.getMessage());
+    }
+  }
+
+  public String copySignature(String key) {
+    log.info("Copy Signature from lowcode to data ceph bucket");
+    String value =
+        lowcodeCephService
+            .getContent(lowcodeBucket, key)
+            .orElseThrow(
+                () -> new DigitalSignatureNotFoundException("Signature does not exist in ceph bucket"));
+    datafactoryCephService.putContent(datafactoryBucket, key, value);
+    return value;
   }
 
   public <I> String sign(I input) {
@@ -106,41 +114,5 @@ public class DigitalSignatureService {
 
     datafactoryCephService.putContent(datafactoryBucket, key, value);
     return key;
-  }
-
-  public String saveSignature(String key) {
-    if (!isEnabled) {
-      return "";
-    }
-
-    log.info("Copy Signature from lowcode to data ceph bucket");
-    String value =
-        lowcodeCephService
-            .getContent(lowcodeBucket, key)
-            .orElseThrow(
-                () -> new DigitalSignatureNotFoundException("Signature does not exist in ceph bucket"));
-    datafactoryCephService.putContent(datafactoryBucket, key, value);
-    return value;
-  }
-
-  private void verify(String signature, String data, boolean emptyDerivedHeader) {
-    try {
-      VerifyResponseDto responseDto;
-      if (emptyDerivedHeader) {
-        log.info("Verifying {}", Header.X_DIGITAL_SIGNATURE.getHeaderName());
-        responseDto = digitalSignatureRestClient.verify(new VerifyRequestDto(signature, data));
-      } else {
-        log.info("Verifying {}", Header.X_DIGITAL_SIGNATURE_DERIVED.getHeaderName());
-        responseDto = digitalSealRestClient.verify(new VerifyRequestDto(signature, data));
-      }
-
-      if (!responseDto.isValid) {
-        throw new InvalidSignatureException(responseDto.error.getMessage());
-      }
-    } catch (BadRequestException e) {
-      throw new KepServiceBadRequestException(e.getMessage());
-    } catch (InternalServerErrorException e) {
-      throw new KepServiceInternalServerErrorException(e.getMessage());
-    }
   }
 }
