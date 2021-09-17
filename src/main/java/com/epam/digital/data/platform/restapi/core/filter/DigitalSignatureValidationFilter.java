@@ -11,12 +11,10 @@ import java.io.IOException;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.RegExUtils;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,7 +24,7 @@ import org.springframework.web.util.UrlPathHelper;
 
 @Component
 @Order(FiltersOrder.digitalSignatureValidationFilter)
-public class DigitalSignatureValidationFilter implements Filter {
+public class DigitalSignatureValidationFilter extends AbstractFilter {
 
   private static final Set<String> applicableHttpMethods = Set.of("PUT", "POST", "DELETE", "PATCH");
 
@@ -40,10 +38,9 @@ public class DigitalSignatureValidationFilter implements Filter {
   }
 
   @Override
-  public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse,
+  public void doFilterInternal(HttpServletRequest request, HttpServletResponse servletResponse,
       FilterChain filterChain) throws IOException, ServletException {
 
-    HttpServletRequest request = (HttpServletRequest) servletRequest;
     String method = request.getMethod().toUpperCase();
 
     SecurityContext securityContext = new SecurityContext();
