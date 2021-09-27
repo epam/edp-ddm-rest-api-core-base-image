@@ -27,6 +27,7 @@
 		<java.version>11</java.version>
 		<spring.boot.version>2.3.5.RELEASE</spring.boot.version>
 		<sonar.coverage.exclusions>
+			**/config/**/*,
 			**/ControllerAuditAspect*
 		</sonar.coverage.exclusions>
 	</properties>
