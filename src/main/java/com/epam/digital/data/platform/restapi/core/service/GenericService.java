@@ -102,12 +102,15 @@ public abstract class GenericService<I, O> {
     var header = new RecordHeader(KafkaHeaders.REPLY_TOPIC, topics.getReplay().getBytes());
     request.headers().add(header);
 
-    log.info("Sending to Kafka...");
+    log.info("Sending to Kafka, topic {}", request.topic());
     var replyFuture = replyingKafkaTemplate.sendAndReceive(request);
 
     try {
       var response = replyFuture.get(30L, TimeUnit.SECONDS);
-      log.info("Successfully got response from Kafka");
+      log.info(
+          "Successfully got response from Kafka, topic: {}, key: {}",
+          response.topic(),
+          response.key());
       return response;
     } catch (Exception e) {
       throw new NoKafkaResponseException("No response for request: " + input, e);

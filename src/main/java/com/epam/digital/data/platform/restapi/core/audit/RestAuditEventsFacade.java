@@ -54,7 +54,7 @@ public class RestAuditEventsFacade extends AbstractAuditFacade {
       setUserInfoToEvent(event, traceProvider.getAccessToken());
     }
 
-    log.info("Sending Exception to Audit");
+    log.debug("Sending Exception to Audit");
     auditService.sendAudit(event.build());
   }
 
@@ -75,7 +75,7 @@ public class RestAuditEventsFacade extends AbstractAuditFacade {
     event.setContext(context);
     setUserInfoToEvent(event, jwt);
 
-    log.info("Sending {} {} event to Audit", step, action);
+    log.debug("Sending {} {} event to Audit", step, action);
     auditService.sendAudit(event.build());
   }
 
