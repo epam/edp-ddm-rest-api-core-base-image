@@ -11,7 +11,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 @Component
-@Order(FiltersOrder.filterChainExceptionHandler)
+@Order(FiltersOrder.FILTER_CHAIN_EXCEPTION_HANDLER)
 public class FilterChainExceptionHandler extends OncePerRequestFilter {
 
   private final HandlerExceptionResolver resolver;

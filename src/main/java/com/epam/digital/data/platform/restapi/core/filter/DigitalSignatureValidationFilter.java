@@ -23,7 +23,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.util.UrlPathHelper;
 
 @Component
-@Order(FiltersOrder.digitalSignatureValidationFilter)
+@Order(FiltersOrder.DIGITAL_SIGNATURE_VALIDATION_FILTER)
 public class DigitalSignatureValidationFilter extends AbstractFilter {
 
   private static final Set<String> applicableHttpMethods = Set.of("PUT", "POST", "DELETE", "PATCH");

@@ -1,10 +1,10 @@
 package com.epam.digital.data.platform.restapi.core.config;
 
+import com.epam.digital.data.platform.restapi.core.filter.FiltersOrder;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.Ordered;
 import org.zalando.logbook.Logbook;
 import org.zalando.logbook.autoconfigure.LogbookProperties;
 import org.zalando.logbook.servlet.LogbookFilter;
@@ -33,7 +33,7 @@ public class LogbookConfig {
     registration.setName("logbookFilter");
     registration.setDispatcherTypes(
             DispatcherType.REQUEST, DispatcherType.ASYNC);
-    registration.setOrder(Ordered.HIGHEST_PRECEDENCE);
+    registration.setOrder(FiltersOrder.LOGBOOK_FILTER);
     return registration;
   }
 }

@@ -27,7 +27,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 @Component
-@Order(FiltersOrder.headerValidationFilter)
+@Order(FiltersOrder.HEADER_VALIDATION_FILTER)
 public class HeaderValidationFilter extends AbstractFilter {
 
   private static final List<String> MODIFYING_HTTP_METHODS = List.of(
