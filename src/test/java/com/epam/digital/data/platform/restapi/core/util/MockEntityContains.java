@@ -1,13 +1,13 @@
-package com.epam.digital.data.platform.restapi.core.dto;
+package com.epam.digital.data.platform.restapi.core.util;
 
-import com.epam.digital.data.platform.model.core.kafka.File;
 import com.fasterxml.jackson.annotation.JsonFormat;
 
 import javax.validation.constraints.Pattern;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-public class MockEntity {
+public class MockEntityContains {
+
   private UUID consentId;
 
   @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
@@ -18,12 +18,8 @@ public class MockEntity {
   @Pattern(regexp = "^[АВЕІКМНОРСТХ]{2}[0-9]{6}$")
   private String personPassNumber;
 
-  private File passportScanCopy;
-
-  public MockEntity() {}
-
   public UUID getConsentId() {
-    return consentId;
+    return this.consentId;
   }
 
   public void setConsentId(UUID consentId) {
@@ -31,7 +27,7 @@ public class MockEntity {
   }
 
   public LocalDateTime getConsentDate() {
-    return consentDate;
+    return this.consentDate;
   }
 
   public void setConsentDate(LocalDateTime consentDate) {
@@ -39,7 +35,7 @@ public class MockEntity {
   }
 
   public String getPersonFullName() {
-    return personFullName;
+    return this.personFullName;
   }
 
   public void setPersonFullName(String personFullName) {
@@ -47,18 +43,10 @@ public class MockEntity {
   }
 
   public String getPersonPassNumber() {
-    return personPassNumber;
+    return this.personPassNumber;
   }
 
   public void setPersonPassNumber(String personPassNumber) {
     this.personPassNumber = personPassNumber;
-  }
-
-  public File getPassportScanCopy() {
-    return passportScanCopy;
-  }
-
-  public void setPassportScanCopy(File passportScanCopy) {
-    this.passportScanCopy = passportScanCopy;
   }
 }

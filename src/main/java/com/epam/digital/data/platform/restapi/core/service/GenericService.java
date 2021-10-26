@@ -8,7 +8,7 @@ import com.epam.digital.data.platform.model.core.kafka.Response;
 import com.epam.digital.data.platform.model.core.kafka.ResponseHeaders;
 import com.epam.digital.data.platform.restapi.core.exception.KafkaCephResponseNotFoundException;
 import com.epam.digital.data.platform.restapi.core.exception.NoKafkaResponseException;
-import com.epam.digital.data.platform.starter.restapi.config.properties.KafkaProperties.Handler;
+import com.epam.digital.data.platform.restapi.core.config.properties.KafkaProperties.Handler;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
