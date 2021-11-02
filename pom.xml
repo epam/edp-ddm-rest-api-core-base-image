@@ -123,11 +123,6 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
-		<dependency>
-			<groupId>org.zalando</groupId>
-			<artifactId>logbook-spring-boot-starter</artifactId>
-			<version>2.12.0</version>
-		</dependency>
 
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
