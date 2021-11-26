@@ -17,3 +17,6 @@ This library contains **all** the business logic of the Rest API microservice wh
 
 # Deployment
 The library is delivered as a docker image with all dependencies inside.
+
+### License
+rest-api-core is Open Source software released under the Apache 2.0 license.
