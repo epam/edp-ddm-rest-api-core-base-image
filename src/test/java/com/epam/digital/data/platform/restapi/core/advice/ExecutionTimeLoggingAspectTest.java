@@ -24,11 +24,18 @@ import com.epam.digital.data.platform.dso.api.dto.SignResponseDto;
 import com.epam.digital.data.platform.dso.api.dto.VerifyRequestDto;
 import com.epam.digital.data.platform.dso.api.dto.VerifyResponseDto;
 import com.epam.digital.data.platform.dso.client.DigitalSealRestClient;
-import com.epam.digital.data.platform.integration.ceph.dto.CephObject;
+import com.epam.digital.data.platform.integration.ceph.model.CephObject;
+import com.epam.digital.data.platform.integration.ceph.model.CephObjectMetadata;
 import com.epam.digital.data.platform.integration.ceph.service.CephService;
 import com.epam.digital.data.platform.restapi.core.annotation.DatabaseOperation;
 import com.epam.digital.data.platform.restapi.core.annotation.DatabaseOperation.Operation;
+
+import java.io.InputStream;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.aop.AopAutoConfiguration;
@@ -59,7 +66,7 @@ class ExecutionTimeLoggingAspectTest {
 
   @Test
   void expectCephServiceAspectCalled() throws Throwable {
-    mockCephService.deleteObject("", "");
+    mockCephService.exist("", "");
     verify(executionTimeLoggingAspect).logCephCommunicationTime(any());
   }
 
@@ -81,27 +88,45 @@ class ExecutionTimeLoggingAspectTest {
   static class MockCephService implements CephService {
 
     @Override
-    public Optional<String> getContent(String s, String s1) {
+    public Optional<CephObject> get(String s, String s1) {
       return Optional.empty();
     }
 
     @Override
-    public Optional<CephObject> getObject(String s, String s1) {
+    public Optional<String> getAsString(String s, String s1) {
       return Optional.empty();
     }
 
     @Override
-    public void putContent(String s, String s1, String s2) {}
+    public void put(String s, String s1, String s2) {}
 
     @Override
-    public void putObject(String s, String s1, CephObject cephObject) {}
+    public CephObjectMetadata put(
+        String s, String s1, String s2, Map<String, String> map, InputStream inputStream) {
+      return null;
+    }
 
     @Override
-    public void deleteObject(String s, String s1) {}
+    public void delete(String s, Set<String> set) {}
 
     @Override
-    public boolean doesObjectExist(String s, String s1) {
+    public Boolean exist(String s, Set<String> set) {
       return false;
+    }
+
+    @Override
+    public Boolean exist(String s, String s1) {
+      return false;
+    }
+
+    @Override
+    public Set<String> getKeys(String s, String s1) {
+      return null;
+    }
+
+    @Override
+    public List<CephObjectMetadata> getMetadata(String s, Set<String> set) {
+      return null;
     }
   }
 

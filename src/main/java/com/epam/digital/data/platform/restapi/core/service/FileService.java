@@ -19,15 +19,20 @@ package com.epam.digital.data.platform.restapi.core.service;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 
+import com.epam.digital.data.platform.integration.ceph.model.CephObject;
 import com.epam.digital.data.platform.integration.ceph.service.CephService;
 import com.epam.digital.data.platform.model.core.kafka.File;
 import com.epam.digital.data.platform.restapi.core.exception.ChecksumInconsistencyException;
 import com.epam.digital.data.platform.restapi.core.model.FileProperty;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,17 +72,23 @@ public class FileService {
 
       var lowcodeId = createCompositeObjectId(instanceId, file.getId());
 
-      var cephResponseOpt = lowcodeFileCephService.getObject(lowcodeFileBucket, lowcodeId);
+      var cephResponseOpt = lowcodeFileCephService.get(lowcodeFileBucket, lowcodeId);
       if (cephResponseOpt.isEmpty()) {
         return false;
       }
       var cephResponse = cephResponseOpt.get();
-
-      if (!isFileChecksumEqualsToCephCalculated(cephResponse.getContent(), file)) {
-        throw new ChecksumInconsistencyException("Checksum from ceph and from request do not match");
+      var content = getCephContent(cephResponse);
+      if (!isFileChecksumEqualsToCephCalculated(content, file)) {
+        throw new ChecksumInconsistencyException(
+            "Checksum from ceph and from request do not match");
       }
 
-      datafactoryFileCephService.putObject(datafactoryFileBucket, file.getId(), cephResponse);
+      datafactoryFileCephService.put(
+          datafactoryFileBucket,
+          file.getId(),
+          cephResponse.getMetadata().getContentType(),
+          cephResponse.getMetadata().getUserMetadata(),
+          new ByteArrayInputStream(content));
     }
 
     return true;
@@ -97,20 +108,21 @@ public class FileService {
 
   private List<FileProperty> getFileProperties(Collection<Object> objs) {
     return objs.stream()
-        .flatMap(o ->
-            Arrays.stream(o.getClass().getDeclaredFields())
-                .filter(f -> File.class.equals(f.getType()))
-                .peek(ReflectionUtils::makeAccessible)
-                .map(f -> {
-                  var value = (File) ReflectionUtils.getField(f, o);
-                  if (value != null) {
-                    return new FileProperty(f.getName(), value);
-                  } else {
-                    return null;
-                  }
-                })
-                .filter(Objects::nonNull)
-        )
+        .flatMap(
+            o ->
+                Arrays.stream(o.getClass().getDeclaredFields())
+                    .filter(f -> File.class.equals(f.getType()))
+                    .peek(ReflectionUtils::makeAccessible)
+                    .map(
+                        f -> {
+                          var value = (File) ReflectionUtils.getField(f, o);
+                          if (value != null) {
+                            return new FileProperty(f.getName(), value);
+                          } else {
+                            return null;
+                          }
+                        })
+                    .filter(Objects::nonNull))
         .collect(toList());
   }
 
@@ -118,27 +130,39 @@ public class FileService {
     if (isFileProcessingEnabled) {
       log.info("Storing file from data to lowcode ceph bucket");
 
-      var cephResponseOpt =
-          datafactoryFileCephService.getObject(datafactoryFileBucket, file.getId());
+      var cephResponseOpt = datafactoryFileCephService.get(datafactoryFileBucket, file.getId());
       if (cephResponseOpt.isEmpty()) {
         return false;
       }
       var cephResponse = cephResponseOpt.get();
-
-      if (!isFileChecksumEqualsToCephCalculated(cephResponse.getContent(), file)) {
+      var content = getCephContent(cephResponse);
+      if (!isFileChecksumEqualsToCephCalculated(content, file)) {
         throw new ChecksumInconsistencyException(
             "Checksum from ceph and from retrieved file object do not match");
       }
 
       var lowcodeId = createCompositeObjectId(instanceId, file.getId());
-      lowcodeFileCephService.putObject(lowcodeFileBucket, lowcodeId, cephResponse);
+      lowcodeFileCephService.put(
+          lowcodeFileBucket,
+          lowcodeId,
+          cephResponse.getMetadata().getContentType(),
+          cephResponse.getMetadata().getUserMetadata(),
+          new ByteArrayInputStream(content));
     }
 
     return true;
   }
 
   private String createCompositeObjectId(String instanceId, String objectId) {
-    return "process/" + instanceId +"/" + objectId;
+    return "process/" + instanceId + "/" + objectId;
+  }
+
+  private byte[] getCephContent(CephObject cephObject) {
+    try {
+      return IOUtils.toByteArray(cephObject.getContent());
+    } catch (IOException e) {
+      throw new IllegalArgumentException("Couldn't read returned ceph content from stream", e);
+    }
   }
 
   private boolean isFileChecksumEqualsToCephCalculated(byte[] cephContent, File file) {

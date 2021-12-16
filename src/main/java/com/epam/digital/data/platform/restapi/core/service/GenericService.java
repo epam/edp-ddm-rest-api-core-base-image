@@ -29,6 +29,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.RuntimeJsonMappingException;
+
+import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -136,7 +138,7 @@ public abstract class GenericService<I, O> {
   private Response<O> getResponseFromStorage(String key) {
     var responseContent =
         datafactoryResponseCephService
-            .getContent(datafactoryResponseBucket, key)
+            .getAsString(datafactoryResponseBucket, key)
             .orElseThrow(
                 () ->
                     new KafkaCephResponseNotFoundException(
@@ -157,7 +159,7 @@ public abstract class GenericService<I, O> {
   private void deleteProcessedContentFromStorage(String key) {
     try {
       log.info("Deleting large payload from Ceph");
-      datafactoryResponseCephService.deleteObject(datafactoryResponseBucket, key);
+      datafactoryResponseCephService.delete(datafactoryResponseBucket, Collections.singleton(key));
     } catch (Exception e) {
       log.error("Exception while deleting processed message from ceph", e);
     }

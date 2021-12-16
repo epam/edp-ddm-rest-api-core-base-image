@@ -19,19 +19,26 @@ package com.epam.digital.data.platform.restapi.core.service;
 import static com.epam.digital.data.platform.restapi.core.dto.MockEntityFile.FILE_FIELD_NUM;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 
 import com.amazonaws.services.s3.model.AmazonS3Exception;
-import com.epam.digital.data.platform.integration.ceph.dto.CephObject;
 import com.epam.digital.data.platform.integration.ceph.exception.CephCommunicationException;
+import com.epam.digital.data.platform.integration.ceph.model.CephObject;
+import com.epam.digital.data.platform.integration.ceph.model.CephObjectMetadata;
 import com.epam.digital.data.platform.integration.ceph.service.CephService;
 import com.epam.digital.data.platform.model.core.kafka.File;
 import com.epam.digital.data.platform.restapi.core.dto.MockEntityFile;
 import com.epam.digital.data.platform.restapi.core.exception.ChecksumInconsistencyException;
 import com.epam.digital.data.platform.restapi.core.utils.ResponseCode;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -39,6 +46,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -55,7 +63,8 @@ class FileServiceTest {
   static final byte[] FILE_CONTENT = "content".getBytes();
   static final String HASH_OF_CONTENT_STRING =
       "ed7002b439e9ac845f22357d822bac1444730fbdb6016d3ec9432297b9ec9f73";
-  static final Map<String, String> FILE_METADATA = Map.of("type", "jpg");
+  static final Map<String, String> FILE_METADATA = Map.of("owner", "name");
+  static final String FILE_CONTENT_TYPE = "image/jpeg";
 
   @Mock
   CephService lowcodeCephService;
@@ -80,6 +89,17 @@ class FileServiceTest {
     file.setId(compositeFileId);
     file.setChecksum(HASH_OF_CONTENT_STRING);
     return file;
+  }
+
+  private CephObject createMockCephResponse(InputStream content) {
+    return CephObject.builder()
+        .content(content)
+        .metadata(
+            CephObjectMetadata.builder()
+                .userMetadata(FILE_METADATA)
+                .contentType(FILE_CONTENT_TYPE)
+                .build())
+        .build();
   }
 
   @Nested
@@ -120,22 +140,34 @@ class FileServiceTest {
   class Store {
 
     @Test
-    void copyContentFromLowcodeBucketToDatafactoryBucket() {
-      when(lowcodeCephService.getObject(LOWCODE_BUCKET_NAME, COMPOSITE_FILE_ID))
-          .thenReturn(Optional.of(new CephObject(FILE_CONTENT, FILE_METADATA)));
+    void copyContentFromLowcodeBucketToDatafactoryBucket() throws IOException {
+      InputStream fileContent = new ByteArrayInputStream(FILE_CONTENT);
+      CephObject lowcodeCephResponse = createMockCephResponse(fileContent);
+      when(lowcodeCephService.get(LOWCODE_BUCKET_NAME, COMPOSITE_FILE_ID))
+          .thenReturn(Optional.of(lowcodeCephResponse));
 
       File file = mockFile(FILE_ID);
 
       instance.store(INSTANCE_ID, file);
 
+      var datafactoryContentCaptor = ArgumentCaptor.forClass(InputStream.class);
       verify(datafactoryCephService)
-          .putObject(DATA_BUCKET_NAME, FILE_ID, new CephObject(FILE_CONTENT, FILE_METADATA));
+          .put(
+              eq(DATA_BUCKET_NAME),
+              eq(FILE_ID),
+              eq(FILE_CONTENT_TYPE),
+              eq(FILE_METADATA),
+              datafactoryContentCaptor.capture());
+      assertThat(datafactoryContentCaptor.getValue().readAllBytes())
+          .isEqualTo(FILE_CONTENT);
     }
 
     @Test
     void expectTrueWhenSuccess() {
-      when(lowcodeCephService.getObject(LOWCODE_BUCKET_NAME, COMPOSITE_FILE_ID))
-          .thenReturn(Optional.of(new CephObject(FILE_CONTENT, FILE_METADATA)));
+      InputStream fileContent = new ByteArrayInputStream(FILE_CONTENT);
+      CephObject lowcodeCephResponse = createMockCephResponse(fileContent);
+      when(lowcodeCephService.get(LOWCODE_BUCKET_NAME, COMPOSITE_FILE_ID))
+          .thenReturn(Optional.of(lowcodeCephResponse));
 
       File file = mockFile(FILE_ID);
 
@@ -146,7 +178,7 @@ class FileServiceTest {
 
     @Test
     void expectFalseIfFileNotExistsInCeph() {
-      when(lowcodeCephService.getObject(LOWCODE_BUCKET_NAME, COMPOSITE_FILE_ID))
+      when(lowcodeCephService.get(LOWCODE_BUCKET_NAME, COMPOSITE_FILE_ID))
           .thenReturn(Optional.empty());
 
       File file = mockFile(FILE_ID);
@@ -161,7 +193,7 @@ class FileServiceTest {
       var amazonS3Exception = new AmazonS3Exception("");
       amazonS3Exception.setErrorCode(ResponseCode.CLIENT_ERROR);
       amazonS3Exception.setStatusCode(INTERNAL_SERVER_ERROR.value());
-      when(lowcodeCephService.getObject(LOWCODE_BUCKET_NAME, COMPOSITE_FILE_ID))
+      when(lowcodeCephService.get(LOWCODE_BUCKET_NAME, COMPOSITE_FILE_ID))
           .thenThrow(new CephCommunicationException("", amazonS3Exception));
 
       File file = mockFile(FILE_ID);
@@ -171,8 +203,11 @@ class FileServiceTest {
 
     @Test
     void expectExceptionIfStoredFileWasChanged() {
-      when(lowcodeCephService.getObject(LOWCODE_BUCKET_NAME, COMPOSITE_FILE_ID))
-          .thenReturn(Optional.of(new CephObject("wrong content".getBytes(), FILE_METADATA)));
+      InputStream fileContent = new ByteArrayInputStream("wrong content".getBytes());
+      var cephResponseWithCorruptedContent =
+          Optional.of(createMockCephResponse(fileContent));
+      when(lowcodeCephService.get(LOWCODE_BUCKET_NAME, COMPOSITE_FILE_ID))
+          .thenReturn(cephResponseWithCorruptedContent);
 
       var file = mockFile(FILE_ID);
 
@@ -201,22 +236,32 @@ class FileServiceTest {
   class Retrieve {
 
     @Test
-    void copyContentFromDatafactoryBucketToLowcodeBucket() {
-      when(datafactoryCephService.getObject(DATA_BUCKET_NAME, FILE_ID))
-          .thenReturn(Optional.of(new CephObject(FILE_CONTENT, FILE_METADATA)));
+    void copyContentFromDatafactoryBucketToLowcodeBucket() throws IOException {
+      InputStream fileContent = new ByteArrayInputStream(FILE_CONTENT);
+      when(datafactoryCephService.get(DATA_BUCKET_NAME, FILE_ID))
+          .thenReturn(Optional.of(createMockCephResponse(fileContent)));
 
       File file = mockFile(FILE_ID);
 
       instance.retrieve(INSTANCE_ID, file);
 
+      var lowcodeContentCaptor = ArgumentCaptor.forClass(InputStream.class);
       verify(lowcodeCephService)
-          .putObject(LOWCODE_BUCKET_NAME, COMPOSITE_FILE_ID, new CephObject(FILE_CONTENT, FILE_METADATA));
+          .put(
+              eq(LOWCODE_BUCKET_NAME),
+              eq(COMPOSITE_FILE_ID),
+              eq(FILE_CONTENT_TYPE),
+              eq(FILE_METADATA),
+              lowcodeContentCaptor.capture());
+      assertThat(lowcodeContentCaptor.getValue().readAllBytes())
+              .isEqualTo(FILE_CONTENT);
     }
 
     @Test
     void expectTrueWhenSuccess() {
-      when(datafactoryCephService.getObject(DATA_BUCKET_NAME, FILE_ID))
-          .thenReturn(Optional.of(new CephObject(FILE_CONTENT, FILE_METADATA)));
+      InputStream fileContent = new ByteArrayInputStream(FILE_CONTENT);
+      when(datafactoryCephService.get(DATA_BUCKET_NAME, FILE_ID))
+          .thenReturn(Optional.of(createMockCephResponse(fileContent)));
 
       File file = mockFile(FILE_ID);
 
@@ -227,7 +272,7 @@ class FileServiceTest {
 
     @Test
     void expectFalseIfFileNotExistsInCeph() {
-      when(datafactoryCephService.getObject(DATA_BUCKET_NAME, FILE_ID))
+      when(datafactoryCephService.get(DATA_BUCKET_NAME, FILE_ID))
           .thenReturn(Optional.empty());
 
       File file = mockFile(FILE_ID);
@@ -242,7 +287,7 @@ class FileServiceTest {
       var amazonS3Exception = new AmazonS3Exception("");
       amazonS3Exception.setErrorCode(ResponseCode.CLIENT_ERROR);
       amazonS3Exception.setStatusCode(INTERNAL_SERVER_ERROR.value());
-      when(datafactoryCephService.getObject(DATA_BUCKET_NAME, FILE_ID))
+      when(datafactoryCephService.get(DATA_BUCKET_NAME, FILE_ID))
           .thenThrow(new CephCommunicationException("", amazonS3Exception));
 
       File file = mockFile(FILE_ID);
@@ -252,12 +297,16 @@ class FileServiceTest {
 
     @Test
     void expectExceptionIfRetrievedFileWasChanged() {
-      when(datafactoryCephService.getObject(DATA_BUCKET_NAME, FILE_ID))
-          .thenReturn(Optional.of(new CephObject("wrong content".getBytes(), FILE_METADATA)));
+      InputStream fileContent = new ByteArrayInputStream("wrong content".getBytes());
+      var cephResponseWithCorruptedContent =
+          Optional.of(createMockCephResponse(fileContent));
+      when(datafactoryCephService.get(DATA_BUCKET_NAME, FILE_ID))
+          .thenReturn(cephResponseWithCorruptedContent);
 
       var file = mockFile(FILE_ID);
 
-      assertThrows(ChecksumInconsistencyException.class, () -> instance.retrieve(INSTANCE_ID, file));
+      assertThrows(
+          ChecksumInconsistencyException.class, () -> instance.retrieve(INSTANCE_ID, file));
     }
 
     @Test

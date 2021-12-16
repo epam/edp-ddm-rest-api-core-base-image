@@ -40,6 +40,8 @@ import com.epam.digital.data.platform.restapi.core.config.properties.KafkaProper
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.RuntimeJsonMappingException;
+
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -165,18 +167,18 @@ class GenericServiceTest {
       when(replyingKafkaTemplate.sendAndReceive(any())).thenReturn(replyFuture);
       String cephContent =
           "{\"payload\":{\"personFullName\":\"" + expected + "\"}, \"status\":\"SUCCESS\"}";
-      when(cephService.getContent(BUCKET_NAME, CEPH_RESPONSE_KEY))
+      when(cephService.getAsString(BUCKET_NAME, CEPH_RESPONSE_KEY))
           .thenReturn(Optional.of(cephContent));
 
       // when
       Response<MockEntity> response = instance.request(new Request<>(ID, null, null));
 
       // then
-      verify(cephService).getContent(BUCKET_NAME, CEPH_RESPONSE_KEY);
+      verify(cephService).getAsString(BUCKET_NAME, CEPH_RESPONSE_KEY);
       assertThat(response.getPayload().getPersonFullName()).isEqualTo(expected);
       assertThat(response.getStatus()).isEqualTo(Status.SUCCESS);
 
-      verify(cephService).deleteObject(BUCKET_NAME, CEPH_RESPONSE_KEY);
+      verify(cephService).delete(BUCKET_NAME, Collections.singleton(CEPH_RESPONSE_KEY));
     }
 
     @Test
@@ -187,18 +189,18 @@ class GenericServiceTest {
       when(replyingKafkaTemplate.sendAndReceive(any())).thenReturn(replyFuture);
 
       String cephContent = "{\"status\":\"SUCCESS\"}";
-      when(cephService.getContent(BUCKET_NAME, CEPH_RESPONSE_KEY))
+      when(cephService.getAsString(BUCKET_NAME, CEPH_RESPONSE_KEY))
           .thenReturn(Optional.of(cephContent));
 
       doThrow(new MisconfigurationException(""))
           .when(cephService)
-          .deleteObject(BUCKET_NAME, CEPH_RESPONSE_KEY);
+          .delete(BUCKET_NAME, Collections.singleton(CEPH_RESPONSE_KEY));
 
       // when
       assertDoesNotThrow(() -> instance.request(new Request<>(ID, null, null)));
 
       // then
-      verify(cephService).deleteObject(BUCKET_NAME, CEPH_RESPONSE_KEY);
+      verify(cephService).delete(BUCKET_NAME, Collections.singleton(CEPH_RESPONSE_KEY));
     }
 
     @Test
@@ -207,7 +209,7 @@ class GenericServiceTest {
           wrapResponseWithCephHeaderAsKafkaReplay();
       when(replyingKafkaTemplate.sendAndReceive(any())).thenReturn(replyFuture);
 
-      when(cephService.getContent(BUCKET_NAME, CEPH_RESPONSE_KEY)).thenReturn(Optional.empty());
+      when(cephService.getAsString(BUCKET_NAME, CEPH_RESPONSE_KEY)).thenReturn(Optional.empty());
 
       assertThrows(KafkaCephResponseNotFoundException.class,
           () -> instance.request(new Request<>(ID, null, null)));

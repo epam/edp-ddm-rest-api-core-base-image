@@ -77,7 +77,7 @@ public class DigitalSignatureService {
     log.info("Reading Signature from Ceph");
     String responseFromCeph =
         lowcodeCephService
-            .getContent(lowcodeBucket, sc.getDigitalSignatureDerived())
+            .getAsString(lowcodeBucket, sc.getDigitalSignatureDerived())
             .orElseThrow(
                 () -> new DigitalSignatureNotFoundException("Signature does not exist in ceph bucket"));
     Map<String, Object> cephResponse = objectMapper.readValue(responseFromCeph, Map.class);
@@ -103,10 +103,10 @@ public class DigitalSignatureService {
     log.info("Copy Signature from lowcode to data ceph bucket");
     String value =
         lowcodeCephService
-            .getContent(lowcodeBucket, key)
+            .getAsString(lowcodeBucket, key)
             .orElseThrow(
                 () -> new DigitalSignatureNotFoundException("Signature does not exist in ceph bucket"));
-    datafactoryCephService.putContent(datafactoryBucket, key, value);
+    datafactoryCephService.put(datafactoryBucket, key, value);
     return value;
   }
 
@@ -128,7 +128,7 @@ public class DigitalSignatureService {
     String key = PREFIX + UUID.randomUUID();
     log.debug("Generated key: {}", key);
 
-    datafactoryCephService.putContent(datafactoryBucket, key, value);
+    datafactoryCephService.put(datafactoryBucket, key, value);
     return key;
   }
 }

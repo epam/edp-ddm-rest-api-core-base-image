@@ -89,7 +89,7 @@ class DigitalSignatureServiceTest {
 
   @Test
   void validSignatureTest() throws JsonProcessingException {
-    when(lowcodeCephService.getContent(LOWCODE_BUCKET, X_DIG_SIG_DERIVED)).thenReturn(Optional.of(RESPONSE_FROM_CEPH));
+    when(lowcodeCephService.getAsString(LOWCODE_BUCKET, X_DIG_SIG_DERIVED)).thenReturn(Optional.of(RESPONSE_FROM_CEPH));
 
     digitalSignatureService.checkSignature(DATA, securityContext);
 
@@ -103,7 +103,7 @@ class DigitalSignatureServiceTest {
 
   @Test
   void shouldThrowExceptionWithCorrectMessage() {
-    when(lowcodeCephService.getContent(LOWCODE_BUCKET, X_DIG_SIG_DERIVED))
+    when(lowcodeCephService.getAsString(LOWCODE_BUCKET, X_DIG_SIG_DERIVED))
         .thenReturn(Optional.of(INVALID_RESPONSE_FROM_CEPH));
     when(digitalSealRestClient.verify(any())).
         thenReturn(VerifyResponseDto.builder().isValid(false).error(errorDto).build());
@@ -126,7 +126,7 @@ class DigitalSignatureServiceTest {
 
   @Test
   void cephServiceThrowsExceptionTest() {
-    when(lowcodeCephService.getContent(LOWCODE_BUCKET, X_DIG_SIG_DERIVED))
+    when(lowcodeCephService.getAsString(LOWCODE_BUCKET, X_DIG_SIG_DERIVED))
         .thenThrow(new CephCommunicationException("", new RuntimeException()));
 
     assertThrows(CephCommunicationException.class,
@@ -135,12 +135,12 @@ class DigitalSignatureServiceTest {
 
   @Test
   void cephServiceNotFoundSignature() {
-    when(lowcodeCephService.getContent(LOWCODE_BUCKET, X_DIG_SIG))
+    when(lowcodeCephService.getAsString(LOWCODE_BUCKET, X_DIG_SIG))
             .thenReturn(Optional.empty());
     assertThrows(DigitalSignatureNotFoundException.class,
             () -> digitalSignatureService.checkSignature(DATA, securityContext));
 
-    when(lowcodeCephService.getContent(LOWCODE_BUCKET, X_DIG_SIG_DERIVED))
+    when(lowcodeCephService.getAsString(LOWCODE_BUCKET, X_DIG_SIG_DERIVED))
         .thenReturn(Optional.empty());
     assertThrows(DigitalSignatureNotFoundException.class,
         () -> digitalSignatureService.checkSignature(DATA, securityContext));
@@ -148,7 +148,7 @@ class DigitalSignatureServiceTest {
 
   @Test
   void misconfigurationExceptionChangedToCephBucketNotFoundException() {
-    when(lowcodeCephService.getContent(LOWCODE_BUCKET, X_DIG_SIG_DERIVED))
+    when(lowcodeCephService.getAsString(LOWCODE_BUCKET, X_DIG_SIG_DERIVED))
         .thenThrow(new MisconfigurationException("Bucket A not found"));
 
     assertThrows(MisconfigurationException.class,
@@ -157,7 +157,7 @@ class DigitalSignatureServiceTest {
 
   @Test
   void badRequestExceptionChangedToKepServiceBadRequestException() {
-    when(lowcodeCephService.getContent(LOWCODE_BUCKET, X_DIG_SIG_DERIVED)).thenReturn(Optional.of(RESPONSE_FROM_CEPH));
+    when(lowcodeCephService.getAsString(LOWCODE_BUCKET, X_DIG_SIG_DERIVED)).thenReturn(Optional.of(RESPONSE_FROM_CEPH));
     when(digitalSealRestClient.verify(any())).thenThrow(BadRequestException.class);
 
     assertThrows(KepServiceBadRequestException.class, () -> digitalSignatureService
@@ -166,7 +166,7 @@ class DigitalSignatureServiceTest {
 
   @Test
   void internalServerErrorExceptionChangedToKepServiceInternalServerErrorException() {
-    when(lowcodeCephService.getContent(LOWCODE_BUCKET, X_DIG_SIG_DERIVED)).thenReturn(Optional.of(RESPONSE_FROM_CEPH));
+    when(lowcodeCephService.getAsString(LOWCODE_BUCKET, X_DIG_SIG_DERIVED)).thenReturn(Optional.of(RESPONSE_FROM_CEPH));
     when(digitalSealRestClient.verify(any())).thenThrow(InternalServerErrorException.class);
 
     assertThrows(KepServiceInternalServerErrorException.class, () -> digitalSignatureService
@@ -188,17 +188,17 @@ class DigitalSignatureServiceTest {
   void shouldCallPutContentWithAppropriateParameters() {
     digitalSignatureService.store("value");
 
-    verify(datafactoryCephService).putContent(eq(DATAFACTORY_BUCKET), any(), eq("value"));
+    verify(datafactoryCephService).put(eq(DATAFACTORY_BUCKET), any(), eq("value"));
   }
 
   @Test
   void shouldCallMethodsWithAppropriateParameters() {
-    when(lowcodeCephService.getContent(LOWCODE_BUCKET, X_DIG_SIG)).thenReturn(Optional.of(CEPH_OBJECT));
+    when(lowcodeCephService.getAsString(LOWCODE_BUCKET, X_DIG_SIG)).thenReturn(Optional.of(CEPH_OBJECT));
 
     String result = digitalSignatureService.copySignature(X_DIG_SIG);
 
-    verify(lowcodeCephService).getContent(LOWCODE_BUCKET, X_DIG_SIG);
-    verify(datafactoryCephService).putContent(DATAFACTORY_BUCKET, X_DIG_SIG, CEPH_OBJECT);
+    verify(lowcodeCephService).getAsString(LOWCODE_BUCKET, X_DIG_SIG);
+    verify(datafactoryCephService).put(DATAFACTORY_BUCKET, X_DIG_SIG, CEPH_OBJECT);
     assertEquals(CEPH_OBJECT, result);
   }
 }
