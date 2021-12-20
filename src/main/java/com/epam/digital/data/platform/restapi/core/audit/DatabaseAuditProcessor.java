@@ -17,7 +17,7 @@
 package com.epam.digital.data.platform.restapi.core.audit;
 
 import com.epam.digital.data.platform.model.core.kafka.Request;
-import com.epam.digital.data.platform.restapi.core.annotation.DatabaseOperation.Operation;
+import com.epam.digital.data.platform.restapi.core.audit.AuditableDatabaseOperation.Operation;
 import com.epam.digital.data.platform.restapi.core.converter.EntityConverter;
 import com.epam.digital.data.platform.restapi.core.exception.AuditException;
 import com.epam.digital.data.platform.restapi.core.service.JwtInfoProvider;
@@ -73,7 +73,7 @@ public class DatabaseAuditProcessor implements AuditProcessor<Operation> {
     var userClaims = jwtInfoProvider.getUserClaims(request);
     var entityId = request.getPayload().toString();
 
-    return prepareAndSendDbAudit(joinPoint, null, READ, userClaims, null, entityId);
+    return prepareAndSendDbAudit(joinPoint, READ, userClaims, null, entityId);
   }
 
   private Object search(ProceedingJoinPoint joinPoint) throws Throwable {
@@ -82,18 +82,18 @@ public class DatabaseAuditProcessor implements AuditProcessor<Operation> {
     JwtClaimsDto userClaims = jwtInfoProvider.getUserClaims(request);
     Set<String> fields = getFields(request.getPayload());
 
-    return prepareAndSendDbAudit(joinPoint, null, SEARCH, userClaims, fields, null);
+    return prepareAndSendDbAudit(joinPoint, SEARCH, userClaims, fields, null);
   }
 
   private Object prepareAndSendDbAudit(
-      ProceedingJoinPoint joinPoint, String tableName, String action, JwtClaimsDto userClaims,
+      ProceedingJoinPoint joinPoint, String action, JwtClaimsDto userClaims,
       Set<String> fields, String entityId) throws Throwable {
 
     String methodName = joinPoint.getSignature().getName();
 
     log.debug("Sending {} event to Audit", action);
     databaseEventsFacade
-        .sendDbAudit(methodName, tableName, action, userClaims, BEFORE, entityId, fields, null);
+        .sendDbAudit(methodName, null, action, userClaims, BEFORE, entityId, fields, null);
 
     Object result = joinPoint.proceed();
 
@@ -103,7 +103,7 @@ public class DatabaseAuditProcessor implements AuditProcessor<Operation> {
 
     log.debug("Sending {} completed event to Audit", action);
     databaseEventsFacade
-        .sendDbAudit(methodName, tableName, action, userClaims, AFTER, entityId, fields, null);
+        .sendDbAudit(methodName, null, action, userClaims, AFTER, entityId, fields, null);
     return result;
   }
 

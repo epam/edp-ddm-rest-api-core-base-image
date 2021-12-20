@@ -17,8 +17,8 @@
 package com.epam.digital.data.platform.restapi.core.queryhandler;
 
 import com.epam.digital.data.platform.model.core.kafka.Request;
-import com.epam.digital.data.platform.restapi.core.annotation.DatabaseOperation;
-import com.epam.digital.data.platform.restapi.core.annotation.DatabaseOperation.Operation;
+import com.epam.digital.data.platform.restapi.core.audit.AuditableDatabaseOperation;
+import com.epam.digital.data.platform.restapi.core.audit.AuditableDatabaseOperation.Operation;
 import com.epam.digital.data.platform.restapi.core.exception.ForbiddenOperationException;
 import com.epam.digital.data.platform.restapi.core.exception.SqlErrorException;
 import com.epam.digital.data.platform.restapi.core.service.AccessPermissionService;
@@ -49,7 +49,7 @@ public abstract class AbstractQueryHandler<I, O> implements
     this.accessPermissionService = accessPermissionService;
   }
 
-  @DatabaseOperation(Operation.READ)
+  @AuditableDatabaseOperation(Operation.READ)
   @Override
   public Optional<O> findById(Request<I> input) {
     log.info("Reading from DB");

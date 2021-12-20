@@ -25,7 +25,7 @@ import com.epam.digital.data.platform.integration.ceph.exception.CephCommunicati
 import com.epam.digital.data.platform.integration.ceph.exception.MisconfigurationException;
 import com.epam.digital.data.platform.model.core.kafka.Response;
 import com.epam.digital.data.platform.model.core.kafka.Status;
-import com.epam.digital.data.platform.restapi.core.annotation.AuditableException;
+import com.epam.digital.data.platform.restapi.core.audit.AuditableException;
 import com.epam.digital.data.platform.restapi.core.model.ConstraintErrorDetails;
 import com.epam.digital.data.platform.restapi.core.model.DetailedErrorResponse;
 import com.epam.digital.data.platform.restapi.core.model.FieldsValidationErrorDetails;

@@ -17,8 +17,8 @@
 package com.epam.digital.data.platform.restapi.core.searchhandler;
 
 import com.epam.digital.data.platform.model.core.kafka.Request;
-import com.epam.digital.data.platform.restapi.core.annotation.DatabaseOperation;
-import com.epam.digital.data.platform.restapi.core.annotation.DatabaseOperation.Operation;
+import com.epam.digital.data.platform.restapi.core.audit.AuditableDatabaseOperation;
+import com.epam.digital.data.platform.restapi.core.audit.AuditableDatabaseOperation.Operation;
 import com.epam.digital.data.platform.restapi.core.exception.SqlErrorException;
 import java.util.List;
 import org.jooq.Condition;
@@ -33,7 +33,7 @@ public abstract class AbstractSearchHandler<I, O> implements
   @Autowired
   protected DSLContext context;
 
-  @DatabaseOperation(Operation.SEARCH)
+  @AuditableDatabaseOperation(Operation.SEARCH)
   @Override
   public List<O> search(Request<I> input) {
     I searchCriteria = input.getPayload();

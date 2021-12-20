@@ -14,20 +14,16 @@
  * limitations under the License.
  */
 
-package com.epam.digital.data.platform.restapi.core.annotation;
+package com.epam.digital.data.platform.restapi.core.audit;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-@Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
-public @interface DatabaseOperation {
-
-  Operation value();
-
-  enum Operation {
-    READ, SEARCH
-  }
+@Retention(RetentionPolicy.RUNTIME)
+public @interface AuditableException {
+    String action() default "";
+    boolean userInfoEnabled() default true;
 }

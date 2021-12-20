@@ -27,8 +27,8 @@ import com.epam.digital.data.platform.dso.client.DigitalSealRestClient;
 import com.epam.digital.data.platform.integration.ceph.model.CephObject;
 import com.epam.digital.data.platform.integration.ceph.model.CephObjectMetadata;
 import com.epam.digital.data.platform.integration.ceph.service.CephService;
-import com.epam.digital.data.platform.restapi.core.annotation.DatabaseOperation;
-import com.epam.digital.data.platform.restapi.core.annotation.DatabaseOperation.Operation;
+import com.epam.digital.data.platform.restapi.core.audit.AuditableDatabaseOperation;
+import com.epam.digital.data.platform.restapi.core.audit.AuditableDatabaseOperation.Operation;
 
 import java.io.InputStream;
 import java.util.List;
@@ -147,7 +147,7 @@ class ExecutionTimeLoggingAspectTest {
   @TestComponent
   static class MockDbClient {
 
-    @DatabaseOperation(Operation.READ)
+    @AuditableDatabaseOperation(Operation.READ)
     public void read() {}
   }
 }

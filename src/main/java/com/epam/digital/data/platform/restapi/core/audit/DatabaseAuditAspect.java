@@ -16,7 +16,6 @@
 
 package com.epam.digital.data.platform.restapi.core.audit;
 
-import com.epam.digital.data.platform.restapi.core.annotation.DatabaseOperation;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -33,10 +32,10 @@ public class DatabaseAuditAspect {
     this.databaseAuditProcessor = databaseAuditProcessor;
   }
 
-  @Around("@annotation(com.epam.digital.data.platform.restapi.core.annotation.DatabaseOperation)")
+  @Around("@annotation(com.epam.digital.data.platform.restapi.core.audit.AuditableDatabaseOperation)")
   Object databaseAdvice(ProceedingJoinPoint joinPoint) throws Throwable {
     var signature = (MethodSignature) joinPoint.getSignature();
-    var annotation = signature.getMethod().getAnnotation(DatabaseOperation.class);
+    var annotation = signature.getMethod().getAnnotation(AuditableDatabaseOperation.class);
     var operation = annotation.value();
     return databaseAuditProcessor.process(joinPoint, operation);
   }

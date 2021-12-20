@@ -22,6 +22,7 @@ import com.epam.digital.data.platform.model.core.kafka.Status;
 import com.epam.digital.data.platform.restapi.core.exception.ApplicationExceptionHandler;
 import com.epam.digital.data.platform.restapi.core.controller.MockController;
 import com.epam.digital.data.platform.restapi.core.dto.MockEntity;
+import com.epam.digital.data.platform.restapi.core.exception.AuditException;
 import com.epam.digital.data.platform.restapi.core.service.MockService;
 import com.epam.digital.data.platform.restapi.core.service.TraceProvider;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -55,6 +56,8 @@ import static org.mockito.Mockito.when;
     ControllerAuditAspect.class,
     ApplicationExceptionHandler.class
 })
+@MockBean(ObjectMapper.class)
+@MockBean(TraceProvider.class)
 class ControllerAuditAspectTest {
 
   private static final UUID ENTITY_ID = UUID.fromString("123e4567-e89b-12d3-a456-426655440000");
@@ -67,13 +70,9 @@ class ControllerAuditAspectTest {
   private MockNonControllerClient nonControllerClient;
 
   @MockBean
-  private ObjectMapper objectMapper;
-  @MockBean
   private MockService mockService;
   @MockBean
   private RestAuditEventsFacade restAuditEventsFacade;
-  @MockBean
-  private TraceProvider traceProvider;
 
   @Mock
   private RequestContext mockRequestContext;
@@ -105,6 +104,21 @@ class ControllerAuditAspectTest {
 
     verify(restAuditEventsFacade)
         .sendRestAudit(any(), any(), any(), any(), any(), any(), any());
+  }
+
+  @Test
+  void expectExceptionWhenControllerHasUnsupportedMappingAnnotation() {
+    assertThrows(
+        AuditException.class,
+        () -> controller.findById(ENTITY_ID, mockRequestContext, mockSecurityContext));
+  }
+
+  @Test
+  void expectExceptionWhenControllerHasMoreThenOneMappingAnnotation() {
+    assertThrows(
+        AuditException.class,
+        () -> controller.patchPutMockEntity(
+            ENTITY_ID, mockPayload(), mockRequestContext, mockSecurityContext));
   }
 
   @Test

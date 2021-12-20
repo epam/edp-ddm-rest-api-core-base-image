@@ -37,9 +37,6 @@ public class RestAuditEventsFacade extends AbstractAuditFacade {
   static final String HTTP_REQUEST = "HTTP request. Method: ";
   static final String EXCEPTION = "EXCEPTION";
 
-  static final String INVALID_ACCESS_TOKEN_EVENT_NAME = "Access Token is not valid";
-  static final String INVALID_SIGNATURE_EVENT_NAME = "Invalid signature";
-
   private final TraceProvider traceProvider;
   private final AuditSourceInfoProvider auditSourceInfoProvider;
   private final TokenParser tokenParser;
