@@ -26,7 +26,6 @@ import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.ResultMatcher.matchAll;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -39,9 +38,9 @@ import com.epam.digital.data.platform.restapi.core.filter.FilterChainExceptionHa
 import com.epam.digital.data.platform.restapi.core.service.DigitalSignatureService;
 import com.epam.digital.data.platform.restapi.core.service.TraceProvider;
 import com.epam.digital.data.platform.restapi.core.utils.ResponseCode;
-import com.google.common.io.ByteStreams;
 import java.io.IOException;
 import java.util.UUID;
+import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -74,9 +73,9 @@ class ApplicationExceptionHandlerFilteredTest {
 
   static {
     try {
-      ACCESS_TOKEN = new String(ByteStreams.toByteArray(
+      ACCESS_TOKEN = new String(IOUtils.toByteArray(
           ApplicationExceptionHandlerFilteredTest.class.getResourceAsStream("/accessToken.json")));
-      ACCESS_TOKEN_WITHOUT_DRFO = new String(ByteStreams.toByteArray(
+      ACCESS_TOKEN_WITHOUT_DRFO = new String(IOUtils.toByteArray(
           ApplicationExceptionHandlerFilteredTest.class
               .getResourceAsStream("/accessTokenWithoutDrfo.json")));
 
@@ -110,11 +109,11 @@ class ApplicationExceptionHandlerFilteredTest {
         .checkSignature(any(), any());
     mockMvc.perform(delete(BASE_URL + "/{id}", CONSENT_ID)
         .headers(MANDATORY_HEADERS))
-        .andExpect(matchAll(
+        .andExpectAll(
             status().isPreconditionFailed(),
             jsonPath("$.code").value(is(ResponseCode.SIGNATURE_VIOLATION)),
             jsonPath("$.traceId").value(is(TRACE_ID)),
-            jsonPath("$.details").doesNotExist())
+            jsonPath("$.details").doesNotExist()
         );
   }
 

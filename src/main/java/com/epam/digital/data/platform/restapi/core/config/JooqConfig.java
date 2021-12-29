@@ -23,10 +23,20 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import java.sql.Date;
+import java.sql.Time;
+import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import javax.sql.DataSource;
+import org.jooq.Converter;
+import org.jooq.ConverterProvider;
 import org.jooq.SQLDialect;
 import org.jooq.impl.DataSourceConnectionProvider;
 import org.jooq.impl.DefaultConfiguration;
+import org.jooq.impl.DefaultConverterProvider;
+import org.jooq.impl.EnumConverter;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -62,9 +72,36 @@ public class JooqConfig {
   }
 
   @Bean
-  public DefaultConfiguration configuration(DataSourceConnectionProvider connectionProvider) {
+  public DefaultConfiguration configuration(DataSourceConnectionProvider connectionProvider,
+      ConverterProvider converterProvider) {
     return (DefaultConfiguration) new DefaultConfiguration()
         .derive(connectionProvider)
-        .derive(SQLDialect.POSTGRES);
+        .derive(SQLDialect.POSTGRES)
+        .set(converterProvider);
+  }
+
+  @Bean
+  public ConverterProvider converterProvider() {
+    return new ConverterProvider() {
+      final ConverterProvider defaultConverterProvider = new DefaultConverterProvider();
+
+      @Override
+      public <T, U> Converter<T, U> provide(Class<T> tType, Class<U> uType) {
+        if (uType == LocalDate.class) {
+          return (Converter<T, U>) Converter.ofNullable(Date.class, LocalDate.class,
+              Date::toLocalDate, Date::valueOf);
+        } else if (uType == LocalTime.class) {
+          return (Converter<T, U>) Converter.ofNullable(Time.class, LocalTime.class,
+              Time::toLocalTime, Time::valueOf);
+        } else if (uType == LocalDateTime.class) {
+          return (Converter<T, U>) Converter.ofNullable(Timestamp.class, LocalDateTime.class,
+              Timestamp::toLocalDateTime, Timestamp::valueOf);
+        } else if (Enum.class.isAssignableFrom(uType)) {
+          return new EnumConverter(tType, uType);
+        } else {
+          return defaultConverterProvider.provide(tType, uType);
+        }
+      }
+    };
   }
 }

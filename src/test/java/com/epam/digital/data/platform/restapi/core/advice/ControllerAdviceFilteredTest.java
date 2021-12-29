@@ -30,7 +30,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.ResultMatcher.matchAll;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -55,10 +54,10 @@ import com.epam.digital.data.platform.restapi.core.service.MockFileService;
 import com.epam.digital.data.platform.restapi.core.service.TraceProvider;
 import com.epam.digital.data.platform.restapi.core.utils.ResponseCode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.io.ByteStreams;
 import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
+import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -98,7 +97,7 @@ class ControllerAdviceFilteredTest {
 
   static {
     try {
-      ACCESS_TOKEN = new String(ByteStreams.toByteArray(
+      ACCESS_TOKEN = new String(IOUtils.toByteArray(
           ControllerAdviceFilteredTest.class.getResourceAsStream("/accessToken.json")));
 
       MANDATORY_HEADERS.add(X_ACCESS_TOKEN.getHeaderName(), ACCESS_TOKEN);
@@ -203,11 +202,10 @@ class ControllerAdviceFilteredTest {
                 .headers(MANDATORY_HEADERS)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{}"))
-        .andExpect(
-            matchAll(
+        .andExpectAll(
                 status().isInternalServerError(),
                 jsonPath("$.traceId").value(is(TRACE_ID)),
-                jsonPath("$.code").value(is(ResponseCode.FILE_WAS_CHANGED))));
+                jsonPath("$.code").value(is(ResponseCode.FILE_WAS_CHANGED)));
   }
 
   @Test
@@ -216,11 +214,10 @@ class ControllerAdviceFilteredTest {
 
     mockMvc
         .perform(get(BASE_URL + "/{id}", ID).headers(MANDATORY_HEADERS))
-        .andExpect(
-            matchAll(
+        .andExpectAll(
                 status().isInternalServerError(),
                 jsonPath("$.traceId").value(is(TRACE_ID)),
-                jsonPath("$.code").value(is(ResponseCode.INTERNAL_CONTRACT_VIOLATION))));
+                jsonPath("$.code").value(is(ResponseCode.INTERNAL_CONTRACT_VIOLATION)));
   }
 
   @Test

@@ -25,9 +25,9 @@ import com.epam.digital.data.platform.starter.audit.model.EventType;
 import com.epam.digital.data.platform.starter.audit.service.AuditService;
 import com.epam.digital.data.platform.starter.security.jwt.TokenParser;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.io.ByteStreams;
 import java.io.IOException;
 import java.util.Map;
+import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -92,7 +92,7 @@ class RestAuditEventsFacadeTest {
 
   @BeforeAll
   static void init() throws IOException {
-    ACCESS_TOKEN = new String(ByteStreams.toByteArray(
+    ACCESS_TOKEN = new String(IOUtils.toByteArray(
         RestAuditEventsFacadeTest.class.getResourceAsStream("/accessToken.json")));
   }
 

@@ -111,7 +111,7 @@ class GenericServiceTest {
 
       RequestReplyFuture<String, Request<UUID>, String> replyFuture =
           wrapResponseObjectAsKafkaReplay(new Request<>(ID, null, null), entity);
-      when(replyingKafkaTemplate.sendAndReceive(any())).thenReturn(replyFuture);
+      when(replyingKafkaTemplate.sendAndReceive(any(ProducerRecord.class))).thenReturn(replyFuture);
 
       // when
       Response<MockEntity> response = instance.request(new Request<>(ID, null, null));
@@ -124,7 +124,7 @@ class GenericServiceTest {
     void shouldThrowExceptionWhenTimeout()
         throws ExecutionException, InterruptedException, TimeoutException {
       RequestReplyFuture mockReplyFuture = Mockito.mock(RequestReplyFuture.class);
-      when(replyingKafkaTemplate.sendAndReceive(any())).thenReturn(mockReplyFuture);
+      when(replyingKafkaTemplate.sendAndReceive(any(ProducerRecord.class))).thenReturn(mockReplyFuture);
 
       Mockito.doThrow(new InterruptedException()).when(mockReplyFuture).get(30L, SECONDS);
 
@@ -142,7 +142,7 @@ class GenericServiceTest {
       RequestReplyFuture<String, Request<UUID>, String>
           replyFuture =
           wrapResponseObjectAsKafkaReplay(request, "invalid json");
-      when(replyingKafkaTemplate.sendAndReceive(any())).thenReturn(replyFuture);
+      when(replyingKafkaTemplate.sendAndReceive(any(ProducerRecord.class))).thenReturn(replyFuture);
 
       Exception exception = assertThrows(RuntimeJsonMappingException.class, () -> {
         instance.request(request);
@@ -164,7 +164,7 @@ class GenericServiceTest {
       RequestReplyFuture<String, Request<UUID>, String> replyFuture =
           wrapResponseWithCephHeaderAsKafkaReplay();
 
-      when(replyingKafkaTemplate.sendAndReceive(any())).thenReturn(replyFuture);
+      when(replyingKafkaTemplate.sendAndReceive(any(ProducerRecord.class))).thenReturn(replyFuture);
       String cephContent =
           "{\"payload\":{\"personFullName\":\"" + expected + "\"}, \"status\":\"SUCCESS\"}";
       when(cephService.getAsString(BUCKET_NAME, CEPH_RESPONSE_KEY))
@@ -186,7 +186,7 @@ class GenericServiceTest {
       // given
       RequestReplyFuture<String, Request<UUID>, String> replyFuture =
           wrapResponseWithCephHeaderAsKafkaReplay();
-      when(replyingKafkaTemplate.sendAndReceive(any())).thenReturn(replyFuture);
+      when(replyingKafkaTemplate.sendAndReceive(any(ProducerRecord.class))).thenReturn(replyFuture);
 
       String cephContent = "{\"status\":\"SUCCESS\"}";
       when(cephService.getAsString(BUCKET_NAME, CEPH_RESPONSE_KEY))
@@ -207,7 +207,7 @@ class GenericServiceTest {
     void expectExceptionThrownIfNotFoundInCephCeph() throws JsonProcessingException {
       RequestReplyFuture<String, Request<UUID>, String> replyFuture =
           wrapResponseWithCephHeaderAsKafkaReplay();
-      when(replyingKafkaTemplate.sendAndReceive(any())).thenReturn(replyFuture);
+      when(replyingKafkaTemplate.sendAndReceive(any(ProducerRecord.class))).thenReturn(replyFuture);
 
       when(cephService.getAsString(BUCKET_NAME, CEPH_RESPONSE_KEY)).thenReturn(Optional.empty());
 
@@ -228,7 +228,7 @@ class GenericServiceTest {
 
       RequestReplyFuture<String, Request<UUID>, String> replyFuture =
           wrapResponseObjectAsKafkaReplay(new Request<>(ID, null, null), new MockEntity());
-      when(replyingKafkaTemplate.sendAndReceive(any())).thenReturn(replyFuture);
+      when(replyingKafkaTemplate.sendAndReceive(any(ProducerRecord.class))).thenReturn(replyFuture);
 
       when(digitalSignatureService.store(any())).thenReturn(expected);
 
@@ -250,7 +250,7 @@ class GenericServiceTest {
 
       RequestReplyFuture<String, Request<UUID>, String> replyFuture =
           wrapResponseObjectAsKafkaReplay(new Request<>(ID, null, null), new MockEntity());
-      when(replyingKafkaTemplate.sendAndReceive(any())).thenReturn(replyFuture);
+      when(replyingKafkaTemplate.sendAndReceive(any(ProducerRecord.class))).thenReturn(replyFuture);
 
       when(digitalSignatureService.store(any())).thenReturn(expected);
 

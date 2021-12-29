@@ -19,16 +19,15 @@ package com.epam.digital.data.platform.restapi.core.filter;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.ResultMatcher.matchAll;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.epam.digital.data.platform.restapi.core.audit.RestAuditEventsFacade;
 import com.epam.digital.data.platform.restapi.core.config.UnauthorizedRequestHandler;
 import com.epam.digital.data.platform.restapi.core.controller.MockController;
 import com.epam.digital.data.platform.restapi.core.exception.ApplicationExceptionHandler;
 import com.epam.digital.data.platform.restapi.core.service.MockService;
-import com.epam.digital.data.platform.restapi.core.audit.RestAuditEventsFacade;
 import com.epam.digital.data.platform.restapi.core.service.TraceProvider;
 import com.epam.digital.data.platform.restapi.core.utils.ResponseCode;
 import com.epam.digital.data.platform.starter.security.WebSecurityConfig;
@@ -50,8 +49,9 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest
-@ContextConfiguration(classes = {MockController.class, UnauthorizedRequestHandler.class, WebSecurityConfig.class,
-        Whitelist.class, SecurityProperties.class, ApplicationExceptionHandler.class})
+@ContextConfiguration(classes = {MockController.class, UnauthorizedRequestHandler.class,
+    WebSecurityConfig.class,
+    Whitelist.class, SecurityProperties.class, ApplicationExceptionHandler.class})
 @ComponentScan(basePackages = {"com.epam.digital.data.platform.starter.security.jwt"},
     excludeFilters = {
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = RestAuthenticationEntryPoint.class)})
@@ -84,10 +84,10 @@ class ExceptionTranslationFilterTest {
   void shouldReturn401WhenNoJwtProvided() throws Exception {
     mockMvc.perform(get(BASE_URL + "/{id}", ENTITY_ID))
         .andExpect(status().isUnauthorized())
-        .andExpect(matchAll(
+        .andExpectAll(
             jsonPath("$.traceId").value(is(TRACE_ID)),
             jsonPath("$.code").value(is(ResponseCode.AUTHENTICATION_FAILED)),
-            jsonPath("$.details").doesNotExist()));
+            jsonPath("$.details").doesNotExist());
   }
 
   @Test
@@ -96,10 +96,10 @@ class ExceptionTranslationFilterTest {
         .thenThrow(JwtParsingException.class);
 
     mockMvc.perform(get(BASE_URL + "/{id}", ENTITY_ID))
-        .andExpect(matchAll(
+        .andExpectAll(
             status().isUnauthorized(),
             jsonPath("$.traceId").value(is(TRACE_ID)),
             jsonPath("$.code").value(is(ResponseCode.AUTHENTICATION_FAILED)),
-            jsonPath("$.details").doesNotExist()));
+            jsonPath("$.details").doesNotExist());
   }
 }

@@ -21,12 +21,13 @@ import com.epam.digital.data.platform.restapi.core.searchhandler.AbstractSearchH
 import com.epam.digital.data.platform.restapi.core.util.MockEntityContains;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 import org.jooq.Condition;
 import org.jooq.SelectFieldOrAsterisk;
 import org.jooq.impl.DSL;
 
 public class AbstractSearchHandlerTestImpl extends
-    AbstractSearchHandler<MockEntityContains, MockEntity> {
+    AbstractSearchHandler<MockEntityContains, UUID> {
 
   private String tableName = "table_name";
 
@@ -41,8 +42,8 @@ public class AbstractSearchHandlerTestImpl extends
   }
 
   @Override
-  public Class<MockEntity> entityType() {
-    return MockEntity.class;
+  public Class<UUID> entityType() {
+    return UUID.class;
   }
 
   @Override

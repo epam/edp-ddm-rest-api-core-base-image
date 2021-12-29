@@ -22,7 +22,6 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.ResultMatcher.matchAll;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -31,18 +30,17 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.epam.digital.data.platform.model.core.kafka.Response;
 import com.epam.digital.data.platform.model.core.kafka.Status;
+import com.epam.digital.data.platform.restapi.core.audit.RestAuditEventsFacade;
 import com.epam.digital.data.platform.restapi.core.config.SecurityConfiguration;
 import com.epam.digital.data.platform.restapi.core.controller.MockController;
 import com.epam.digital.data.platform.restapi.core.dto.MockEntity;
 import com.epam.digital.data.platform.restapi.core.model.DetailedErrorResponse;
 import com.epam.digital.data.platform.restapi.core.model.FieldsValidationErrorDetails;
 import com.epam.digital.data.platform.restapi.core.service.MockService;
-import com.epam.digital.data.platform.restapi.core.audit.RestAuditEventsFacade;
 import com.epam.digital.data.platform.restapi.core.service.TraceProvider;
 import com.epam.digital.data.platform.restapi.core.utils.ResponseCode;
 import com.epam.digital.data.platform.starter.security.config.SecurityProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import java.util.Collections;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -93,10 +91,10 @@ class ApplicationExceptionHandlerTest extends ResponseEntityExceptionHandler {
         .andExpect(status().isInternalServerError())
         .andExpect(response -> assertTrue(
             response.getResolvedException() instanceof NoKafkaResponseException))
-        .andExpect(matchAll(
+        .andExpectAll(
             jsonPath("$.traceId").value(is(TRACE_ID)),
             jsonPath("$.code").value(is(ResponseCode.TIMEOUT_ERROR)),
-            jsonPath("$.details").doesNotExist()));
+            jsonPath("$.details").doesNotExist());
   }
 
   @Test
@@ -105,10 +103,10 @@ class ApplicationExceptionHandlerTest extends ResponseEntityExceptionHandler {
 
     mockMvc.perform(get(BASE_URL + "/{id}", ENTITY_ID))
         .andExpect(status().isInternalServerError())
-        .andExpect(matchAll(
+        .andExpectAll(
             jsonPath("$.traceId").value(is(TRACE_ID)),
             jsonPath("$.code").value(is(ResponseCode.RUNTIME_ERROR)),
-            jsonPath("$.details").doesNotExist()));
+            jsonPath("$.details").doesNotExist());
   }
 
   @Test
@@ -126,12 +124,12 @@ class ApplicationExceptionHandlerTest extends ResponseEntityExceptionHandler {
     var unsupportedMediaType = MediaType.APPLICATION_PDF;
 
     mockMvc.perform(post(BASE_URL)
-        .contentType(unsupportedMediaType))
-        .andExpect(matchAll(
+            .contentType(unsupportedMediaType))
+        .andExpectAll(
             status().isUnsupportedMediaType(),
             jsonPath("$.traceId").value(is(TRACE_ID)),
             jsonPath("$.code").value(is(ResponseCode.UNSUPPORTED_MEDIA_TYPE)),
-            jsonPath("$.details").doesNotExist())
+            jsonPath("$.details").doesNotExist()
         );
   }
 
@@ -142,9 +140,9 @@ class ApplicationExceptionHandlerTest extends ResponseEntityExceptionHandler {
 
     mockMvc.perform(get(BASE_URL + "/{id}", ENTITY_ID))
         .andExpect(status().isInternalServerError())
-        .andExpect(matchAll(jsonPath("$.traceId").value(is(TRACE_ID)),
+        .andExpectAll(jsonPath("$.traceId").value(is(TRACE_ID)),
             jsonPath("$.code").value(is("THIRD_PARTY_SERVICE_UNAVAILABLE")),
-            jsonPath("$.details").doesNotExist()));
+            jsonPath("$.details").doesNotExist());
   }
 
   @Test
@@ -156,9 +154,9 @@ class ApplicationExceptionHandlerTest extends ResponseEntityExceptionHandler {
 
     mockMvc.perform(get(BASE_URL + "/{id}", ENTITY_ID))
         .andExpect(status().isConflict())
-        .andExpect(matchAll(jsonPath("$.traceId").value(is(TRACE_ID)),
+        .andExpectAll(jsonPath("$.traceId").value(is(TRACE_ID)),
             jsonPath("$.code").value(is("CONSTRAINT_ERROR")),
-            jsonPath("$.details.constraint").value(is("not null"))));
+            jsonPath("$.details.constraint").value(is("not null")));
   }
 
   @Test
@@ -176,11 +174,10 @@ class ApplicationExceptionHandlerTest extends ResponseEntityExceptionHandler {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(inputStringBody))
         .andExpect(status().isBadRequest())
-        .andExpect(
-            matchAll(
-                jsonPath("$.traceId").value(is(TRACE_ID)),
-                jsonPath("$.code").value(is("FILE_NOT_FOUND")),
-                jsonPath("$.details[0]").value(is("scanCopy"))));
+        .andExpectAll(
+            jsonPath("$.traceId").value(is(TRACE_ID)),
+            jsonPath("$.code").value(is("FILE_NOT_FOUND")),
+            jsonPath("$.details[0]").value(is("scanCopy")));
   }
 
   @Test
@@ -199,8 +196,8 @@ class ApplicationExceptionHandlerTest extends ResponseEntityExceptionHandler {
     String expectedOutputBody = objectMapper.writeValueAsString(expectedResponseObject);
 
     mockMvc.perform(post(BASE_URL)
-        .contentType(MediaType.APPLICATION_JSON)
-        .content(inputStringBody))
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(inputStringBody))
         .andExpect(status().isUnprocessableEntity())
         .andExpect(response ->
             assertTrue(response.getResolvedException() instanceof MethodArgumentNotValidException))
@@ -218,8 +215,8 @@ class ApplicationExceptionHandlerTest extends ResponseEntityExceptionHandler {
     String expectedOutputBody = objectMapper.writeValueAsString(expectedResponseObject);
 
     mockMvc.perform(post(BASE_URL)
-        .contentType(MediaType.APPLICATION_JSON)
-        .content("{\"consentDate\": \"invalid date\"}"))
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("{\"consentDate\": \"invalid date\"}"))
         .andExpect(status().isUnprocessableEntity())
         .andExpect(content().json(expectedOutputBody));
   }
@@ -227,11 +224,11 @@ class ApplicationExceptionHandlerTest extends ResponseEntityExceptionHandler {
   @Test
   void shouldReturn400WithBodyWhenPathArgumentIsNotValid() throws Exception {
     mockMvc.perform(get(BASE_URL + "/invalidUUID"))
-        .andExpect(matchAll(
+        .andExpectAll(
             status().isBadRequest(),
             jsonPath("$.traceId").value(is(TRACE_ID)),
             jsonPath("$.code").value(is(ResponseCode.METHOD_ARGUMENT_TYPE_MISMATCH)),
-            jsonPath("$.details").doesNotExist())
+            jsonPath("$.details").doesNotExist()
         );
   }
 
@@ -241,10 +238,10 @@ class ApplicationExceptionHandlerTest extends ResponseEntityExceptionHandler {
         .thenReturn(mockResponse(Status.JWT_INVALID));
 
     mockMvc.perform(get(BASE_URL + "/{id}", ENTITY_ID))
-        .andExpect(matchAll(
+        .andExpectAll(
             status().isForbidden(),
             jsonPath("$.traceId").value(is(TRACE_ID)),
-            jsonPath("$.code").value(is(ResponseCode.JWT_INVALID))));
+            jsonPath("$.code").value(is(ResponseCode.JWT_INVALID)));
   }
 
   @Test
@@ -253,11 +250,10 @@ class ApplicationExceptionHandlerTest extends ResponseEntityExceptionHandler {
 
     mockMvc
         .perform(get(BASE_URL + "/{id}", ENTITY_ID))
-        .andExpect(
-            matchAll(
-                status().isForbidden(),
-                jsonPath("$.traceId").value(is(TRACE_ID)),
-                jsonPath("$.code").value(is(ResponseCode.FORBIDDEN_OPERATION))));
+        .andExpectAll(
+            status().isForbidden(),
+            jsonPath("$.traceId").value(is(TRACE_ID)),
+            jsonPath("$.code").value(is(ResponseCode.FORBIDDEN_OPERATION)));
   }
 
   @Test
@@ -266,9 +262,9 @@ class ApplicationExceptionHandlerTest extends ResponseEntityExceptionHandler {
         .thenThrow(new NotFoundException("some resource is not found"));
 
     mockMvc.perform(get(BASE_URL + "/{id}", ENTITY_ID))
-        .andExpect(matchAll(
+        .andExpectAll(
             status().isNotFound(),
             jsonPath("$.traceId").value(is("1")),
-            jsonPath("$.code").value(is(ResponseCode.NOT_FOUND))));
+            jsonPath("$.code").value(is(ResponseCode.NOT_FOUND)));
   }
 }
