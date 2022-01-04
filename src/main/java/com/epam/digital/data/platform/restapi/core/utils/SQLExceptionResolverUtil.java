@@ -23,6 +23,7 @@ import com.epam.digital.data.platform.restapi.core.exception.RequestProcessingEx
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 public final class SQLExceptionResolverUtil {
 
@@ -45,14 +46,20 @@ public final class SQLExceptionResolverUtil {
 
   public static RequestProcessingException getDetailedExceptionFromSql(SQLException exception) {
     String sqlState = exception.getSQLState();
+    String shortErrorDescription = Optional.ofNullable(exception.getMessage())
+            .map(message -> message.split("\n")[0])
+            .orElse("");
     boolean isConstraintViolation = sqlErrorCodeToDetail.containsKey(sqlState);
     if (isConstraintViolation) {
       return new ConstraintViolationException(
-          "Constraint violation occured", exception, sqlErrorCodeToDetail.get(sqlState));
+              "Constraint violation occurred: " + shortErrorDescription,
+              exception,
+              sqlErrorCodeToDetail.get(sqlState));
     } else if (PERMISSION_DENIED_ERROR_CODE.equals(sqlState)) {
       return new ForbiddenOperationException("User has invalid role for this operation");
     } else {
-      return new ProcedureErrorException("Procedure error on DB call occured", exception);
+      return new ProcedureErrorException(
+              "Procedure error on DB call occurred: " + shortErrorDescription, exception);
     }
   }
 }
