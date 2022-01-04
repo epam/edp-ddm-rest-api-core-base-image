@@ -186,6 +186,22 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
   }
 
   @AuditableException
+  @ExceptionHandler(SqlErrorException.class)
+  public ResponseEntity<DetailedErrorResponse<Void>> handleSqlErrorException(SqlErrorException exception) {
+    log.error("sql exception occurred", exception);
+    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .body(newDetailedResponse(ResponseCode.RUNTIME_ERROR));
+  }
+
+  @AuditableException
+  @ExceptionHandler(ForbiddenOperationException.class)
+  public ResponseEntity<DetailedErrorResponse<Void>> handleForbiddenOperationException(ForbiddenOperationException exception) {
+    log.error("User has invalid role", exception);
+    return ResponseEntity.status(HttpStatus.FORBIDDEN)
+        .body(newDetailedResponse(ResponseCode.FORBIDDEN_OPERATION));
+  }
+
+  @AuditableException
   @Override
   protected ResponseEntity<Object> handleHttpMessageNotReadable(
       HttpMessageNotReadableException exception, HttpHeaders headers, HttpStatus status,

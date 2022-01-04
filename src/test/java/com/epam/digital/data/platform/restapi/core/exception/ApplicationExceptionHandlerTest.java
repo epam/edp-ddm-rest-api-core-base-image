@@ -98,6 +98,34 @@ class ApplicationExceptionHandlerTest extends ResponseEntityExceptionHandler {
   }
 
   @Test
+  void shouldReturnRuntimeErrorOnSqlErrorException() throws Exception {
+    when(mockService.read(any())).thenThrow(SqlErrorException.class);
+
+    mockMvc.perform(get(BASE_URL + "/{id}", ENTITY_ID))
+        .andExpect(status().isInternalServerError())
+        .andExpect(response -> assertTrue(
+            response.getResolvedException() instanceof SqlErrorException))
+        .andExpectAll(
+            jsonPath("$.traceId").value(is(TRACE_ID)),
+            jsonPath("$.code").value(is(ResponseCode.RUNTIME_ERROR)),
+            jsonPath("$.details").doesNotExist());
+  }
+
+  @Test
+  void shouldReturnForbiddenOperationOnException() throws Exception {
+    when(mockService.read(any())).thenThrow(ForbiddenOperationException.class);
+
+    mockMvc.perform(get(BASE_URL + "/{id}", ENTITY_ID))
+        .andExpect(status().isForbidden())
+        .andExpect(response -> assertTrue(
+            response.getResolvedException() instanceof ForbiddenOperationException))
+        .andExpectAll(
+            jsonPath("$.traceId").value(is(TRACE_ID)),
+            jsonPath("$.code").value(is(ResponseCode.FORBIDDEN_OPERATION)),
+            jsonPath("$.details").doesNotExist());
+  }
+
+  @Test
   void shouldReturnRuntimeErrorOnGenericException() throws Exception {
     when(mockService.read(any())).thenThrow(RuntimeException.class);
 

@@ -28,7 +28,6 @@ import com.epam.digital.data.platform.restapi.core.service.impl.GenericQueryServ
 import com.epam.digital.data.platform.restapi.core.queryhandler.impl.QueryHandlerTestImpl;
 import java.util.Optional;
 import java.util.UUID;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,16 +42,9 @@ class GenericQueryServiceTest {
 
   @MockBean
   QueryHandlerTestImpl mockQueryHandler;
-  @MockBean
-  JwtValidationService jwtValidationService;
 
   @Autowired
   private GenericQueryServiceTestImpl instance;
-
-  @BeforeEach
-  void init() {
-    when(jwtValidationService.isValid(any())).thenReturn(true);
-  }
 
   @Test
   @DisplayName("Check if response is failed on record not found")
@@ -77,20 +69,6 @@ class GenericQueryServiceTest {
 
     assertThat(reponse.getPayload()).isEqualTo(mock);
     assertThat(reponse.getStatus()).isEqualTo(Status.SUCCESS);
-  }
-
-  @Test
-  void expectJwtInvalidStatusOnReadIfValidationNotPassed() {
-    when(jwtValidationService.isValid(any())).thenReturn(false);
-    MockEntity mock = new MockEntity();
-    mock.setConsentId(ENTITY_ID);
-    mock.setPersonFullName("stub");
-    when(mockQueryHandler.findById(any())).thenReturn(Optional.of(mock));
-
-    var response = instance.request(mockInput());
-
-    assertThat(response.getStatus()).isEqualTo(Status.JWT_INVALID);
-    assertThat(response.getDetails()).isNull();
   }
 
   private Request<UUID> mockInput() {
