@@ -34,12 +34,8 @@ public abstract class GenericSearchService<I, O> {
     Response<List<O>> response = new Response<>();
 
     List<O> found = searchHandler.search(input);
-    if (!found.isEmpty()){
-      response.setPayload(found);
-      response.setStatus(Status.SUCCESS);
-    } else {
-      response.setStatus(Status.NOT_FOUND);
-    }
+    response.setPayload(found);
+    response.setStatus(Status.SUCCESS);
 
     return response;
   }

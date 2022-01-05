@@ -28,6 +28,7 @@ import com.epam.digital.data.platform.restapi.core.dto.MockEntity;
 import com.epam.digital.data.platform.restapi.core.service.impl.GenericSearchServiceTestImpl;
 import com.epam.digital.data.platform.restapi.core.searchhandler.AbstractSearchHandler;
 import com.epam.digital.data.platform.restapi.core.util.MockEntityContains;
+import java.util.Collections;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,7 +45,7 @@ class GenericSearchServiceTest {
   GenericSearchServiceTestImpl instance;
 
   @Test
-  void shouldSearchInHandler() {
+  void shouldSearchInHandlerWithResult() {
     var c = mockResult();
 
     given(searchHandler.search(any(Request.class))).willReturn(List.of(c));
@@ -54,6 +55,16 @@ class GenericSearchServiceTest {
     assertThat(response.getStatus()).isEqualTo(SUCCESS);
     assertThat(response.getPayload()).hasSize(1);
     assertThat(response.getPayload().get(0)).isEqualTo(c);
+  }
+
+  @Test
+  void shouldSearchInHandlerWithEmptyResult() {
+    given(searchHandler.search(any(Request.class))).willReturn(Collections.emptyList());
+
+    var response = instance.request(mockRequest());
+
+    assertThat(response.getStatus()).isEqualTo(SUCCESS);
+    assertThat(response.getPayload()).hasSize(0);
   }
 
   private MockEntityContains mockSc() {
