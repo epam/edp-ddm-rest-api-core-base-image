@@ -35,8 +35,7 @@ import com.epam.digital.data.platform.model.core.kafka.Status;
 import com.epam.digital.data.platform.restapi.core.dto.MockEntity;
 import com.epam.digital.data.platform.restapi.core.exception.KafkaCephResponseNotFoundException;
 import com.epam.digital.data.platform.restapi.core.exception.NoKafkaResponseException;
-import com.epam.digital.data.platform.restapi.core.config.properties.KafkaProperties;
-import com.epam.digital.data.platform.restapi.core.config.properties.KafkaProperties.Handler;
+import com.epam.digital.data.platform.starter.restapi.config.properties.KafkaProperties;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.RuntimeJsonMappingException;
@@ -90,7 +89,7 @@ class GenericServiceTest {
 
   @BeforeEach
   void setUp() {
-    topics = new Handler();
+    topics = new KafkaProperties.Handler();
     topics.setRequest("request-topic");
     topics.setReplay("replay-topic");
 

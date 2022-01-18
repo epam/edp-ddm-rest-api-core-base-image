@@ -24,7 +24,7 @@ import com.epam.digital.data.platform.model.core.kafka.Response;
 import com.epam.digital.data.platform.model.core.kafka.ResponseHeaders;
 import com.epam.digital.data.platform.restapi.core.exception.KafkaCephResponseNotFoundException;
 import com.epam.digital.data.platform.restapi.core.exception.NoKafkaResponseException;
-import com.epam.digital.data.platform.restapi.core.config.properties.KafkaProperties.Handler;
+import com.epam.digital.data.platform.starter.restapi.config.properties.KafkaProperties;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -49,7 +49,7 @@ public abstract class GenericService<I, O> {
   private final Logger log = LoggerFactory.getLogger(GenericService.class);
 
   private final ReplyingKafkaTemplate<String, I, String> replyingKafkaTemplate;
-  private final Handler topics;
+  private final KafkaProperties.Handler topics;
 
   @Value("${data-platform.kafka-request.signing.enabled}")
   private boolean isSigningEnabled;
@@ -67,14 +67,14 @@ public abstract class GenericService<I, O> {
 
   protected GenericService(
       ReplyingKafkaTemplate<String, I, String> replyingKafkaTemplate,
-      Handler topics) {
+      KafkaProperties.Handler topics) {
     this.replyingKafkaTemplate = replyingKafkaTemplate;
     this.topics = topics;
   }
 
   GenericService(
       ReplyingKafkaTemplate<String, I, String> replyingKafkaTemplate,
-      Handler topics,
+      KafkaProperties.Handler topics,
       DigitalSignatureService digitalSignatureService,
       TraceProvider traceProvider,
       CephService datafactoryResponseCephService,
