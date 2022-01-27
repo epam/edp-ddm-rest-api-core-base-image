@@ -20,6 +20,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
+import com.epam.digital.data.platform.integration.idm.client.KeycloakAuthRestClient;
 import com.epam.digital.data.platform.model.core.kafka.Request;
 import com.epam.digital.data.platform.model.core.kafka.SecurityContext;
 import com.epam.digital.data.platform.model.core.kafka.Status;
@@ -56,7 +57,7 @@ class JwtValidationServiceTest {
   @MockBean
   private KeycloakConfigProperties keycloakConfigProperties;
   @MockBean
-  private KeycloakRestClient keycloakRestClient;
+  private KeycloakAuthRestClient keycloakRestClient;
   @MockBean
   private Clock clock;
 

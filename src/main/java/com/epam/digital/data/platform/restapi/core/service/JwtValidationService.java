@@ -16,6 +16,7 @@
 
 package com.epam.digital.data.platform.restapi.core.service;
 
+import com.epam.digital.data.platform.integration.idm.client.KeycloakAuthRestClient;
 import com.epam.digital.data.platform.model.core.kafka.Request;
 import com.epam.digital.data.platform.model.core.kafka.SecurityContext;
 import com.epam.digital.data.platform.restapi.core.config.KeycloakConfigProperties;
@@ -49,7 +50,7 @@ public class JwtValidationService {
   private final boolean jwtValidationEnabled;
   private final KeycloakConfigProperties keycloakConfigProperties;
 
-  private final KeycloakRestClient keycloakRestClient;
+  private final KeycloakAuthRestClient keycloakRestClient;
   private final Clock clock;
 
   private Map<String, PublishedRealmRepresentation> allowedRealmsRepresentations;
@@ -57,7 +58,7 @@ public class JwtValidationService {
   public JwtValidationService(
       @Value("${data-platform.jwt.validation.enabled}") boolean jwtValidationEnabled,
       KeycloakConfigProperties keycloakConfigProperties,
-      KeycloakRestClient keycloakRestClient, Clock clock) {
+      KeycloakAuthRestClient keycloakRestClient, Clock clock) {
     this.jwtValidationEnabled = jwtValidationEnabled;
     this.keycloakConfigProperties = keycloakConfigProperties;
     this.keycloakRestClient = keycloakRestClient;
