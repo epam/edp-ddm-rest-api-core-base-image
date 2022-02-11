@@ -21,8 +21,8 @@ import static org.mockito.Mockito.verify;
 
 import com.epam.digital.data.platform.dso.api.dto.SignRequestDto;
 import com.epam.digital.data.platform.dso.api.dto.SignResponseDto;
-import com.epam.digital.data.platform.dso.api.dto.VerifyRequestDto;
-import com.epam.digital.data.platform.dso.api.dto.VerifyResponseDto;
+import com.epam.digital.data.platform.dso.api.dto.VerificationRequestDto;
+import com.epam.digital.data.platform.dso.api.dto.VerificationResponseDto;
 import com.epam.digital.data.platform.dso.client.DigitalSealRestClient;
 import com.epam.digital.data.platform.integration.ceph.model.CephObject;
 import com.epam.digital.data.platform.integration.ceph.model.CephObjectMetadata;
@@ -43,6 +43,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestComponent;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.HttpHeaders;
 
 @Import({AopAutoConfiguration.class})
 @SpringBootTest(
@@ -134,12 +135,17 @@ class ExecutionTimeLoggingAspectTest {
   static class MockDigitalSealRestClient implements DigitalSealRestClient {
 
     @Override
-    public VerifyResponseDto verify(VerifyRequestDto verifyRequestDto) {
+    public VerificationResponseDto verify(VerificationRequestDto VerificationRequestDto) {
       return null;
     }
 
     @Override
     public SignResponseDto sign(SignRequestDto signRequest) {
+      return null;
+    }
+
+    @Override
+    public SignResponseDto sign(SignRequestDto signRequestDto, HttpHeaders httpHeaders) {
       return null;
     }
   }

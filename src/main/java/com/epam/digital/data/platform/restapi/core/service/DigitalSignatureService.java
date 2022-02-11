@@ -17,8 +17,8 @@
 package com.epam.digital.data.platform.restapi.core.service;
 
 import com.epam.digital.data.platform.dso.api.dto.SignRequestDto;
-import com.epam.digital.data.platform.dso.api.dto.VerifyRequestDto;
-import com.epam.digital.data.platform.dso.api.dto.VerifyResponseDto;
+import com.epam.digital.data.platform.dso.api.dto.VerificationRequestDto;
+import com.epam.digital.data.platform.dso.api.dto.VerificationResponseDto;
 import com.epam.digital.data.platform.dso.client.DigitalSealRestClient;
 import com.epam.digital.data.platform.dso.client.exception.BadRequestException;
 import com.epam.digital.data.platform.dso.client.exception.InternalServerErrorException;
@@ -87,10 +87,10 @@ public class DigitalSignatureService {
   private void verify(String signature, String data) {
     try {
       log.info("Verifying {}", Header.X_DIGITAL_SIGNATURE_DERIVED.getHeaderName());
-      VerifyResponseDto responseDto = digitalSealRestClient.verify(new VerifyRequestDto(signature, data));
+      VerificationResponseDto responseDto = digitalSealRestClient.verify(new VerificationRequestDto(signature, data));
 
-      if (!responseDto.isValid) {
-        throw new InvalidSignatureException(responseDto.error.getMessage());
+      if (!responseDto.isValid()) {
+        throw new InvalidSignatureException(responseDto.getError().getMessage());
       }
     } catch (BadRequestException e) {
       throw new KepServiceBadRequestException(e.getMessage());

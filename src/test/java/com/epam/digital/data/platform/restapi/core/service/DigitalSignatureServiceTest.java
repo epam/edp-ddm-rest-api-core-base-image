@@ -25,8 +25,8 @@ import static org.mockito.Mockito.when;
 
 import com.epam.digital.data.platform.dso.api.dto.ErrorDto;
 import com.epam.digital.data.platform.dso.api.dto.SignResponseDto;
-import com.epam.digital.data.platform.dso.api.dto.VerifyRequestDto;
-import com.epam.digital.data.platform.dso.api.dto.VerifyResponseDto;
+import com.epam.digital.data.platform.dso.api.dto.VerificationRequestDto;
+import com.epam.digital.data.platform.dso.api.dto.VerificationResponseDto;
 import com.epam.digital.data.platform.dso.client.DigitalSealRestClient;
 import com.epam.digital.data.platform.dso.client.exception.BadRequestException;
 import com.epam.digital.data.platform.dso.client.exception.InternalServerErrorException;
@@ -84,7 +84,7 @@ class DigitalSignatureServiceTest {
     securityContext = new SecurityContext(null, X_DIG_SIG, X_DIG_SIG_DERIVED);
 
     when(digitalSealRestClient.verify(any())).
-        thenReturn(VerifyResponseDto.builder().isValid(true).build());
+        thenReturn(new VerificationResponseDto(true, null));
   }
 
   @Test
@@ -93,12 +93,12 @@ class DigitalSignatureServiceTest {
 
     digitalSignatureService.checkSignature(DATA, securityContext);
 
-    ArgumentCaptor<VerifyRequestDto> requestCaptor = ArgumentCaptor
-        .forClass(VerifyRequestDto.class);
+    ArgumentCaptor<VerificationRequestDto> requestCaptor = ArgumentCaptor
+        .forClass(VerificationRequestDto.class);
     verify(digitalSealRestClient).verify(requestCaptor.capture());
 
-    assertEquals(SIGNATURE, requestCaptor.getValue().signature());
-    assertEquals(DATA, requestCaptor.getValue().data());
+    assertEquals(SIGNATURE, requestCaptor.getValue().getSignature());
+    assertEquals(DATA, requestCaptor.getValue().getData());
   }
 
   @Test
@@ -106,7 +106,7 @@ class DigitalSignatureServiceTest {
     when(lowcodeCephService.getAsString(LOWCODE_BUCKET, X_DIG_SIG_DERIVED))
         .thenReturn(Optional.of(INVALID_RESPONSE_FROM_CEPH));
     when(digitalSealRestClient.verify(any())).
-        thenReturn(VerifyResponseDto.builder().isValid(false).error(errorDto).build());
+        thenReturn(new VerificationResponseDto(false, errorDto));
 
     String exceptionMessage = null;
     try {
@@ -115,13 +115,13 @@ class DigitalSignatureServiceTest {
       exceptionMessage = e.getMessage();
     }
 
-    ArgumentCaptor<VerifyRequestDto> requestCaptor = ArgumentCaptor
-        .forClass(VerifyRequestDto.class);
+    ArgumentCaptor<VerificationRequestDto> requestCaptor = ArgumentCaptor
+        .forClass(VerificationRequestDto.class);
     verify(digitalSealRestClient).verify(requestCaptor.capture());
 
     assertEquals("DRFO mismatch", exceptionMessage);
-    assertEquals(INVALID_SIGNATURE, requestCaptor.getValue().signature());
-    assertEquals(DATA, requestCaptor.getValue().data());
+    assertEquals(INVALID_SIGNATURE, requestCaptor.getValue().getSignature());
+    assertEquals(DATA, requestCaptor.getValue().getData());
   }
 
   @Test
