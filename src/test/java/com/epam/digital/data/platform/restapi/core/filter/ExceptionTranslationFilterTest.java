@@ -34,7 +34,7 @@ import com.epam.digital.data.platform.starter.security.WebSecurityConfig;
 import com.epam.digital.data.platform.starter.security.config.SecurityProperties;
 import com.epam.digital.data.platform.starter.security.config.Whitelist;
 import com.epam.digital.data.platform.starter.security.exception.JwtParsingException;
-import com.epam.digital.data.platform.starter.security.jwt.RestAuthenticationEntryPoint;
+import com.epam.digital.data.platform.starter.security.jwt.DefaultAuthenticationEntryPoint;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -54,7 +54,7 @@ import org.springframework.test.web.servlet.MockMvc;
     Whitelist.class, SecurityProperties.class, ApplicationExceptionHandler.class})
 @ComponentScan(basePackages = {"com.epam.digital.data.platform.starter.security.jwt"},
     excludeFilters = {
-        @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = RestAuthenticationEntryPoint.class)})
+        @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = DefaultAuthenticationEntryPoint.class)})
 @Import({Whitelist.class})
 class ExceptionTranslationFilterTest {
 
