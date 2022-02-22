@@ -68,6 +68,7 @@ public class ControllerAuditAspect {
   static final String CREATE = "CREATE ENTITY";
   static final String READ = "READ ENTITY";
   static final String UPDATE = "UPDATE ENTITY";
+  static final String UPSERT = "UPSERT ENTITY";
   static final String DELETE = "DELETE ENTITY";
   static final String SEARCH = "SEARCH ENTITY";
 
@@ -98,7 +99,7 @@ public class ControllerAuditAspect {
   }
 
   @Around("controller() && args(object, context, securityContext)")
-  Object auditGetPostDelete(ProceedingJoinPoint joinPoint, Object object, RequestContext context,
+  Object auditGetPostDeletePutUpsert(ProceedingJoinPoint joinPoint, Object object, RequestContext context,
       SecurityContext securityContext) throws Throwable {
 
     var annotation = getAnnotation(joinPoint);
@@ -111,6 +112,8 @@ public class ControllerAuditAspect {
       return prepareAndSendRestAudit(joinPoint, CREATE, null, securityContext);
     } else if (annotation.equals(DeleteMapping.class) && object instanceof UUID) {
       return prepareAndSendRestAudit(joinPoint, DELETE, (UUID) object, securityContext);
+    } else if (annotation.equals(PutMapping.class)) {
+      return prepareAndSendRestAudit(joinPoint, UPSERT, null, securityContext);
     } else {
       throw new AuditException("Cannot save audit for this HTTP method. Not supported annotation: @"
           + annotation.getSimpleName());
@@ -118,7 +121,7 @@ public class ControllerAuditAspect {
   }
 
   @Around("controller() && args(id, dto, context, securityContext)")
-  Object auditPutPatch(ProceedingJoinPoint joinPoint, UUID id, Object dto, RequestContext context,
+  Object auditPatchPutUpdate(ProceedingJoinPoint joinPoint, UUID id, Object dto, RequestContext context,
       SecurityContext securityContext) throws Throwable {
 
     var annotation = getAnnotation(joinPoint);
