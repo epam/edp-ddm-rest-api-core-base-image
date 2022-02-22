@@ -16,7 +16,8 @@
 
 package com.epam.digital.data.platform.restapi.core.service;
 
-import com.epam.digital.data.platform.integration.idm.client.KeycloakAuthRestClient;
+import com.epam.digital.data.platform.integration.idm.model.PublishedIdmRealm;
+import com.epam.digital.data.platform.integration.idm.service.PublicIdmService;
 import com.epam.digital.data.platform.model.core.kafka.Request;
 import com.epam.digital.data.platform.model.core.kafka.SecurityContext;
 import com.epam.digital.data.platform.restapi.core.config.KeycloakConfigProperties;
@@ -36,7 +37,6 @@ import javax.annotation.PostConstruct;
 import org.keycloak.TokenVerifier;
 import org.keycloak.common.VerificationException;
 import org.keycloak.representations.JsonWebToken;
-import org.keycloak.representations.idm.PublishedRealmRepresentation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -50,18 +50,18 @@ public class JwtValidationService {
   private final boolean jwtValidationEnabled;
   private final KeycloakConfigProperties keycloakConfigProperties;
 
-  private final KeycloakAuthRestClient keycloakRestClient;
+  private final PublicIdmService publicIdmService;
   private final Clock clock;
 
-  private Map<String, PublishedRealmRepresentation> allowedRealmsRepresentations;
+  private Map<String, PublishedIdmRealm> allowedRealmsRepresentations;
 
   public JwtValidationService(
       @Value("${data-platform.jwt.validation.enabled}") boolean jwtValidationEnabled,
       KeycloakConfigProperties keycloakConfigProperties,
-      KeycloakAuthRestClient keycloakRestClient, Clock clock) {
+      PublicIdmService publicIdmService, Clock clock) {
     this.jwtValidationEnabled = jwtValidationEnabled;
     this.keycloakConfigProperties = keycloakConfigProperties;
-    this.keycloakRestClient = keycloakRestClient;
+    this.publicIdmService = publicIdmService;
     this.clock = clock;
   }
 
@@ -72,7 +72,7 @@ public class JwtValidationService {
           keycloakConfigProperties.getRealms().stream()
               .collect(
                   Collectors.toMap(
-                      Function.identity(), keycloakRestClient::getRealmRepresentation));
+                      Function.identity(), publicIdmService::getRealm));
     }
   }
 

@@ -20,7 +20,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
-import com.epam.digital.data.platform.integration.idm.client.KeycloakAuthRestClient;
+import com.epam.digital.data.platform.integration.idm.model.PublishedIdmRealm;
+import com.epam.digital.data.platform.integration.idm.service.PublicIdmService;
 import com.epam.digital.data.platform.model.core.kafka.Request;
 import com.epam.digital.data.platform.model.core.kafka.SecurityContext;
 import com.epam.digital.data.platform.model.core.kafka.Status;
@@ -45,7 +46,6 @@ import java.util.Date;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.keycloak.representations.idm.PublishedRealmRepresentation;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
@@ -57,7 +57,7 @@ class JwtValidationServiceTest {
   @MockBean
   private KeycloakConfigProperties keycloakConfigProperties;
   @MockBean
-  private KeycloakAuthRestClient keycloakRestClient;
+  private PublicIdmService publicIdmService;
   @MockBean
   private Clock clock;
 
@@ -70,22 +70,22 @@ class JwtValidationServiceTest {
     jwtSigningKeyPair = generateSigningKeyPair();
 
     jwtValidationService = new JwtValidationService(true, keycloakConfigProperties,
-            keycloakRestClient, clock);
+        publicIdmService, clock);
 
     when(keycloakConfigProperties.getRealms()).thenReturn(Collections.singletonList(REALM));
     when(clock.millis())
         .thenReturn(LocalDateTime.of(2021, 3, 1, 11, 50)
             .atZone(ZoneId.systemDefault()).toInstant().toEpochMilli());
-    var keycloakRealmRepresentation = new PublishedRealmRepresentation();
-    keycloakRealmRepresentation.setPublicKey(jwtSigningKeyPair.getPublic());
-    when(keycloakRestClient.getRealmRepresentation(REALM))
+    var keycloakRealmRepresentation = PublishedIdmRealm.builder()
+        .publicKey(jwtSigningKeyPair.getPublic()).build();
+    when(publicIdmService.getRealm(REALM))
         .thenReturn(keycloakRealmRepresentation);
   }
 
   @Test
   void expectOperationTokenVerifiedWhenProcessingDisabled() throws JOSEException {
     jwtValidationService = new JwtValidationService(false, keycloakConfigProperties,
-            keycloakRestClient, clock);
+        publicIdmService, clock);
     jwtValidationService.postConstruct();
     Request<Void> input = mockRequest("", new Date());
 
@@ -97,7 +97,7 @@ class JwtValidationServiceTest {
   @Test
   void expectExceptionWhenOperationWithNoToken() {
     jwtValidationService = new JwtValidationService(true, keycloakConfigProperties,
-            keycloakRestClient, clock);
+        publicIdmService, clock);
     jwtValidationService.postConstruct();
     Request<Void> input = new Request<>();
 
@@ -110,11 +110,11 @@ class JwtValidationServiceTest {
 
   @Test
   void expectTokenNonVerifiedWhenInvalidPublicKeyReturned() throws JOSEException {
-    when(keycloakRestClient.getRealmRepresentation(REALM))
-        .thenReturn(new PublishedRealmRepresentation());
+    when(publicIdmService.getRealm(REALM))
+        .thenReturn(PublishedIdmRealm.builder().build());
     Date tokenExp = Date.from(LocalDateTime.of(2021, 3, 1, 12, 0)
         .atZone(ZoneId.systemDefault()).toInstant());
-    Request<Void> input = mockRequest("/" + REALM,  tokenExp);
+    Request<Void> input = mockRequest("/" + REALM, tokenExp);
     jwtValidationService.postConstruct();
 
     boolean actual = jwtValidationService.isValid(input);
@@ -139,12 +139,12 @@ class JwtValidationServiceTest {
   void expectJwtVerificationExceptionWhenIssuerRealmIncorrect() throws JOSEException {
 
     Date tokenExp = Date.from(LocalDateTime.of(2021, 3, 1, 12, 0)
-            .atZone(ZoneId.systemDefault()).toInstant());
+        .atZone(ZoneId.systemDefault()).toInstant());
     Request<Void> input = mockRequest("/wrongRealm", tokenExp);
     jwtValidationService.postConstruct();
 
     JwtValidationException e = assertThrows(JwtValidationException.class,
-            () -> jwtValidationService.isValid(input));
+        () -> jwtValidationService.isValid(input));
 
     assertThat(e.getKafkaResponseStatus()).isEqualTo(Status.JWT_INVALID);
   }
@@ -156,7 +156,8 @@ class JwtValidationServiceTest {
     Request<Void> input = mockRequest("", tokenExp);
     jwtValidationService.postConstruct();
 
-    JwtExpiredException e = assertThrows(JwtExpiredException.class, () -> jwtValidationService.isValid(input));
+    JwtExpiredException e = assertThrows(JwtExpiredException.class,
+        () -> jwtValidationService.isValid(input));
     assertThat(e.getKafkaResponseStatus()).isEqualTo(Status.JWT_EXPIRED);
     assertThat(e.getDetails()).isNull();
   }
