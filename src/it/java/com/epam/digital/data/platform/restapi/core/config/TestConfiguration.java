@@ -1,5 +1,7 @@
 package com.epam.digital.data.platform.restapi.core.config;
 
+import com.epam.digital.data.platform.starter.database.config.DatabaseConfig;
+import com.epam.digital.data.platform.starter.database.config.JooqConfig;
 import io.zonky.test.db.AutoConfigureEmbeddedDatabase;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -13,6 +15,7 @@ import org.springframework.test.context.ContextConfiguration;
 @AutoConfigureEmbeddedDatabase(provider = AutoConfigureEmbeddedDatabase.DatabaseProvider.ZONKY)
 @ContextConfiguration(classes = {
     TestDatabase.class,
+    DatabaseConfig.class,
     JooqConfig.class,
     JooqAutoConfiguration.class
 })

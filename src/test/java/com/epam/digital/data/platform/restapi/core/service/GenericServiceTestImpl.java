@@ -20,7 +20,7 @@ import com.epam.digital.data.platform.integration.ceph.service.CephService;
 import com.epam.digital.data.platform.model.core.kafka.Request;
 import com.epam.digital.data.platform.model.core.kafka.Response;
 import com.epam.digital.data.platform.restapi.core.dto.MockEntity;
-import com.epam.digital.data.platform.starter.restapi.config.properties.KafkaProperties;
+import com.epam.digital.data.platform.starter.kafka.config.properties.KafkaProperties;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.UUID;
@@ -32,7 +32,7 @@ public class GenericServiceTestImpl extends GenericService<Request<UUID>, MockEn
 
   public GenericServiceTestImpl(
       ReplyingKafkaTemplate<String, Request<UUID>, String> replyingKafkaTemplate,
-      KafkaProperties.Handler topics,
+      KafkaProperties.RequestReplyHandler topics,
       DigitalSignatureService digitalSignatureService,
       TraceProvider traceProvider,
       CephService datafactoryResponseCephService,

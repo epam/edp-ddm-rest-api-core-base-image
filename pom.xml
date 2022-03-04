@@ -13,11 +13,12 @@
 
 	<properties>
 		<model.core.version>1.4.0-SNAPSHOT</model.core.version>
+		<ddm.starter.kafka.version>1.5.0-SNAPSHOT</ddm.starter.kafka.version>
+		<ddm.starter.database.version>1.5.0-SNAPSHOT</ddm.starter.database.version>
 		<ddm.starter.logger.version>1.5.1-SNAPSHOT</ddm.starter.logger.version>
-		<ddm.starter.rest.api.version>1.5.1-SNAPSHOT</ddm.starter.rest.api.version>
-		<ddm.starter.actuator.version>1.5.1-SNAPSHOT</ddm.starter.actuator.version>
+		<ddm.starter.actuator.version>1.5.2-SNAPSHOT</ddm.starter.actuator.version>
 		<ddm.starter.swagger.version>1.5.1-SNAPSHOT</ddm.starter.swagger.version>
-		<ddm.starter.audit.version>1.5.1-SNAPSHOT</ddm.starter.audit.version>
+		<ddm.starter.audit.version>1.5.2-SNAPSHOT</ddm.starter.audit.version>
 		<ddm.starter.security.version>1.5.2-SNAPSHOT</ddm.starter.security.version>
 		<ddm.ceph.client.version>1.5.2-SNAPSHOT</ddm.ceph.client.version>
 		<ddm-idm-client.version>1.5.1-SNAPSHOT</ddm-idm-client.version>
@@ -77,8 +78,13 @@
 	<dependencies>
 		<dependency>
 			<groupId>com.epam.digital.data.platform</groupId>
-			<artifactId>ddm-starter-rest-api</artifactId>
-			<version>${ddm.starter.rest.api.version}</version>
+			<artifactId>ddm-starter-kafka</artifactId>
+			<version>${ddm.starter.kafka.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.epam.digital.data.platform</groupId>
+			<artifactId>ddm-starter-database</artifactId>
+			<version>${ddm.starter.database.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.epam.digital.data.platform</groupId>

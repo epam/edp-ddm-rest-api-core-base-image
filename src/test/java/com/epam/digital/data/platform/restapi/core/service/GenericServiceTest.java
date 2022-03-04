@@ -35,7 +35,7 @@ import com.epam.digital.data.platform.model.core.kafka.Status;
 import com.epam.digital.data.platform.restapi.core.dto.MockEntity;
 import com.epam.digital.data.platform.restapi.core.exception.KafkaCephResponseNotFoundException;
 import com.epam.digital.data.platform.restapi.core.exception.NoKafkaResponseException;
-import com.epam.digital.data.platform.starter.restapi.config.properties.KafkaProperties;
+import com.epam.digital.data.platform.starter.kafka.config.properties.KafkaProperties;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.RuntimeJsonMappingException;
@@ -85,13 +85,13 @@ class GenericServiceTest {
   @Captor
   ArgumentCaptor<ProducerRecord<String, Request<UUID>>> captor;
 
-  KafkaProperties.Handler topics;
+  KafkaProperties.RequestReplyHandler topics;
 
   @BeforeEach
   void setUp() {
-    topics = new KafkaProperties.Handler();
+    topics = new KafkaProperties.RequestReplyHandler();
     topics.setRequest("request-topic");
-    topics.setReplay("replay-topic");
+    topics.setReply("replay-topic");
 
     instance = new GenericServiceTestImpl(replyingKafkaTemplate, topics,
         digitalSignatureService, traceProvider, cephService, objectMapper, false, BUCKET_NAME);

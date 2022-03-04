@@ -16,6 +16,7 @@
 
 package com.epam.digital.data.platform.restapi.core.config;
 
+import com.epam.digital.data.platform.starter.database.config.JooqConfig;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import javax.sql.DataSource;
 import org.jooq.DSLContext;
