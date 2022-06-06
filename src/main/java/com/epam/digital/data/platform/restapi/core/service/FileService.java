@@ -19,18 +19,23 @@ package com.epam.digital.data.platform.restapi.core.service;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 
-import com.epam.digital.data.platform.integration.ceph.model.CephObject;
-import com.epam.digital.data.platform.integration.ceph.service.CephService;
 import com.epam.digital.data.platform.model.core.kafka.File;
 import com.epam.digital.data.platform.restapi.core.exception.ChecksumInconsistencyException;
 import com.epam.digital.data.platform.restapi.core.model.FileProperty;
+import com.epam.digital.data.platform.storage.file.dto.FileDataDto;
+import com.epam.digital.data.platform.storage.file.exception.FileNotFoundException;
+import com.epam.digital.data.platform.storage.file.service.FormDataFileKeyProvider;
+import com.epam.digital.data.platform.storage.file.service.FormDataFileStorageService;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -47,39 +52,39 @@ public class FileService {
   private final Logger log = LoggerFactory.getLogger(FileService.class);
 
   private final boolean isFileProcessingEnabled;
-  private final String lowcodeFileBucket;
-  private final String datafactoryFileBucket;
 
-  private final CephService lowcodeFileCephService;
-  private final CephService datafactoryFileCephService;
+  private final FormDataFileStorageService lowcodeFileDataStorageService;
+  private final FormDataFileStorageService datafactoryFileDataStorageService;
+  private final FormDataFileKeyProvider fileKeyProvider;
 
   public FileService(
       @Value("${data-platform.files.processing.enabled}") boolean isFileProcessingEnabled,
-      @Value("${lowcode-file-ceph.bucket}") String lowcodeFileBucket,
-      @Value("${datafactory-file-ceph.bucket}") String datafactoryFileBucket,
-      @Qualifier("lowcodeFileCephService") CephService lowcodeFileCephService,
-      @Qualifier("datafactoryFileCephService") CephService datafactoryFileCephService) {
+      @Qualifier("lowcodeFileDataStorageService") FormDataFileStorageService lowcodeFileDataStorageService,
+      @Qualifier("datafactoryFileDataStorageService") FormDataFileStorageService datafactoryFileDataStorageService,
+      FormDataFileKeyProvider fileKeyProvider) {
     this.isFileProcessingEnabled = isFileProcessingEnabled;
-    this.lowcodeFileBucket = lowcodeFileBucket;
-    this.datafactoryFileBucket = datafactoryFileBucket;
-    this.lowcodeFileCephService = lowcodeFileCephService;
-    this.datafactoryFileCephService = datafactoryFileCephService;
+    this.lowcodeFileDataStorageService = lowcodeFileDataStorageService;
+    this.datafactoryFileDataStorageService = datafactoryFileDataStorageService;
+    this.fileKeyProvider = fileKeyProvider;
   }
 
   public boolean store(String instanceId, File file) {
     if (isFileProcessingEnabled) {
       log.info("Storing file '{}' from lowcode to data ceph bucket", file.getId());
 
-      var lowcodeId = createCompositeObjectId(instanceId, file.getId());
+      var lowcodeId = fileKeyProvider.generateKey(instanceId, file.getId());
 
-      var cephResponseOpt = lowcodeFileCephService.get(lowcodeFileBucket, lowcodeId);
-      if (cephResponseOpt.isEmpty()) {
+      FileDataDto fileDataDto;
+      try {
+        fileDataDto = lowcodeFileDataStorageService.loadByKey(lowcodeId);
+      } catch (FileNotFoundException ex) {
+        log.warn("File not found ", ex);
         return false;
       }
-      var cephResponse = cephResponseOpt.get();
-      var content = getCephContent(cephResponse);
 
-      String calculatedChecksum = DigestUtils.sha256Hex(content);
+      var content = getContent(fileDataDto.getContent());
+      var calculatedChecksum = DigestUtils.sha256Hex(content);
+
       if (!StringUtils.equals(calculatedChecksum, file.getChecksum())) {
         throw new ChecksumInconsistencyException(
             String.format(
@@ -87,12 +92,8 @@ public class FileService {
                 calculatedChecksum, file.getChecksum(), file.getId()));
       }
 
-      datafactoryFileCephService.put(
-          datafactoryFileBucket,
-          file.getId(),
-          cephResponse.getMetadata().getContentType(),
-          cephResponse.getMetadata().getUserMetadata(),
-          new ByteArrayInputStream(content));
+      fileDataDto.setContent(new ByteArrayInputStream(content));
+      datafactoryFileDataStorageService.save(file.getId(), fileDataDto);
     }
 
     return true;
@@ -170,14 +171,17 @@ public class FileService {
     if (isFileProcessingEnabled) {
       log.info("Storing file '{}' from data to lowcode ceph bucket", file.getId());
 
-      var cephResponseOpt = datafactoryFileCephService.get(datafactoryFileBucket, file.getId());
-      if (cephResponseOpt.isEmpty()) {
+      FileDataDto fileDataDto;
+      try {
+        fileDataDto = datafactoryFileDataStorageService.loadByKey(file.getId());
+      } catch (FileNotFoundException ex) {
+        log.warn("File not found ", ex);
         return false;
       }
-      var cephResponse = cephResponseOpt.get();
-      var content = getCephContent(cephResponse);
 
-      String calculatedChecksum = DigestUtils.sha256Hex(content);
+      var content = getContent(fileDataDto.getContent());
+      var calculatedChecksum = DigestUtils.sha256Hex(content);
+
       if (!StringUtils.equals(calculatedChecksum, file.getChecksum())) {
         log.error("The checksum stored in the database ({}) and calculated based on the retrieved "
                 + "file object ({}) do not match. File id: '{}'",
@@ -185,27 +189,21 @@ public class FileService {
         return true;
       }
 
-      var lowcodeId = createCompositeObjectId(instanceId, file.getId());
-      lowcodeFileCephService.put(
-          lowcodeFileBucket,
-          lowcodeId,
-          cephResponse.getMetadata().getContentType(),
-          cephResponse.getMetadata().getUserMetadata(),
-          new ByteArrayInputStream(content));
+      fileDataDto.setContent(new ByteArrayInputStream(content));
+      var lowcodeId = fileKeyProvider.generateKey(instanceId, file.getId());
+      lowcodeFileDataStorageService.save(lowcodeId, fileDataDto);
     }
 
     return true;
   }
 
-  private String createCompositeObjectId(String instanceId, String objectId) {
-    return "process/" + instanceId + "/" + objectId;
-  }
 
-  private byte[] getCephContent(CephObject cephObject) {
+  private byte[] getContent(InputStream inputStream) {
     try {
-      return IOUtils.toByteArray(cephObject.getContent());
+      return IOUtils.toByteArray(inputStream);
     } catch (IOException e) {
       throw new IllegalArgumentException("Couldn't read returned ceph content from stream", e);
     }
   }
+
 }

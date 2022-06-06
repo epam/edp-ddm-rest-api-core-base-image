@@ -33,6 +33,7 @@ import static org.mockito.Mockito.when;
 import com.epam.digital.data.platform.model.core.kafka.SecurityContext;
 import com.epam.digital.data.platform.restapi.core.exception.InvalidSignatureException;
 import com.epam.digital.data.platform.restapi.core.service.DigitalSignatureService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.StringReader;
@@ -62,6 +63,7 @@ class DigitalSignatureValidationFilterTest {
   private static final String X_DIGITAL_SIGNATURE_DERIVED_VALUE = "x-digital-signature-derived-header-value";
 
   private static final String uuid = "4b57a8d7-1af0-4f0a-8afc-dfc078299885";
+  private static final String deleteData = String.format("{\"id\":\"%s\"}", uuid);
   private static final String URL = "/some/service/" + uuid;
   private static final String REQUEST_BODY = "some request body";
 
@@ -79,6 +81,7 @@ class DigitalSignatureValidationFilterTest {
   private FilterChain filterChain;
   @Mock
   private DigitalSignatureService digitalSignatureService;
+  private ObjectMapper mapper = new ObjectMapper();
 
   @Captor
   private ArgumentCaptor<SecurityContext> securityContextCaptor;
@@ -89,7 +92,7 @@ class DigitalSignatureValidationFilterTest {
 
   @BeforeEach
   void init() throws IOException {
-    filter = new DigitalSignatureValidationFilter(digitalSignatureService, true);
+    filter = new DigitalSignatureValidationFilter(digitalSignatureService, mapper, true);
 
     when(digitalSignatureService.copySignature(any())).thenReturn("");
 
@@ -127,7 +130,7 @@ class DigitalSignatureValidationFilterTest {
   void methodDelete() throws IOException, ServletException {
     filter.doFilter(request, response, filterChain);
 
-    verify(digitalSignatureService).checkSignature(uuid, securityContext);
+    verify(digitalSignatureService).checkSignature(deleteData, securityContext);
   }
 
   @ParameterizedTest
@@ -172,7 +175,7 @@ class DigitalSignatureValidationFilterTest {
     securityContext.setDigitalSignatureChecksum(null);
     securityContext.setDigitalSignatureDerivedChecksum(null);
     doThrow(InvalidSignatureException.class)
-        .when(digitalSignatureService).checkSignature(uuid, securityContext);
+        .when(digitalSignatureService).checkSignature(deleteData, securityContext);
 
     Assertions.assertThrows(InvalidSignatureException.class,
         () -> filter.doFilter(request, response, filterChain));
@@ -184,7 +187,7 @@ class DigitalSignatureValidationFilterTest {
 
     filter.doFilter(request, response, filterChain);
 
-    verify(digitalSignatureService).checkSignature(uuid, securityContext);
+    verify(digitalSignatureService).checkSignature(deleteData, securityContext);
   }
 
   @Test
@@ -227,7 +230,7 @@ class DigitalSignatureValidationFilterTest {
   @ParameterizedTest
   @ValueSource(strings = {"POST", "PUT", "PATCH"})
   void skipWhenDisabled(String arg) throws ServletException, IOException {
-    filter = new DigitalSignatureValidationFilter(digitalSignatureService, false);
+    filter = new DigitalSignatureValidationFilter(digitalSignatureService, mapper, false);
     when(request.getMethod()).thenReturn(arg);
 
     filter.doFilter(request, response, filterChain);
@@ -238,7 +241,7 @@ class DigitalSignatureValidationFilterTest {
   @ParameterizedTest
   @ValueSource(strings = {"POST", "PUT", "PATCH"})
   void sameRequestWhenDisabled(String arg) throws ServletException, IOException {
-    filter = new DigitalSignatureValidationFilter(digitalSignatureService, false);
+    filter = new DigitalSignatureValidationFilter(digitalSignatureService, mapper, false);
     when(request.getMethod()).thenReturn(arg);
 
     filter.doFilter(request, response, filterChain);
@@ -250,7 +253,7 @@ class DigitalSignatureValidationFilterTest {
   @ParameterizedTest
   @ValueSource(strings = {"POST", "PUT", "PATCH"})
   void setScEvenWhenDisabled(String arg) throws ServletException, IOException {
-    filter = new DigitalSignatureValidationFilter(digitalSignatureService, false);
+    filter = new DigitalSignatureValidationFilter(digitalSignatureService, mapper, false);
     when(request.getMethod()).thenReturn(arg);
 
     filter.doFilter(request, response, filterChain);

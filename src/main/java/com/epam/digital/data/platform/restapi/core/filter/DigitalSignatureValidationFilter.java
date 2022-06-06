@@ -23,7 +23,10 @@ import static org.springframework.util.StringUtils.isEmpty;
 
 import com.epam.digital.data.platform.model.core.kafka.SecurityContext;
 import com.epam.digital.data.platform.restapi.core.service.DigitalSignatureService;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -45,11 +48,13 @@ public class DigitalSignatureValidationFilter extends AbstractFilter {
   private static final Set<String> applicableHttpMethods = Set.of("PUT", "POST", "DELETE", "PATCH");
 
   private final DigitalSignatureService digitalSignatureService;
+  private final ObjectMapper mapper;
   private final boolean isEnabled;
 
   public DigitalSignatureValidationFilter(DigitalSignatureService digitalSignatureService,
-      @Value("${data-platform.signature.validation.enabled}") boolean isEnabled) {
+      ObjectMapper mapper, @Value("${data-platform.signature.validation.enabled}") boolean isEnabled) {
     this.digitalSignatureService = digitalSignatureService;
+    this.mapper = mapper;
     this.isEnabled = isEnabled;
   }
 
@@ -97,8 +102,8 @@ public class DigitalSignatureValidationFilter extends AbstractFilter {
   private String getDataForDelete(HttpServletRequest request) {
     String fullPath = UrlPathHelper.defaultInstance.getPathWithinApplication(request);
     String url = RegExUtils.removePattern(fullPath, "/+$");
-    UUID result = UUID.fromString(url.substring(url.lastIndexOf('/') + 1));
-    return result.toString();
+    var id = UUID.fromString(url.substring(url.lastIndexOf('/') + 1));
+    return serialize(Map.of("id", id.toString()));
   }
 
   private SecurityContext fillContextSignatures(SecurityContext securityContext, HttpServletRequest request) {
@@ -115,5 +120,13 @@ public class DigitalSignatureValidationFilter extends AbstractFilter {
     securityContext.setDigitalSignatureDerived(xDigitalSignatureDerived);
 
     return securityContext;
+  }
+
+  private String serialize(Map<String, String> data) {
+    try {
+      return mapper.writeValueAsString(data);
+    } catch (JsonProcessingException e) {
+      throw new IllegalStateException("Couldn't serialize object", e);
+    }
   }
 }

@@ -39,33 +39,6 @@ public class CephClientConfig {
   }
 
   @Bean
-  public CephService lowcodeCephService(
-      @Value("${ceph.http-endpoint}") String uri,
-      @Value("${ceph.access-key}") String accessKey,
-      @Value("${ceph.secret-key}") String secretKey,
-      CephS3Factory cephS3Factory) {
-    return cephS3Factory.createCephService(uri, accessKey, secretKey);
-  }
-
-  @Bean
-  public CephService lowcodeFileCephService(
-      @Value("${lowcode-file-ceph.http-endpoint}") String uri,
-      @Value("${lowcode-file-ceph.access-key}") String accessKey,
-      @Value("${lowcode-file-ceph.secret-key}") String secretKey,
-      CephS3Factory cephS3Factory) {
-    return cephS3Factory.createCephService(uri, accessKey, secretKey);
-  }
-
-  @Bean
-  public CephService datafactoryCephService(
-      @Value("${datafactoryceph.http-endpoint}") String uri,
-      @Value("${datafactoryceph.access-key}") String accessKey,
-      @Value("${datafactoryceph.secret-key}") String secretKey,
-      CephS3Factory cephS3Factory) {
-    return cephS3Factory.createCephService(uri, accessKey, secretKey);
-  }
-
-  @Bean
   public CephService datafactoryResponseCephService(
       @Value("${datafactory-response-ceph.http-endpoint}") String uri,
       @Value("${datafactory-response-ceph.access-key}") String accessKey,
@@ -75,10 +48,10 @@ public class CephClientConfig {
   }
 
   @Bean
-  public CephService datafactoryFileCephService(
-      @Value("${datafactory-file-ceph.http-endpoint}") String uri,
-      @Value("${datafactory-file-ceph.access-key}") String accessKey,
-      @Value("${datafactory-file-ceph.secret-key}") String secretKey,
+  public CephService datafactoryCephService(
+      @Value("${datafactoryceph.http-endpoint}") String uri,
+      @Value("${datafactoryceph.access-key}") String accessKey,
+      @Value("${datafactoryceph.secret-key}") String secretKey,
       CephS3Factory cephS3Factory) {
     return cephS3Factory.createCephService(uri, accessKey, secretKey);
   }
