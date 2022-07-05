@@ -7,7 +7,7 @@ public class TestEntityM2M {
 
   private UUID id;
   private String name;
-  private List<UUID> entities;
+  private TestEntity[] entities;
 
   public UUID getId() {
     return id;
@@ -25,11 +25,11 @@ public class TestEntityM2M {
     this.name = name;
   }
 
-  public List<UUID> getEntities() {
+  public TestEntity[] getEntities() {
     return entities;
   }
 
-  public void setEntities(List<UUID> entities) {
+  public void setEntities(TestEntity[] entities) {
     this.entities = entities;
   }
 }

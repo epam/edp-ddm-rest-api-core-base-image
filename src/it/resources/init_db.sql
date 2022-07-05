@@ -64,7 +64,7 @@ create table test_entity
     ddm_updated_at       timestamp,
     ddm_created_by       varchar(255),
     ddm_updated_by      varchar(255),
-    consent_date     timestamp,
+    consent_date     timestamptz,
     person_full_name   varchar(255),
     person_pass_number   varchar(255),
     person_gender       type_gender,
@@ -76,13 +76,13 @@ insert into test_entity (id, ddm_created_at, ddm_updated_at,
         consent_date, person_full_name, person_pass_number, person_gender)
 values ('3cc262c1-0cd8-4d45-be66-eb0fca821e0a', current_timestamp, current_timestamp,
         current_user, current_user,
-        '2020-01-15 12:00:01', 'John Doe Patronymic', 'AB123456', 'M'),
+        '2020-01-15 12:00:01+02:00', 'John Doe Patronymic', 'AB123456', 'M'),
        ('1ce1cad1-ff11-1fa1-b111-e07afea1cb1d', current_timestamp, current_timestamp,
         current_user, current_user,
         current_timestamp, 'John Doe Patronymic', 'BA654321', 'M'),
        ('9ce4cad9-ff50-4fa3-b893-e07afea0cb8d', current_timestamp, current_timestamp,
         current_user, current_user,
-        current_timestamp,'Benjamin Franklin Patronymic', 'XY098765', 'W');
+        '2020-01-15 12:00:01+02:00','Benjamin Franklin Patronymic', 'XY098765', 'W');
 
 --- test_entity_file:
 CREATE TABLE test_entity_file

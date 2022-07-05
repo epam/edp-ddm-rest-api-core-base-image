@@ -20,6 +20,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -30,15 +31,21 @@ import com.epam.digital.data.platform.restapi.core.config.TestDataProvider;
 import com.epam.digital.data.platform.restapi.core.dto.MockEntity;
 import com.epam.digital.data.platform.restapi.core.exception.ForbiddenOperationException;
 import com.epam.digital.data.platform.restapi.core.exception.SqlErrorException;
+import com.epam.digital.data.platform.restapi.core.model.FieldsAccessCheckDto;
 import com.epam.digital.data.platform.restapi.core.queryhandler.impl.QueryHandlerTestImpl;
 import com.epam.digital.data.platform.restapi.core.service.AccessPermissionService;
 import com.epam.digital.data.platform.restapi.core.service.JwtInfoProvider;
+import com.epam.digital.data.platform.restapi.core.tabledata.TableDataProvider;
 import com.epam.digital.data.platform.starter.security.dto.JwtClaimsDto;
+
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -50,10 +57,12 @@ import org.springframework.test.util.ReflectionTestUtils;
 class QueryHandlerTest {
 
   @MockBean
-  private AccessPermissionService<MockEntity> accessPermissionService;
+  private AccessPermissionService accessPermissionService;
   @MockBean
   private JwtInfoProvider jwtInfoProvider;
 
+  @MockBean
+  private TableDataProvider tableDataProvider;
   @Autowired
   private QueryHandlerTestImpl queryHandler;
 
@@ -62,12 +71,18 @@ class QueryHandlerTest {
   void expectSuccessfulFindByIdWhenHaveValidRoles() {
     JwtClaimsDto userClaims = new JwtClaimsDto();
     when(jwtInfoProvider.getUserClaims(any())).thenReturn(userClaims);
-    when(accessPermissionService.hasReadAccess(any(), any(), any())).thenReturn(true);
+    when(accessPermissionService.hasReadAccess(any(), any())).thenReturn(true);
+    when(tableDataProvider.tableName()).thenReturn("table");
+    when(tableDataProvider.pkColumnName()).thenReturn("id");
     Request<UUID> input = getMockRequest(TestDataProvider.ENTITY_ID);
     final Optional<MockEntity> consentSubject = queryHandler.findById(input);
     MockEntity record = consentSubject.orElse(new MockEntity());
 
-    verify(accessPermissionService).hasReadAccess("table", userClaims, MockEntity.class);
+    ArgumentCaptor<List<FieldsAccessCheckDto>> captor = ArgumentCaptor.forClass(List.class);
+    verify(accessPermissionService).hasReadAccess(captor.capture(), eq(userClaims));
+    assertThat(captor.getValue().get(0).getTableName()).isEqualTo("table");
+    assertThat(captor.getValue().get(0).getFields())
+        .containsExactlyInAnyOrder("consent_id", "person_full_name", "person_pass_number");
     Assertions.assertAll(
         "A",
         () -> assertEquals(TestDataProvider.ENTITY_ID, record.getConsentId()),
@@ -79,7 +94,7 @@ class QueryHandlerTest {
   void expectExceptionWhenNoAccessForFindById() {
     JwtClaimsDto userClaims = new JwtClaimsDto();
     when(jwtInfoProvider.getUserClaims(any())).thenReturn(userClaims);
-    when(accessPermissionService.hasReadAccess(any(), any(), any())).thenReturn(false);
+    when(accessPermissionService.hasReadAccess(any(), any())).thenReturn(false);
     Request<UUID> input = getMockRequest(TestDataProvider.ENTITY_ID);
 
     ForbiddenOperationException e =
@@ -90,8 +105,8 @@ class QueryHandlerTest {
 
   @Test
   void expectAuditAspectOnlyBeforeWhenExceptionOnSearchMethod() {
-    when(accessPermissionService.hasReadAccess(any(), any(), any())).thenReturn(true);
-    queryHandler = new QueryHandlerTestImpl(accessPermissionService);
+    when(accessPermissionService.hasReadAccess(any(), any())).thenReturn(true);
+//    queryHandler = new QueryHandlerTestImpl(tableDataProvider);
     ReflectionTestUtils.setField(queryHandler, "jwtInfoProvider", jwtInfoProvider);
     var input = new Request<UUID>();
 

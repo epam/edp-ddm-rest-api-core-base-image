@@ -20,15 +20,15 @@ import com.epam.digital.data.platform.model.core.kafka.Request;
 import com.epam.digital.data.platform.restapi.core.audit.AuditableDatabaseOperation;
 import com.epam.digital.data.platform.restapi.core.audit.AuditableDatabaseOperation.Operation;
 import com.epam.digital.data.platform.restapi.core.exception.SqlErrorException;
-import java.util.List;
 import org.jooq.Condition;
 import org.jooq.DSLContext;
 import org.jooq.SelectFieldOrAsterisk;
 import org.jooq.impl.DSL;
 import org.springframework.beans.factory.annotation.Autowired;
 
-public abstract class AbstractSearchHandler<I, O> implements
-    com.epam.digital.data.platform.restapi.core.searchhandler.SearchHandler<I, O> {
+import java.util.List;
+
+public abstract class AbstractSearchHandler<I, O> implements SearchHandler<I, O> {
 
   @Autowired
   protected DSLContext context;

@@ -17,30 +17,28 @@
 package com.epam.digital.data.platform.restapi.core.queryhandler.impl;
 
 import com.epam.digital.data.platform.restapi.core.dto.MockEntity;
+import com.epam.digital.data.platform.restapi.core.model.FieldsAccessCheckDto;
 import com.epam.digital.data.platform.restapi.core.queryhandler.AbstractQueryHandler;
-import com.epam.digital.data.platform.restapi.core.service.AccessPermissionService;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
+
+import com.epam.digital.data.platform.restapi.core.tabledata.TableDataProvider;
 import org.jooq.SelectFieldOrAsterisk;
 import org.jooq.impl.DSL;
 import org.springframework.boot.test.context.TestComponent;
 
 @TestComponent
 public class QueryHandlerTestImpl extends AbstractQueryHandler<UUID, MockEntity> {
-  public QueryHandlerTestImpl(
-      AccessPermissionService<MockEntity> accessPermissionService) {
-    super(accessPermissionService);
+  public QueryHandlerTestImpl(TableDataProvider tableDataProvider) {
+    super(tableDataProvider);
   }
 
   @Override
-  public String idName() {
-    return "id";
-  }
-
-  @Override
-  public String tableName() {
-    return "table";
+  public List<FieldsAccessCheckDto> getFieldsToCheckAccess() {
+    return List.of(
+        new FieldsAccessCheckDto(
+            "table", List.of("consent_id", "person_full_name", "person_pass_number")));
   }
 
   @Override
@@ -54,5 +52,19 @@ public class QueryHandlerTestImpl extends AbstractQueryHandler<UUID, MockEntity>
         DSL.field("consent_id"),
         DSL.field("person_full_name"),
         DSL.field("person_pass_number"));
+  }
+
+  @TestComponent
+  public static class TableDataProviderTestImpl implements TableDataProvider {
+
+    @Override
+    public String tableName() {
+      return "table";
+    }
+
+    @Override
+    public String pkColumnName() {
+      return "id";
+    }
   }
 }

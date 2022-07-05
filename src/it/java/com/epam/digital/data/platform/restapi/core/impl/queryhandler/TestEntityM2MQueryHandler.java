@@ -1,9 +1,9 @@
 package com.epam.digital.data.platform.restapi.core.impl.queryhandler;
 
 import com.epam.digital.data.platform.restapi.core.impl.model.TestEntityM2M;
+import com.epam.digital.data.platform.restapi.core.impl.tabledata.TestEntityM2mTableDataProvider;
+import com.epam.digital.data.platform.restapi.core.model.FieldsAccessCheckDto;
 import com.epam.digital.data.platform.restapi.core.queryhandler.AbstractQueryHandler;
-import com.epam.digital.data.platform.restapi.core.service.AccessPermissionService;
-import com.epam.digital.data.platform.restapi.core.utils.JooqDataTypes;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -13,18 +13,18 @@ import org.jooq.impl.DSL;
 public class TestEntityM2MQueryHandler extends AbstractQueryHandler<UUID, TestEntityM2M> {
 
   public TestEntityM2MQueryHandler(
-      AccessPermissionService<TestEntityM2M> accessPermissionService) {
-    super(accessPermissionService);
+          TestEntityM2mTableDataProvider tableDataProvider) {
+    super(tableDataProvider);
   }
 
   @Override
-  public String idName() {
-    return "id";
-  }
-
-  @Override
-  public String tableName() {
-    return "test_entity_m2m";
+  public List<FieldsAccessCheckDto> getFieldsToCheckAccess() {
+    return Arrays.asList(
+        new FieldsAccessCheckDto("test_entity_m2m", Arrays.asList("id", "name", "entities")),
+        new FieldsAccessCheckDto(
+            "test_entity",
+            Arrays.asList(
+                "id", "consent_date", "person_pass_number", "person_full_name", "person_gender")));
   }
 
   @Override
@@ -37,7 +37,23 @@ public class TestEntityM2MQueryHandler extends AbstractQueryHandler<UUID, TestEn
     return Arrays.asList(
         DSL.field("id"),
         DSL.field("name"),
-        DSL.field("entities", JooqDataTypes.ARRAY_DATA_TYPE)
-        );
+        DSL.field(
+                DSL.select(
+                        DSL.coalesce(
+                            DSL.jsonArrayAgg(
+                                DSL.jsonObject(
+                                    DSL.field("id"),
+                                    DSL.field("person_pass_number"),
+                                    DSL.field("consent_date"),
+                                    DSL.field("person_gender"),
+                                    DSL.field("person_full_name"))),
+                            DSL.jsonArray()))
+                    .from("test_entity")
+                    .where(
+                        DSL.field("id")
+                            .eq(
+                                DSL.any(
+                                    DSL.array(DSL.field("test_entity_m2m.entities"))))))
+            .as("entities"));
   }
 }

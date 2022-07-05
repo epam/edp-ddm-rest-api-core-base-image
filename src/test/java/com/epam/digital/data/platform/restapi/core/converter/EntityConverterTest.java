@@ -88,9 +88,7 @@ class EntityConverterTest {
     assertThat(entityMap)
         .hasSize(5)
         .containsEntry("consent_id", CONSENT_ID.toString())
-        .containsEntry(
-            "consent_date",
-            CONSENT_DATE.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")))
+        .containsEntry("consent_date", CONSENT_DATE.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME))
         .containsEntry("person_full_name", USER_NAME)
         .containsEntry("person_pass_number", USER_PASS)
         .containsEntry("passport_scan_copy", "(" + SCAN_COPY_ID + "," + SCAN_COPY_CHECKSUM + ")");

@@ -19,14 +19,14 @@ package com.epam.digital.data.platform.restapi.core.service;
 import com.epam.digital.data.platform.model.core.kafka.Request;
 import com.epam.digital.data.platform.model.core.kafka.Response;
 import com.epam.digital.data.platform.model.core.kafka.Status;
-import com.epam.digital.data.platform.restapi.core.queryhandler.AbstractQueryHandler;
+import com.epam.digital.data.platform.restapi.core.queryhandler.QueryHandler;
 import java.util.Optional;
 
 public abstract class GenericQueryService<I, O> {
 
-  private final AbstractQueryHandler<I, O> queryHandler;
+  private final QueryHandler<I, O> queryHandler;
 
-  protected GenericQueryService(AbstractQueryHandler<I, O> queryHandler) {
+  protected GenericQueryService(QueryHandler<I, O> queryHandler) {
     this.queryHandler = queryHandler;
   }
 

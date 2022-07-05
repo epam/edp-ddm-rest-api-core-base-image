@@ -14,10 +14,9 @@
  * limitations under the License.
  */
 
-package com.epam.digital.data.platform.restapi.core.impl;
+package com.epam.digital.data.platform.restapi.core.searchhandler;
 
-import com.epam.digital.data.platform.restapi.core.dto.MockEntity;
-import com.epam.digital.data.platform.restapi.core.searchhandler.AbstractSearchHandler;
+
 import com.epam.digital.data.platform.restapi.core.util.MockEntityContains;
 import java.util.Collections;
 import java.util.List;

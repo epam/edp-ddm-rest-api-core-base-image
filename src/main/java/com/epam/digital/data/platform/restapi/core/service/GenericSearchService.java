@@ -19,14 +19,14 @@ package com.epam.digital.data.platform.restapi.core.service;
 import com.epam.digital.data.platform.model.core.kafka.Request;
 import com.epam.digital.data.platform.model.core.kafka.Response;
 import com.epam.digital.data.platform.model.core.kafka.Status;
-import com.epam.digital.data.platform.restapi.core.searchhandler.AbstractSearchHandler;
+import com.epam.digital.data.platform.restapi.core.searchhandler.SearchHandler;
 import java.util.List;
 
 public abstract class GenericSearchService<I, O> {
 
-  private final AbstractSearchHandler<I, O> searchHandler;
+  private final SearchHandler<I, O> searchHandler;
 
-  protected GenericSearchService(AbstractSearchHandler<I, O> searchHandler) {
+  protected GenericSearchService(SearchHandler<I, O> searchHandler) {
     this.searchHandler = searchHandler;
   }
 

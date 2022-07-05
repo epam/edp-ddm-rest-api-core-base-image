@@ -21,11 +21,11 @@ import com.epam.digital.data.platform.restapi.core.audit.AuditableDatabaseOperat
 import com.epam.digital.data.platform.restapi.core.audit.AuditableDatabaseOperation.Operation;
 import com.epam.digital.data.platform.restapi.core.exception.ForbiddenOperationException;
 import com.epam.digital.data.platform.restapi.core.exception.SqlErrorException;
+import com.epam.digital.data.platform.restapi.core.model.FieldsAccessCheckDto;
 import com.epam.digital.data.platform.restapi.core.service.AccessPermissionService;
 import com.epam.digital.data.platform.restapi.core.service.JwtInfoProvider;
+import com.epam.digital.data.platform.restapi.core.tabledata.TableDataProvider;
 import com.epam.digital.data.platform.starter.security.dto.JwtClaimsDto;
-import java.util.List;
-import java.util.Optional;
 import org.jooq.DSLContext;
 import org.jooq.SelectFieldOrAsterisk;
 import org.jooq.impl.DSL;
@@ -33,8 +33,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
-public abstract class AbstractQueryHandler<I, O> implements
-    com.epam.digital.data.platform.restapi.core.queryhandler.QueryHandler<I, O> {
+import java.util.List;
+import java.util.Optional;
+
+public abstract class AbstractQueryHandler<I, O> implements QueryHandler<I, O> {
 
   private final Logger log = LoggerFactory.getLogger(AbstractQueryHandler.class);
 
@@ -42,11 +44,13 @@ public abstract class AbstractQueryHandler<I, O> implements
   protected DSLContext context;
   @Autowired
   protected JwtInfoProvider jwtInfoProvider;
+  @Autowired
+  protected AccessPermissionService accessPermissionService;
 
-  protected final AccessPermissionService<O> accessPermissionService;
+  protected final TableDataProvider tableDataProvider;
 
-  protected AbstractQueryHandler(AccessPermissionService<O> accessPermissionService) {
-    this.accessPermissionService = accessPermissionService;
+  public AbstractQueryHandler(TableDataProvider tableDataProvider) {
+    this.tableDataProvider = tableDataProvider;
   }
 
   @AuditableDatabaseOperation(Operation.READ)
@@ -55,8 +59,9 @@ public abstract class AbstractQueryHandler<I, O> implements
     log.info("Reading from DB");
 
     JwtClaimsDto userClaims = jwtInfoProvider.getUserClaims(input);
-    if (!accessPermissionService.hasReadAccess(tableName(), userClaims, entityType())) {
-      throw new ForbiddenOperationException("User has invalid role for search by ID");
+    if (!accessPermissionService.hasReadAccess(getFieldsToCheckAccess(), userClaims)) {
+      throw new ForbiddenOperationException(
+          "User has invalid role for search by ID from " + tableDataProvider.tableName());
     }
 
     I id = input.getPayload();
@@ -64,8 +69,8 @@ public abstract class AbstractQueryHandler<I, O> implements
       final O dto =
           context
               .select(selectFields())
-              .from(DSL.table(tableName()))
-              .where(DSL.field(idName()).eq(id))
+              .from(DSL.table(tableDataProvider.tableName()))
+              .where(DSL.field(tableDataProvider.pkColumnName()).eq(id))
               .fetchOneInto(entityType());
       return Optional.ofNullable(dto);
     } catch (Exception e) {
@@ -73,9 +78,7 @@ public abstract class AbstractQueryHandler<I, O> implements
     }
   }
 
-  public abstract String idName();
-
-  public abstract String tableName();
+  public abstract List<FieldsAccessCheckDto> getFieldsToCheckAccess();
 
   public abstract Class<O> entityType();
 

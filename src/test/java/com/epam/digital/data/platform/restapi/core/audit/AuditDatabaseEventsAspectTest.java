@@ -26,10 +26,9 @@ import com.epam.digital.data.platform.model.core.kafka.Request;
 import com.epam.digital.data.platform.model.core.kafka.SecurityContext;
 import com.epam.digital.data.platform.restapi.core.config.JooqTestConfig;
 import com.epam.digital.data.platform.restapi.core.converter.EntityConverter;
-import com.epam.digital.data.platform.restapi.core.dto.MockEntity;
 import com.epam.digital.data.platform.restapi.core.exception.ForbiddenOperationException;
 import com.epam.digital.data.platform.restapi.core.exception.SqlErrorException;
-import com.epam.digital.data.platform.restapi.core.impl.AbstractSearchHandlerTestImpl;
+import com.epam.digital.data.platform.restapi.core.searchhandler.AbstractSearchHandlerTestImpl;
 import com.epam.digital.data.platform.restapi.core.queryhandler.impl.QueryHandlerTestImpl;
 import com.epam.digital.data.platform.restapi.core.service.AccessPermissionService;
 import com.epam.digital.data.platform.restapi.core.service.JwtInfoProvider;
@@ -77,7 +76,7 @@ class AuditDatabaseEventsAspectTest {
   private AbstractSearchHandlerTestImpl abstractSearchHandlerTest;
 
   @MockBean
-  private AccessPermissionService<MockEntity> accessPermissionService;
+  private AccessPermissionService accessPermissionService;
   @MockBean
   private DatabaseEventsFacade databaseEventsFacade;
   @MockBean
@@ -106,7 +105,7 @@ class AuditDatabaseEventsAspectTest {
 
   @Test
   void expectAuditAspectBeforeAndAfterFindByIdMethodWhenNoException() {
-    when(accessPermissionService.hasReadAccess(any(), any(), any())).thenReturn(true);
+    when(accessPermissionService.hasReadAccess(any(), any())).thenReturn(true);
     abstractQueryHandler.findById(mockRequest(ACCESS_TOKEN, ENTITY_ID));
 
     verify(databaseEventsFacade, times(2))

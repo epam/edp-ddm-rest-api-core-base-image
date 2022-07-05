@@ -1,30 +1,30 @@
 package com.epam.digital.data.platform.restapi.core.impl.queryhandler;
 
 import com.epam.digital.data.platform.restapi.core.impl.model.TestEntityFile;
+import com.epam.digital.data.platform.restapi.core.impl.tabledata.TestEntityFileTableDataProvider;
+import com.epam.digital.data.platform.restapi.core.model.FieldsAccessCheckDto;
 import com.epam.digital.data.platform.restapi.core.queryhandler.AbstractQueryHandler;
 import com.epam.digital.data.platform.restapi.core.service.AccessPermissionService;
-import com.epam.digital.data.platform.restapi.core.utils.JooqDataTypes;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
+
+import com.epam.digital.data.platform.restapi.core.utils.JooqDataTypes;
 import org.jooq.SelectFieldOrAsterisk;
 import org.jooq.impl.DSL;
 
 public class TestEntityFileQueryHandler extends AbstractQueryHandler<UUID, TestEntityFile> {
 
   public TestEntityFileQueryHandler(
-      AccessPermissionService<TestEntityFile> accessPermissionService) {
-    super(accessPermissionService);
+          TestEntityFileTableDataProvider tableDataProvider) {
+    super(tableDataProvider);
   }
 
   @Override
-  public String idName() {
-    return "id";
-  }
-
-  @Override
-  public String tableName() {
-    return "test_entity_file";
+  public List<FieldsAccessCheckDto> getFieldsToCheckAccess() {
+    return List.of(
+        new FieldsAccessCheckDto(
+            "test_entity_file", List.of("id", "legal_entity_name", "scan_copy")));
   }
 
   @Override

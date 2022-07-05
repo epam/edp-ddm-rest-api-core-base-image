@@ -90,10 +90,10 @@ public class DaoTestUtils {
   }
 
   public static TestEntityM2M testEntityM2M() {
-    var r = new TestEntityM2M();
-    r.setId(TEST_ENTITY_M2M_ID);
-    r.setName("FOP John Doe");
-    r.setEntities(List.of(TEST_ENTITY_ID, TEST_ENTITY_ID_2));
-    return r;
+    var entityM2M = new TestEntityM2M();
+    entityM2M.setId(TEST_ENTITY_M2M_ID);
+    entityM2M.setName("FOP John Doe");
+    entityM2M.setEntities(new TestEntity[] { testEntity(), testEntity2() });
+    return entityM2M;
   }
 }

@@ -2,17 +2,19 @@ package com.epam.digital.data.platform.restapi.core.queryhandler;
 
 import static com.epam.digital.data.platform.restapi.core.util.DaoTestUtils.TEST_ENTITY_M2M;
 import static com.epam.digital.data.platform.restapi.core.util.SecurityUtils.mockSecurityContext;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import com.epam.digital.data.platform.model.core.kafka.Request;
+import com.epam.digital.data.platform.restapi.core.config.GenericConfig;
 import com.epam.digital.data.platform.restapi.core.config.TestConfiguration;
 import com.epam.digital.data.platform.restapi.core.impl.model.TestEntityM2M;
 import com.epam.digital.data.platform.restapi.core.impl.queryhandler.TestEntityM2MQueryHandler;
+import com.epam.digital.data.platform.restapi.core.impl.tabledata.TestEntityM2mTableDataProvider;
 import com.epam.digital.data.platform.restapi.core.service.AccessPermissionService;
 import com.epam.digital.data.platform.restapi.core.service.JwtInfoProvider;
 import com.epam.digital.data.platform.starter.security.jwt.TokenParser;
 import com.nimbusds.jose.JOSEException;
 import java.util.Optional;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,9 +24,11 @@ import org.springframework.boot.test.context.SpringBootTest;
 @SpringBootTest(
     classes = {
       TestEntityM2MQueryHandler.class,
+      TestEntityM2mTableDataProvider.class,
       AccessPermissionService.class,
       JwtInfoProvider.class,
-      TokenParser.class
+      TokenParser.class,
+      GenericConfig.class
     })
 class TestEntityM2MQueryHandlerIT {
 
@@ -42,9 +46,15 @@ class TestEntityM2MQueryHandlerIT {
                 entity.getId(),
                 null,
                 mockSecurityContext()));
-    Assertions.assertThat(found).isPresent();
-    Assertions.assertThat(found.get().getName()).isEqualTo(entity.getName());
-    Assertions.assertThat(found.get().getEntities()).hasSize(entity.getEntities().size());
-    Assertions.assertThat(found.get().getEntities().get(0)).isEqualTo(entity.getEntities().get(0));
+    assertThat(found).isPresent();
+    assertThat(found.get().getName()).isEqualTo(entity.getName());
+    assertThat(found.get().getEntities()).hasSize(entity.getEntities().length);
+    assertThat(found.get().getEntities()[0].getId()).isEqualTo(entity.getEntities()[0].getId());
+    assertThat(found.get().getEntities()[0].getPersonFullName())
+        .isEqualTo(entity.getEntities()[0].getPersonFullName());
+    assertThat(found.get().getEntities()[0].getPersonPassNumber())
+        .isEqualTo(entity.getEntities()[0].getPersonPassNumber());
+    assertThat(found.get().getEntities()[0].getPersonGender())
+        .isEqualTo(entity.getEntities()[0].getPersonGender());
   }
 }

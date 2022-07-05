@@ -1,6 +1,8 @@
 package com.epam.digital.data.platform.restapi.core.impl.queryhandler;
 
 import com.epam.digital.data.platform.restapi.core.impl.model.TestEntity;
+import com.epam.digital.data.platform.restapi.core.impl.tabledata.TestEntityTableDataProvider;
+import com.epam.digital.data.platform.restapi.core.model.FieldsAccessCheckDto;
 import com.epam.digital.data.platform.restapi.core.queryhandler.AbstractQueryHandler;
 import com.epam.digital.data.platform.restapi.core.service.AccessPermissionService;
 import java.util.Arrays;
@@ -12,18 +14,17 @@ import org.jooq.impl.DSL;
 public class TestEntityQueryHandler extends AbstractQueryHandler<UUID, TestEntity> {
 
   public TestEntityQueryHandler(
-      AccessPermissionService<TestEntity> accessPermissionService) {
-    super(accessPermissionService);
+          TestEntityTableDataProvider tableDataProvider) {
+    super(tableDataProvider);
   }
 
   @Override
-  public String idName() {
-    return "id";
-  }
-
-  @Override
-  public String tableName() {
-    return "test_entity";
+  public List<FieldsAccessCheckDto> getFieldsToCheckAccess() {
+    return List.of(
+        new FieldsAccessCheckDto(
+            "test_entity",
+            List.of(
+                "id", "consent_date", "person_pass_number", "person_full_name", "person_gender")));
   }
 
   @Override

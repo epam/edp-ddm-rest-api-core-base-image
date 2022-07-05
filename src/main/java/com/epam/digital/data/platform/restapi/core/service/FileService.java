@@ -176,11 +176,11 @@ public class FileService {
       }
       var cephResponse = cephResponseOpt.get();
       var content = getCephContent(cephResponse);
-      
+
       String calculatedChecksum = DigestUtils.sha256Hex(content);
       if (!StringUtils.equals(calculatedChecksum, file.getChecksum())) {
-        log.error("The checksum stored in the database ({}) and calculated based on the retrieved " 
-                + "file object ({}) do not match. File id: '{}'", 
+        log.error("The checksum stored in the database ({}) and calculated based on the retrieved "
+                + "file object ({}) do not match. File id: '{}'",
             file.getChecksum(), calculatedChecksum, file.getId());
         return true;
       }
