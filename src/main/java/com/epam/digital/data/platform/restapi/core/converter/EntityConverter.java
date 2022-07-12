@@ -112,8 +112,16 @@ public class EntityConverter<T> {
   private Map<String, Object> listsToStrings(Map<String, Object> entityMap) {
     return entityMap.entrySet().stream()
         .filter(entry -> entry.getValue() instanceof List)
-        .map(entry -> Map
-            .entry(entry.getKey(), toCompatibleString((Collection<?>) entry.getValue())))
+        .map(entry -> {
+          var list = (List<?>) entry.getValue();
+          if(!list.isEmpty() && list.get(0) instanceof LinkedHashMap) {
+            var listOfStrings = ((List<LinkedHashMap>)entry.getValue()).stream()
+                .map(this::toCompatibleStringWithInnerMap)
+                .collect(Collectors.toList());
+            entry.setValue(listOfStrings);
+          }
+          return Map.entry(entry.getKey(), toCompatibleString((Collection<?>) entry.getValue()));
+        })
         .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
   }
 
@@ -129,6 +137,10 @@ public class EntityConverter<T> {
 
   private String toCompatibleString(Map<?, ?> map) {
     return "(" + map.values().stream().map(Object::toString).collect(Collectors.joining(",")) + ")";
+  }
+
+  private String toCompatibleStringWithInnerMap(Map<?, ?> map) {
+    return "\"(" + map.values().stream().map(Object::toString).collect(Collectors.joining(",")) + ")\"";
   }
 
   private String toCompatibleString(Collection<?> list) {

@@ -19,8 +19,9 @@ package com.epam.digital.data.platform.restapi.core.service;
 import static com.epam.digital.data.platform.restapi.core.dto.MockEntityFile.FILE_FIELD_NUM;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -35,10 +36,10 @@ import com.epam.digital.data.platform.model.core.kafka.File;
 import com.epam.digital.data.platform.restapi.core.dto.MockEntityFile;
 import com.epam.digital.data.platform.restapi.core.exception.ChecksumInconsistencyException;
 import com.epam.digital.data.platform.restapi.core.utils.ResponseCode;
-
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -105,34 +106,69 @@ class FileServiceTest {
   @Nested
   class GetFileProperties {
 
-    @Test
-    void skipNulls() {
-      assertThat(instance.getFileProperties(new MockEntityFile())).isEmpty();
+    @Nested
+    class ProcessingFieldsFile {
+
+      @Test
+      void skipNulls() {
+        assertThat(instance.getFileProperties(new MockEntityFile())).isEmpty();
+      }
+
+      @Test
+      void findPropertiesWithFileType() {
+        MockEntityFile e = mockEntityFile();
+
+        var fileProperties = instance.getFileProperties(e);
+
+        assertThat(fileProperties).hasSize(FILE_FIELD_NUM);
+      }
+
+      @Test
+      void dealWithCollections() {
+        var list = List.of(mockEntityFile(), mockEntityFile());
+
+        var fileProperties = instance.getFileProperties(list);
+
+        assertThat(fileProperties).hasSize(list.size() * FILE_FIELD_NUM);
+      }
+
+      private MockEntityFile mockEntityFile() {
+        var e = new MockEntityFile();
+        e.setScanCopy(new File());
+        e.setAnotherScanCopy(new File());
+        return e;
+      }
     }
 
-    @Test
-    void findPropertiesWithFileType() {
-      MockEntityFile e = mockEntityFile();
+    @Nested
+    class ProcessingFieldsListOfFiles {
 
-      var fileProperties = instance.getFileProperties(e);
+      @Test
+      void skipEmptyLists() {
+        var entity = mockEntityFile();
+        entity.setAnotherPhotos(Collections.EMPTY_LIST);
+        
+        assertThat(instance.getFileProperties(entity)).hasSize(4);
+      }
 
-      assertThat(fileProperties).hasSize(FILE_FIELD_NUM);
-    }
+      @Test
+      void dealWithCollections() {
+        var list = List.of(mockEntityFile(), mockEntityFile());
 
-    @Test
-    void dealWithCollections() {
-      var list = List.of(mockEntityFile(), mockEntityFile());
+        var fileProperties = instance.getFileProperties(list);
 
-      var fileProperties = instance.getFileProperties(list);
-
-      assertThat(fileProperties).hasSize(list.size() * FILE_FIELD_NUM);
-    }
-
-    private MockEntityFile mockEntityFile() {
-      var e = new MockEntityFile();
-      e.setScanCopy(new File());
-      e.setAnotherScanCopy(new File());
-      return e;
+        assertThat(fileProperties).hasSize(14);
+      }
+      
+      // 7 files
+      private MockEntityFile mockEntityFile() {
+        var e = new MockEntityFile();
+        e.setScanCopy(new File());
+        e.setAnotherScanCopy(new File());
+        e.setPhotos(List.of(new File(), new File()));
+        e.setAnotherPhotos(List.of(new File(), new File(), new File()));
+        return e;
+      }
     }
   }
 
@@ -296,7 +332,7 @@ class FileServiceTest {
     }
 
     @Test
-    void expectExceptionIfRetrievedFileWasChanged() {
+    void ifRetrievedFileWasChangedWeReturnTrueButDontCopyToTargetBucket() {
       InputStream fileContent = new ByteArrayInputStream("wrong content".getBytes());
       var cephResponseWithCorruptedContent =
           Optional.of(createMockCephResponse(fileContent));
@@ -305,8 +341,10 @@ class FileServiceTest {
 
       var file = mockFile(FILE_ID);
 
-      assertThrows(
-          ChecksumInconsistencyException.class, () -> instance.retrieve(INSTANCE_ID, file));
+      var isFound = instance.retrieve(INSTANCE_ID, file);
+      
+      assertThat(isFound).isTrue();
+      verify(lowcodeCephService, never()).put(any(), any(), any(), any(), any());
     }
 
     @Test

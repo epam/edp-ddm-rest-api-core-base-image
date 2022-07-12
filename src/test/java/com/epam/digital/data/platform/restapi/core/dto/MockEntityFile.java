@@ -17,6 +17,7 @@
 package com.epam.digital.data.platform.restapi.core.dto;
 
 import com.epam.digital.data.platform.model.core.kafka.File;
+import java.util.List;
 import java.util.UUID;
 import javax.validation.constraints.Size;
 
@@ -29,6 +30,8 @@ public class MockEntityFile {
   private String someField;
   private File scanCopy;
   private File anotherScanCopy;
+  private List<File> photos;
+  private List<File> anotherPhotos;
 
   public UUID getId() {
     return id;
@@ -60,5 +63,22 @@ public class MockEntityFile {
 
   public void setAnotherScanCopy(File anotherScanCopy) {
     this.anotherScanCopy = anotherScanCopy;
+  }
+
+  public List<File> getPhotos() {
+    return photos;
+  }
+
+  public void setPhotos(List<File> photos) {
+    this.photos = photos;
+  }
+
+  public List<File> getAnotherPhotos() {
+    return anotherPhotos;
+  }
+
+  public void setAnotherPhotos(
+      List<File> anotherPhotos) {
+    this.anotherPhotos = anotherPhotos;
   }
 }

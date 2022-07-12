@@ -108,12 +108,39 @@ values ('7f017d37-6ba5-4849-a4b2-f6a3ef2cadb9', 'FOP John Doe',
         current_timestamp, current_timestamp, current_user, current_user
         );
 
+--- test_entity_file_array:
+CREATE TABLE test_entity_file_array
+(
+    id uuid NOT NULL,
+    legal_entity_name text NOT NULL,
+    scan_copies _type_file,
+    ddm_created_at timestamptz NOT NULL DEFAULT now(),
+    ddm_created_by text NOT NULL,
+    ddm_updated_at timestamptz NOT NULL DEFAULT now(),
+    ddm_updated_by text NOT NULL,
+    CONSTRAINT pk_test_entity_file_array PRIMARY KEY (id)
+);
+
+insert into test_entity_file_array (id, legal_entity_name, scan_copies,
+                              ddm_created_at, ddm_updated_at, ddm_created_by, ddm_updated_by)
+values ('7f017d37-6ba5-4849-a4b2-f6a3ef2cadb9', 'FOP John Doe',
+        array['(1,db7bb0ef3ae21cafba57068bab4bcdd5129ba8a25ef5f8c16ad33fc686c7467e)',
+            '(2,2a3d2db6e3974ee0fae45b0a3f0616c645b8a80b72c153d0577b35cbdfe41dd4)']::type_file[],
+        current_timestamp, current_timestamp, current_user, current_user
+       ),
+       ('7300a76f-aaaa-bbbb-cccc-08d258d2282a', 'FOP Another John Doe',
+        array['(3,6be438aa51ef8ff668b12925b301da585cf84d38fed32918d78d430dc133f5ab)',
+            '(4,9d87053d47ff9064203b63ee770697872a211fd1b8087267178cbfb5371f4343)']::type_file[],
+        current_timestamp, current_timestamp, current_user, current_user
+       );
+
+
 --- test_entity_m2m:
 CREATE TABLE test_entity_m2m
 (
 	id uuid NOT NULL,
 	name text NOT NULL,
-  entities _uuid NOT NULL,
+    entities _uuid NOT NULL,
 	ddm_created_at timestamptz NOT NULL DEFAULT now(),
 	ddm_created_by text NOT NULL,
 	ddm_updated_at timestamptz NOT NULL DEFAULT now(),
