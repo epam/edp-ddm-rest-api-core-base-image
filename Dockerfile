@@ -1,4 +1,4 @@
-FROM maven:3.8.1-jdk-11-slim
+FROM nexus-docker-registry.apps.cicd2.mdtu-ddm.projects.epam.com/mdtu-ddm-edp-cicd/maven:3.8.6-jdk-11-slim
 ARG NEXUS_URL
 WORKDIR /app
 COPY pom.xml settings.xml ./
