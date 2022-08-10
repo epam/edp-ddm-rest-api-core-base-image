@@ -1,4 +1,4 @@
-FROM maven:3.8.1-jdk-11-slim
+FROM ${dockerProxyRegistry}/${globalNexusNamespace}/maven:3.8.6-jdk-11-slim
 ARG NEXUS_URL
 WORKDIR /app
 COPY pom.xml settings.xml ./
