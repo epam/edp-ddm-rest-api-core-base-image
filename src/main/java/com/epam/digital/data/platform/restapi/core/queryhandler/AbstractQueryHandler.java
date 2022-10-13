@@ -26,6 +26,7 @@ import com.epam.digital.data.platform.restapi.core.service.AccessPermissionServi
 import com.epam.digital.data.platform.restapi.core.service.JwtInfoProvider;
 import com.epam.digital.data.platform.restapi.core.tabledata.TableDataProvider;
 import com.epam.digital.data.platform.starter.security.dto.JwtClaimsDto;
+import org.jooq.Condition;
 import org.jooq.DSLContext;
 import org.jooq.SelectFieldOrAsterisk;
 import org.jooq.impl.DSL;
@@ -58,11 +59,7 @@ public abstract class AbstractQueryHandler<I, O> implements QueryHandler<I, O> {
   public Optional<O> findById(Request<I> input) {
     log.info("Reading from DB");
 
-    JwtClaimsDto userClaims = jwtInfoProvider.getUserClaims(input);
-    if (!accessPermissionService.hasReadAccess(getFieldsToCheckAccess(), userClaims)) {
-      throw new ForbiddenOperationException(
-          "User has invalid role for search by ID from " + tableDataProvider.tableName());
-    }
+    validateAccess(input);
 
     I id = input.getPayload();
     try {
@@ -71,11 +68,24 @@ public abstract class AbstractQueryHandler<I, O> implements QueryHandler<I, O> {
               .select(selectFields())
               .from(DSL.table(tableDataProvider.tableName()))
               .where(DSL.field(tableDataProvider.pkColumnName()).eq(id))
+                  .and(getCommonCondition(input))
               .fetchOneInto(entityType());
       return Optional.ofNullable(dto);
     } catch (Exception e) {
       throw new SqlErrorException("Can not read from DB", e);
     }
+  }
+
+  public void validateAccess(Request<I> input) {
+    JwtClaimsDto userClaims = jwtInfoProvider.getUserClaims(input);
+    if (!accessPermissionService.hasReadAccess(getFieldsToCheckAccess(), userClaims)) {
+      throw new ForbiddenOperationException(
+              "User has invalid role for search by ID from " + tableDataProvider.tableName());
+    }
+  }
+
+  public Condition getCommonCondition(Request<I> input) {
+    return DSL.noCondition();
   }
 
   public abstract List<FieldsAccessCheckDto> getFieldsToCheckAccess();

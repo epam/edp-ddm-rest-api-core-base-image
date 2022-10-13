@@ -38,17 +38,28 @@ public abstract class AbstractSearchHandler<I, O> implements SearchHandler<I, O>
   public List<O> search(Request<I> input) {
     I searchCriteria = input.getPayload();
 
+    validateAccess(input);
+
     try {
       return
           context
               .select(selectFields())
               .from(DSL.table(tableName()))
               .where(whereClause(searchCriteria))
+                  .and(getCommonCondition(input))
               .limit(offset(searchCriteria), limit(searchCriteria))
               .fetchInto(entityType());
     } catch (Exception e) {
       throw new SqlErrorException("Can not read from DB", e);
     }
+  }
+
+
+  public void validateAccess(Request<I> input) {
+  }
+
+  public Condition getCommonCondition(Request<I> input) {
+    return DSL.noCondition();
   }
 
   protected abstract Condition whereClause(I searchCriteria);
