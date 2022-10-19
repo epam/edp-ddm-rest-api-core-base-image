@@ -74,10 +74,10 @@ public class DigitalSignatureService {
   }
 
   private String getSignature(SecurityContext sc) {
-    log.info("Reading Signature from Ceph");
+    log.info("Reading Signature from lowcode storage with key {}", sc.getDigitalSignatureDerived());
     var formData = lowcodeFormDataStorageService.getFormData(sc.getDigitalSignatureDerived())
         .orElseThrow(
-            () -> new DigitalSignatureNotFoundException("Signature does not exist in ceph bucket"));
+            () -> new DigitalSignatureNotFoundException("Signature does not exist in lowcode storage"));
     return formData.getSignature();
   }
 
@@ -99,7 +99,7 @@ public class DigitalSignatureService {
   public String copySignature(String key) {
     log.info("Copy Signature from lowcode to data ceph bucket");
     var formData = lowcodeFormDataStorageService.getFormData(key).orElseThrow(
-        () -> new DigitalSignatureNotFoundException("Signature does not exist in ceph bucket"));
+        () -> new DigitalSignatureNotFoundException("Signature does not exist in lowcode storage"));
     datafactoryFormDataStorageService.putFormData(key, formData);
     return serialize(formData);
   }

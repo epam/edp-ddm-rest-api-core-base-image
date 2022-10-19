@@ -24,7 +24,7 @@
 		<ddm-idm-client.version>1.6.0.1</ddm-idm-client.version>
 		<digital.signature.ops.api.version>1.6.0.1</digital.signature.ops.api.version>
 		<digital.signature.ops.client.version>1.6.0.1</digital.signature.ops.client.version>
-		<ddm-form-data-storage.version>1.7.0.1</ddm-form-data-storage.version>
+		<ddm-form-data-storage.version>1.8.0.2</ddm-form-data-storage.version>
 		<ddm-file-storage.version>1.7.0.1</ddm-file-storage.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
