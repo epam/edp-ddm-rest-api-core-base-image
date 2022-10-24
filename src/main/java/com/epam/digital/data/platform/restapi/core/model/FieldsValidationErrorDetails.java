@@ -32,7 +32,7 @@ public class FieldsValidationErrorDetails {
 
   public static class FieldError {
 
-    private final Object value;
+    private final String value;
     private final String field;
     private final String message;
 
@@ -40,13 +40,13 @@ public class FieldsValidationErrorDetails {
       this(null, null, message);
     }
 
-    public FieldError(Object value, String field, String message) {
+    public FieldError(String value, String field, String message) {
       this.value = value;
       this.field = field;
       this.message = message;
     }
 
-    public Object getValue() {
+    public String getValue() {
       return value;
     }
 

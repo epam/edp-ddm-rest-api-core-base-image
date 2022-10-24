@@ -28,7 +28,7 @@ import org.springframework.boot.test.context.TestComponent;
 import org.springframework.kafka.requestreply.ReplyingKafkaTemplate;
 
 @TestComponent
-public class GenericServiceTestImpl extends GenericService<Request<UUID>, MockEntity> {
+public class GenericServiceTestImpl extends GenericService<UUID, MockEntity> {
 
   public GenericServiceTestImpl(
       ReplyingKafkaTemplate<String, Request<UUID>, String> replyingKafkaTemplate,

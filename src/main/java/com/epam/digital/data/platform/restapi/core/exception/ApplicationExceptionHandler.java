@@ -47,6 +47,7 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.BindException;
+import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
@@ -161,20 +162,21 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
   @AuditableException
   @Override
   protected ResponseEntity<Object> handleMethodArgumentNotValid(
-      MethodArgumentNotValidException exception, HttpHeaders headers, HttpStatus status,
+      MethodArgumentNotValidException exception,
+      HttpHeaders headers,
+      HttpStatus status,
       WebRequest request) {
     log.error("One or more input arguments are not valid", exception);
-    DetailedErrorResponse<FieldsValidationErrorDetails> invalidFieldsResponse
-        = newDetailedResponse(ResponseCode.VALIDATION_ERROR);
+    return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+        .body(getValidationErrorsResponse(exception.getBindingResult()));
+  }
 
-    var generalErrorList = exception.getBindingResult().getFieldErrors();
-    var customErrorsDetails = generalErrorList.stream()
-        .map(error -> new FieldsValidationErrorDetails.FieldError(error.getRejectedValue(),
-            error.getField(), error.getDefaultMessage()))
-        .collect(toList());
-    invalidFieldsResponse.setDetails(new FieldsValidationErrorDetails(customErrorsDetails));
-
-    return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(invalidFieldsResponse);
+  @AuditableException
+  @ExceptionHandler(DtoValidationException.class)
+  protected ResponseEntity<Object> handleDtoValidationException(DtoValidationException exception) {
+    log.error("Failed validation of input dto", exception);
+    return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+        .body(getValidationErrorsResponse(exception.getBindingResult()));
   }
 
   @AuditableException
@@ -386,6 +388,25 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
         .body(invalidFieldsResponse);
   }
 
+  private DetailedErrorResponse<FieldsValidationErrorDetails> getValidationErrorsResponse(
+      BindingResult bindingResult) {
+    DetailedErrorResponse<FieldsValidationErrorDetails> invalidFieldsResponse =
+        newDetailedResponse(ResponseCode.VALIDATION_ERROR);
+
+    var generalErrorList = bindingResult.getFieldErrors();
+    var customErrorsDetails =
+        generalErrorList.stream()
+            .map(
+                error ->
+                    new FieldsValidationErrorDetails.FieldError(
+                        String.valueOf(error.getRejectedValue()),
+                        error.getField(),
+                        error.getDefaultMessage()))
+            .collect(toList());
+    invalidFieldsResponse.setDetails(new FieldsValidationErrorDetails(customErrorsDetails));
+    return invalidFieldsResponse;
+  }
+
   private FieldsValidationErrorDetails.FieldError bindErrorToFieldError(ObjectError error) {
     String msg = error.getDefaultMessage();
 
@@ -399,8 +420,8 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
         }
       }
 
-      return new FieldsValidationErrorDetails.FieldError(fieldError.getRejectedValue(),
-          fieldError.getField(), msg);
+      return new FieldsValidationErrorDetails.FieldError(
+          String.valueOf(fieldError.getRejectedValue()), fieldError.getField(), msg);
     } else {
       return new FieldsValidationErrorDetails.FieldError(msg);
     }
