@@ -20,6 +20,7 @@ import static com.epam.digital.data.platform.restapi.core.utils.KafkaUtils.getKa
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.epam.digital.data.platform.integration.ceph.service.CephService;
+import com.epam.digital.data.platform.model.core.kafka.Request;
 import com.epam.digital.data.platform.model.core.kafka.Response;
 import com.epam.digital.data.platform.model.core.kafka.ResponseHeaders;
 import com.epam.digital.data.platform.restapi.core.exception.KafkaCephResponseNotFoundException;
@@ -42,13 +43,13 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.requestreply.ReplyingKafkaTemplate;
 import org.springframework.kafka.support.KafkaHeaders;
 
-public abstract class GenericService<I, O> {
+public abstract class GenericService<I, O> implements KafkaService<I, O> {
 
   static final String DIGITAL_SEAL_KAFKA_HEADER = "digital-seal";
 
   private final Logger log = LoggerFactory.getLogger(GenericService.class);
 
-  private final ReplyingKafkaTemplate<String, I, String> replyingKafkaTemplate;
+  private final ReplyingKafkaTemplate<String, Request<I>, String> replyingKafkaTemplate;
   private final KafkaProperties.RequestReplyHandler topics;
 
   @Value("${data-platform.kafka-request.signing.enabled}")
@@ -66,14 +67,14 @@ public abstract class GenericService<I, O> {
   private ObjectMapper objectMapper;
 
   protected GenericService(
-      ReplyingKafkaTemplate<String, I, String> replyingKafkaTemplate,
+      ReplyingKafkaTemplate<String, Request<I>, String> replyingKafkaTemplate,
       KafkaProperties.RequestReplyHandler topics) {
     this.replyingKafkaTemplate = replyingKafkaTemplate;
     this.topics = topics;
   }
 
   GenericService(
-      ReplyingKafkaTemplate<String, I, String> replyingKafkaTemplate,
+      ReplyingKafkaTemplate<String, Request<I>, String> replyingKafkaTemplate,
       KafkaProperties.RequestReplyHandler topics,
       DigitalSignatureService digitalSignatureService,
       TraceProvider traceProvider,
@@ -92,7 +93,8 @@ public abstract class GenericService<I, O> {
 
   protected abstract TypeReference<Response<O>> type();
 
-  public Response<O> request(I input) {
+  @Override
+  public Response<O> request(Request<I> input) {
     var request = new ProducerRecord<>(topics.getRequest(), traceProvider.getRequestId(), input);
 
     if (isSigningEnabled) {
@@ -116,7 +118,7 @@ public abstract class GenericService<I, O> {
   }
 
   private ConsumerRecord<String, String> sendRequest(
-      I input, ProducerRecord<String, I> request) {
+      Request<I> input, ProducerRecord<String, Request<I>> request) {
     var header = new RecordHeader(KafkaHeaders.REPLY_TOPIC, topics.getReply().getBytes());
     request.headers().add(header);
 

@@ -33,7 +33,7 @@
 		<spring.boot.version>2.6.1</spring.boot.version>
 		<spring.cloud.version>2021.0.0</spring.cloud.version>
 		<postgresql.version>42.2.18</postgresql.version>
-		<jackson.core.version>2.12.0</jackson.core.version>
+		<jackson.core.version>2.13.0</jackson.core.version>
 		<sonar.coverage.exclusions>
 			**/config/**/*,
 			**/ControllerAuditAspect*,
@@ -224,9 +224,20 @@
 			<version>${jackson.core.version}</version>
 		</dependency>
 		<dependency>
+			<groupId>com.fasterxml.jackson.dataformat</groupId>
+			<artifactId>jackson-dataformat-csv</artifactId>
+			<version>${jackson.core.version}</version>
+		</dependency>
+		<dependency>
 			<groupId>com.fasterxml.jackson.datatype</groupId>
 			<artifactId>jackson-datatype-jsr310</artifactId>
 			<version>2.12.1</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.any23</groupId>
+			<artifactId>apache-any23-encoding</artifactId>
+			<version>2.7</version>
 		</dependency>
 
 		<dependency>
