@@ -26,6 +26,7 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.ObjectUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import com.epam.digital.data.platform.restapi.core.config.WebConfigProperties;
 import com.epam.digital.data.platform.restapi.core.exception.MandatoryAccessTokenClaimMissingException;
 import com.epam.digital.data.platform.restapi.core.exception.MandatoryHeaderMissingException;
 import com.epam.digital.data.platform.restapi.core.utils.Header;
@@ -62,7 +63,10 @@ public class HeaderValidationFilter extends AbstractFilter {
 
   private final TokenParser tokenParser;
 
-  public HeaderValidationFilter(TokenParser tokenParser) {
+  public HeaderValidationFilter(
+      WebConfigProperties webConfigProperties,
+      TokenParser tokenParser) {
+    super(webConfigProperties);
     this.tokenParser = tokenParser;
   }
 

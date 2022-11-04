@@ -16,12 +16,11 @@
 
 package com.epam.digital.data.platform.restapi.core.filter;
 
-import static com.epam.digital.data.platform.restapi.core.utils.Header.X_ACCESS_TOKEN;
 import static com.epam.digital.data.platform.restapi.core.utils.Header.X_DIGITAL_SIGNATURE;
 import static com.epam.digital.data.platform.restapi.core.utils.Header.X_DIGITAL_SIGNATURE_DERIVED;
-import static org.springframework.util.StringUtils.isEmpty;
 
 import com.epam.digital.data.platform.model.core.kafka.SecurityContext;
+import com.epam.digital.data.platform.restapi.core.config.WebConfigProperties;
 import com.epam.digital.data.platform.restapi.core.service.DigitalSignatureService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -36,6 +35,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.RegExUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -51,8 +51,12 @@ public class DigitalSignatureValidationFilter extends AbstractFilter {
   private final ObjectMapper mapper;
   private final boolean isEnabled;
 
-  public DigitalSignatureValidationFilter(DigitalSignatureService digitalSignatureService,
-      ObjectMapper mapper, @Value("${data-platform.signature.validation.enabled}") boolean isEnabled) {
+  public DigitalSignatureValidationFilter(
+      WebConfigProperties webConfigProperties,
+      DigitalSignatureService digitalSignatureService,
+      ObjectMapper mapper,
+      @Value("${data-platform.signature.validation.enabled}") boolean isEnabled) {
+    super(webConfigProperties);
     this.digitalSignatureService = digitalSignatureService;
     this.mapper = mapper;
     this.isEnabled = isEnabled;
@@ -65,10 +69,8 @@ public class DigitalSignatureValidationFilter extends AbstractFilter {
     String method = request.getMethod().toUpperCase();
 
     SecurityContext securityContext = new SecurityContext();
-    securityContext.setAccessToken(request.getHeader(X_ACCESS_TOKEN.getHeaderName()));
 
     if (applicableHttpMethods.contains(method)) {
-
       fillContextSignatures(securityContext, request);
 
       if (isEnabled) {
@@ -108,13 +110,13 @@ public class DigitalSignatureValidationFilter extends AbstractFilter {
 
   private SecurityContext fillContextSignatures(SecurityContext securityContext, HttpServletRequest request) {
     String xDigitalSignature = request.getHeader(X_DIGITAL_SIGNATURE.getHeaderName());
-    if (isEmpty(xDigitalSignature) && isEnabled) {
+    if (StringUtils.isEmpty(xDigitalSignature) && isEnabled) {
       throw new IllegalArgumentException("Missing required Header X-Digital-Signature");
     }
     securityContext.setDigitalSignature(xDigitalSignature);
 
     String xDigitalSignatureDerived = request.getHeader(X_DIGITAL_SIGNATURE_DERIVED.getHeaderName());
-    if (isEmpty(xDigitalSignatureDerived) && isEnabled) {
+    if (StringUtils.isEmpty(xDigitalSignatureDerived) && isEnabled) {
       throw new IllegalArgumentException("Missing required Header X-Digital-Signature-Derived");
     }
     securityContext.setDigitalSignatureDerived(xDigitalSignatureDerived);

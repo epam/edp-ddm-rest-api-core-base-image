@@ -16,20 +16,23 @@
 
 package com.epam.digital.data.platform.restapi.core.filter;
 
+import com.epam.digital.data.platform.restapi.core.config.WebConfigProperties;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.List;
-
-import static java.util.List.of;
 
 public abstract class AbstractFilter extends OncePerRequestFilter {
 
-  private static final List<String> skipUrls = of("/openapi", "/swagger-ui", "/v3/api-docs",
-      "/actuator");
+  private final WebConfigProperties webConfigProperties;
+
+  AbstractFilter(WebConfigProperties webConfigProperties) {
+    this.webConfigProperties = webConfigProperties;
+  }
 
   @Override
   protected boolean shouldNotFilter(HttpServletRequest request) {
-    return skipUrls.stream().anyMatch(p -> request.getRequestURI().startsWith(p));
+    return webConfigProperties.getFilters().getExclude().stream()
+        .anyMatch(pattern -> new AntPathRequestMatcher(pattern).matches(request));
   }
 }

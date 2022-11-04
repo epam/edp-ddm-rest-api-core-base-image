@@ -18,8 +18,6 @@ package com.epam.digital.data.platform.restapi.core.exception;
 
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
-import static org.springframework.http.HttpStatus.BAD_REQUEST;
-import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 import com.epam.digital.data.platform.integration.ceph.exception.CephCommunicationException;
 import com.epam.digital.data.platform.integration.ceph.exception.MisconfigurationException;
@@ -59,16 +57,22 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import org.springframework.web.servlet.NoHandlerFoundException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
+import javax.validation.ConstraintViolation;
+import javax.validation.constraints.Size;
+
 @RestControllerAdvice
 public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler {
 
-  private static final Map<Status, String> externalErrorStatusToResponseCodeMap = Map.of(
+  private static final Map<Status, String> EXTERNAL_ERROR_STATUS_TO_RESPONSE_CODE_MAP = Map.of(
       Status.THIRD_PARTY_SERVICE_UNAVAILABLE, ResponseCode.THIRD_PARTY_SERVICE_UNAVAILABLE,
       Status.PROCEDURE_ERROR, ResponseCode.PROCEDURE_ERROR,
       Status.INTERNAL_CONTRACT_VIOLATION, ResponseCode.INTERNAL_CONTRACT_VIOLATION,
       Status.JWT_EXPIRED, ResponseCode.JWT_EXPIRED,
       Status.JWT_INVALID, ResponseCode.JWT_INVALID,
       Status.FORBIDDEN_OPERATION, ResponseCode.FORBIDDEN_OPERATION);
+
+  private static final Map<Class<?>, String> VALIDATION_CONSTRAINT_TO_CODE_MAP =
+      Map.of(Size.class, ResponseCode.LIST_SIZE_VALIDATION_ERROR);
 
   private final Logger log = LoggerFactory.getLogger(ApplicationExceptionHandler.class);
 
@@ -168,15 +172,15 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
       WebRequest request) {
     log.error("One or more input arguments are not valid", exception);
     return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
-        .body(getValidationErrorsResponse(exception.getBindingResult()));
+        .body(getValidationErrorsResponse(exception.getBindingResult(), ResponseCode.VALIDATION_ERROR));
   }
 
   @AuditableException
-  @ExceptionHandler(DtoValidationException.class)
-  protected ResponseEntity<Object> handleDtoValidationException(DtoValidationException exception) {
-    log.error("Failed validation of input dto", exception);
+  @ExceptionHandler(CsvDtoValidationException.class)
+  protected ResponseEntity<Object> handleDtoValidationException(CsvDtoValidationException exception) {
+    log.error("Failed validation of input csv dto", exception);
     return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
-        .body(getValidationErrorsResponse(exception.getBindingResult()));
+        .body(getValidationErrorsResponse(exception.getBindingResult(), ResponseCode.CSV_VALIDATION_ERROR));
   }
 
   @AuditableException
@@ -209,7 +213,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
       HttpMessageNotReadableException exception, HttpHeaders headers, HttpStatus status,
       WebRequest request) {
 
-    var parseException = handleParseException(exception);
+    var parseException = handleParseException(exception, ResponseCode.VALIDATION_ERROR);
     if (parseException.isPresent()) {
       log.error("Can not read some of arguments", exception);
       return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
@@ -222,7 +226,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
   }
 
   private Optional<DetailedErrorResponse<FieldsValidationErrorDetails>> handleParseException(
-      HttpMessageNotReadableException exception) {
+      Exception exception, String responseCode) {
     if (exception.getCause() instanceof InvalidFormatException) {
       var ex = (InvalidFormatException) exception.getCause();
 
@@ -238,7 +242,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
           .collect(joining("."));
 
       DetailedErrorResponse<FieldsValidationErrorDetails> invalidFieldsResponse
-          = newDetailedResponse(ResponseCode.VALIDATION_ERROR);
+          = newDetailedResponse(responseCode);
 
       var details = List.of(new FieldsValidationErrorDetails.FieldError(value, field, msg));
       invalidFieldsResponse.setDetails(new FieldsValidationErrorDetails(details));
@@ -265,7 +269,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
       NoHandlerFoundException exception, HttpHeaders headers, HttpStatus status,
       WebRequest request) {
     log.error("Page not found", exception);
-    return ResponseEntity.status(NOT_FOUND)
+    return ResponseEntity.status(HttpStatus.NOT_FOUND)
         .body(newDetailedResponse(ResponseCode.NOT_FOUND));
   }
 
@@ -276,7 +280,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
     log.error("Exceptional status in kafka response", kafkaInternalServerException);
     Response<?> kafkaResponse = kafkaInternalServerException.getKafkaResponse();
     String code =
-        externalErrorStatusToResponseCodeMap
+        EXTERNAL_ERROR_STATUS_TO_RESPONSE_CODE_MAP
             .getOrDefault(kafkaResponse.getStatus(), ResponseCode.RUNTIME_ERROR);
     return ResponseEntity.status(kafkaInternalServerException.getHttpStatus())
         .body(newDetailedResponse(code));
@@ -289,7 +293,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
     log.error("Digital signature not found", exception);
     DetailedErrorResponse<Void> responseBody =
         newDetailedResponse(ResponseCode.INVALID_HEADER_VALUE);
-    return ResponseEntity.status(BAD_REQUEST).body(responseBody);
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseBody);
   }
 
   @AuditableException
@@ -300,7 +304,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
     DetailedErrorResponse<List<String>> responseBody =
         newDetailedResponse(ResponseCode.FILE_NOT_FOUND);
     responseBody.setDetails(exception.getFieldsWithNotExistsFiles());
-    return ResponseEntity.status(BAD_REQUEST)
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
         .body(responseBody);
   }
 
@@ -323,7 +327,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
       KafkaSecurityValidationFailedException exception) {
     log.error("Request didn't pass one of security validations", exception);
     Response<?> kafkaResponse = exception.getKafkaResponse();
-    String code = externalErrorStatusToResponseCodeMap.get(kafkaResponse.getStatus());
+    String code = EXTERNAL_ERROR_STATUS_TO_RESPONSE_CODE_MAP.get(kafkaResponse.getStatus());
     return ResponseEntity.status(exception.getHttpStatus())
         .body(newDetailedResponse(code));
   }
@@ -333,7 +337,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
   public ResponseEntity<DetailedErrorResponse<Void>> handleNotFoundException(
       NotFoundException exception) {
     log.error("Resource not found", exception);
-    return ResponseEntity.status(NOT_FOUND)
+    return ResponseEntity.status(HttpStatus.NOT_FOUND)
         .body(newDetailedResponse(ResponseCode.NOT_FOUND));
   }
 
@@ -372,6 +376,31 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
         .body(newDetailedResponse(ResponseCode.FILE_WAS_CHANGED));
   }
 
+  @AuditableException
+  @ExceptionHandler(CsvFileEncodingException.class)
+  public ResponseEntity<DetailedErrorResponse<Void>> handleCsvFileEncodingException(
+          CsvFileEncodingException exception) {
+    log.error("Csv file encoding is invalid", exception);
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+            .body(newDetailedResponse(ResponseCode.CSV_ENCODING_ERROR));
+  }
+
+  @AuditableException
+  @ExceptionHandler(CsvFileParsingException.class)
+  public ResponseEntity<DetailedErrorResponse<FieldsValidationErrorDetails>> handleCsvFileParsingException(
+          CsvFileParsingException exception) {
+    var parseException = handleParseException(exception, ResponseCode.CSV_VALIDATION_ERROR);
+    if (parseException.isPresent()) {
+      log.error("Validation error on parsing csv", exception);
+      return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+              .body(parseException.get());
+    }
+
+    log.error("File is not readable csv", exception);
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+            .body(newDetailedResponse(ResponseCode.CSV_PARSING_ERROR));
+  }
+
   @Override
   protected ResponseEntity<Object> handleBindException(
       BindException ex, HttpHeaders headers, HttpStatus status, WebRequest request) {
@@ -389,11 +418,21 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
   }
 
   private DetailedErrorResponse<FieldsValidationErrorDetails> getValidationErrorsResponse(
-      BindingResult bindingResult) {
-    DetailedErrorResponse<FieldsValidationErrorDetails> invalidFieldsResponse =
-        newDetailedResponse(ResponseCode.VALIDATION_ERROR);
+      BindingResult bindingResult, String defaultResponseCode) {
 
     var generalErrorList = bindingResult.getFieldErrors();
+    var validationConstraintType =
+        generalErrorList
+            .get(0)
+            .unwrap(ConstraintViolation.class)
+            .getConstraintDescriptor()
+            .getAnnotation()
+            .annotationType();
+    var code =
+        VALIDATION_CONSTRAINT_TO_CODE_MAP.getOrDefault(
+            validationConstraintType, defaultResponseCode);
+    DetailedErrorResponse<FieldsValidationErrorDetails> invalidFieldsResponse =
+        newDetailedResponse(code);
     var customErrorsDetails =
         generalErrorList.stream()
             .map(
