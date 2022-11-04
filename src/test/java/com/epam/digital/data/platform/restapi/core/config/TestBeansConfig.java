@@ -64,6 +64,11 @@ public class TestBeansConfig {
   }
 
   @Bean
+  public WebConfigProperties webConfigProperties() {
+    return mock(WebConfigProperties.class);
+  }
+
+  @Bean
   public FileService fileService() {
     return mock(FileService.class);
   }

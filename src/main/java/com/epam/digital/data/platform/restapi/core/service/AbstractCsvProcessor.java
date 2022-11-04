@@ -20,7 +20,8 @@ import com.epam.digital.data.platform.model.core.kafka.File;
 import com.epam.digital.data.platform.model.core.kafka.Request;
 import com.epam.digital.data.platform.restapi.core.exception.ChecksumInconsistencyException;
 import com.epam.digital.data.platform.restapi.core.exception.CsvFileEncodingException;
-import com.epam.digital.data.platform.restapi.core.exception.DtoValidationException;
+import com.epam.digital.data.platform.restapi.core.exception.CsvFileParsingException;
+import com.epam.digital.data.platform.restapi.core.exception.CsvDtoValidationException;
 import com.epam.digital.data.platform.storage.file.dto.FileDataDto;
 import com.epam.digital.data.platform.storage.file.service.FormDataFileKeyProvider;
 import com.epam.digital.data.platform.storage.file.service.FormDataFileStorageService;
@@ -54,6 +55,11 @@ public abstract class AbstractCsvProcessor<U, V> implements CsvProcessor<V> {
   private Function<Class<?>, ObjectReader> csvReaderFactory;
   @Autowired
   private Validator validator;
+
+  @Override
+  public void validate(Request<File> input) {
+    transformFileToEntity(input);
+  }
 
   @Override
   public V transformFileToEntity(Request<File> input) {
@@ -109,7 +115,7 @@ public abstract class AbstractCsvProcessor<U, V> implements CsvProcessor<V> {
       var csvRowsContentList = csvRowsContent.readAll();
       return getPayloadObjectFromCsvRows(csvRowsContentList);
     } catch (IOException exception) {
-      throw new IllegalArgumentException("Exception on processing csv file content", exception);
+      throw new CsvFileParsingException("Exception on parsing csv file content", exception);
     }
   }
 
@@ -118,7 +124,7 @@ public abstract class AbstractCsvProcessor<U, V> implements CsvProcessor<V> {
     var errors = new BeanPropertyBindingResult(payloadObject, payloadObject.getClass().getName());
     validator.validate(payloadObject, errors);
     if (errors.hasErrors()) {
-      throw new DtoValidationException("Failed validation of csv file content", errors);
+      throw new CsvDtoValidationException("Failed validation of csv file content", errors);
     }
   }
 

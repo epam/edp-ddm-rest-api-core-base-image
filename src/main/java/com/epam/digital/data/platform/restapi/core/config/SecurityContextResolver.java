@@ -25,6 +25,10 @@ import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
 
+import java.util.Optional;
+
+import static com.epam.digital.data.platform.restapi.core.utils.Header.X_ACCESS_TOKEN;
+
 public class SecurityContextResolver implements HandlerMethodArgumentResolver {
 
   @Override
@@ -39,6 +43,13 @@ public class SecurityContextResolver implements HandlerMethodArgumentResolver {
       NativeWebRequest webRequest,
       WebDataBinderFactory binderFactory) {
 
-    return webRequest.getAttribute(SecurityContext.class.getSimpleName(), RequestAttributes.SCOPE_REQUEST);
+    var securityContext =
+        Optional.ofNullable(
+                webRequest.getAttribute(
+                    SecurityContext.class.getSimpleName(), RequestAttributes.SCOPE_REQUEST))
+            .map(SecurityContext.class::cast)
+            .orElse(new SecurityContext());
+    securityContext.setAccessToken(webRequest.getHeader(X_ACCESS_TOKEN.getHeaderName()));
+    return securityContext;
   }
 }
