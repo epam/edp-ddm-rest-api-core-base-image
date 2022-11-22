@@ -41,7 +41,6 @@ import com.epam.digital.data.platform.model.core.kafka.File;
 import com.epam.digital.data.platform.model.core.kafka.Status;
 import com.epam.digital.data.platform.restapi.core.config.SecurityConfiguration;
 import com.epam.digital.data.platform.restapi.core.config.TestBeansConfig;
-import com.epam.digital.data.platform.restapi.core.config.WebConfigProperties;
 import com.epam.digital.data.platform.restapi.core.controller.MockFileController;
 import com.epam.digital.data.platform.restapi.core.dto.MockEntityFile;
 import com.epam.digital.data.platform.restapi.core.exception.ApplicationExceptionHandler;
@@ -128,17 +127,11 @@ class ControllerAdviceFilteredTest {
   DigitalSignatureService digitalSignatureService;
   @MockBean
   TraceProvider traceProvider;
-  @MockBean
-  WebConfigProperties webConfigProperties;
 
   @BeforeEach
   void beforeEach() {
     when(traceProvider.getRequestId()).thenReturn(TRACE_ID);
     when(digitalSignatureService.copySignature(any())).thenReturn(SIGNATURE);
-
-    var filtersExclude = new WebConfigProperties.Filters();
-    filtersExclude.setExclude(List.of("/"));
-    when(webConfigProperties.getFilters()).thenReturn(filtersExclude);
 
     when(fileService.getFileProperties(any())).thenReturn(List.of(
         new FileProperty("scanCopy", new File())
