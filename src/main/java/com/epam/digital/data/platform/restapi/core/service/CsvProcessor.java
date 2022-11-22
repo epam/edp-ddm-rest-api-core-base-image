@@ -21,7 +21,5 @@ import com.epam.digital.data.platform.model.core.kafka.Request;
 
 public interface CsvProcessor<T> {
 
-    void validate(Request<File> input);
-
     T transformFileToEntity(Request<File> input);
 }

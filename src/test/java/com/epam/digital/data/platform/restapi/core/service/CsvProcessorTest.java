@@ -22,8 +22,7 @@ import com.epam.digital.data.platform.model.core.kafka.RequestContext;
 import com.epam.digital.data.platform.restapi.core.config.CsvConfig;
 import com.epam.digital.data.platform.restapi.core.exception.ChecksumInconsistencyException;
 import com.epam.digital.data.platform.restapi.core.exception.CsvFileEncodingException;
-import com.epam.digital.data.platform.restapi.core.exception.CsvFileParsingException;
-import com.epam.digital.data.platform.restapi.core.exception.CsvDtoValidationException;
+import com.epam.digital.data.platform.restapi.core.exception.DtoValidationException;
 import com.epam.digital.data.platform.restapi.core.service.impl.CsvProcessorTestImpl;
 import com.epam.digital.data.platform.storage.file.dto.FileDataDto;
 import com.epam.digital.data.platform.storage.file.service.FormDataFileKeyProvider;
@@ -134,7 +133,7 @@ class CsvProcessorTest {
     var request = mockRequest(fileChecksum);
 
     var actualException =
-        assertThrows(CsvFileParsingException.class,
+        assertThrows(IllegalArgumentException.class,
             () -> instance.transformFileToEntity(request));
     assertThat(actualException.getCause()).isExactlyInstanceOf(CsvReadException.class);
   }
@@ -154,7 +153,7 @@ class CsvProcessorTest {
     var request = mockRequest(fileChecksum);
 
     var actualException =
-        assertThrows(CsvDtoValidationException.class,
+        assertThrows(DtoValidationException.class,
             () -> instance.transformFileToEntity(request));
     assertThat(actualException.getBindingResult().getErrorCount()).isEqualTo(1);
     assertThat(actualException.getBindingResult().getFieldErrors().get(0).getField())

@@ -24,10 +24,6 @@ public final class ResponseCode {
   public static final String SIGNATURE_VIOLATION = "SIGNATURE_VIOLATION";
   public static final String TIMEOUT_ERROR = "TIMEOUT_ERROR";
   public static final String VALIDATION_ERROR = "VALIDATION_ERROR";
-  public static final String CSV_VALIDATION_ERROR = "CSV_VALIDATION_ERROR";
-  public static final String LIST_SIZE_VALIDATION_ERROR = "LIST_SIZE_VALIDATION_ERROR";
-  public static final String CSV_ENCODING_ERROR = "CSV_ENCODING_ERROR";
-  public static final String CSV_PARSING_ERROR = "CSV_PARSING_ERROR";
   public static final String RUNTIME_ERROR = "RUNTIME_ERROR";
   public static final String THIRD_PARTY_SERVICE_UNAVAILABLE = "THIRD_PARTY_SERVICE_UNAVAILABLE";
   public static final String INTERNAL_CONTRACT_VIOLATION = "INTERNAL_CONTRACT_VIOLATION";
