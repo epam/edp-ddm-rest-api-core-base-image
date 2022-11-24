@@ -20,11 +20,15 @@ import com.epam.digital.data.platform.model.core.kafka.Request;
 import com.epam.digital.data.platform.restapi.core.audit.AuditableDatabaseOperation;
 import com.epam.digital.data.platform.restapi.core.audit.AuditableDatabaseOperation.Operation;
 import com.epam.digital.data.platform.restapi.core.exception.SqlErrorException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.commons.collections4.CollectionUtils;
 import org.jooq.Condition;
 import org.jooq.DSLContext;
+import org.jooq.Record;
 import org.jooq.SelectFieldOrAsterisk;
 import org.jooq.impl.DSL;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 import java.util.List;
 
@@ -32,6 +36,10 @@ public abstract class AbstractSearchHandler<I, O> implements SearchHandler<I, O>
 
   @Autowired
   protected DSLContext context;
+
+  @Autowired
+  @Qualifier("jooqMapper")
+  private ObjectMapper objectMapper;
 
   @AuditableDatabaseOperation(Operation.SEARCH)
   @Override
@@ -41,19 +49,24 @@ public abstract class AbstractSearchHandler<I, O> implements SearchHandler<I, O>
     validateAccess(input);
 
     try {
-      return
-          context
-              .select(selectFields())
-              .from(DSL.table(tableName()))
-              .where(whereClause(searchCriteria))
-                  .and(getCommonCondition(input))
-              .limit(offset(searchCriteria), limit(searchCriteria))
-              .fetchInto(entityType());
+      var selectFields = selectFields();
+      var selectRequest = context
+          .select(selectFields)
+          .from(DSL.table(tableName()))
+          .where(whereClause(searchCriteria))
+          .and(getCommonCondition(input))
+          .limit(offset(searchCriteria), limit(searchCriteria));
+      return CollectionUtils.size(selectFields) > 1 ?
+          selectRequest.fetchInto(entityType()) :
+          selectRequest.fetch(this::mapFieldsToEntity);
     } catch (Exception e) {
       throw new SqlErrorException("Can not read from DB", e);
     }
   }
 
+  private O mapFieldsToEntity(Record src) {
+    return objectMapper.convertValue(src.intoMap(), entityType());
+  }
 
   public void validateAccess(Request<I> input) {
   }
