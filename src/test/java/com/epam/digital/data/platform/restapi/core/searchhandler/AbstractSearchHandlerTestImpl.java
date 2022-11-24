@@ -17,16 +17,16 @@
 package com.epam.digital.data.platform.restapi.core.searchhandler;
 
 
+import com.epam.digital.data.platform.restapi.core.dto.MockEntity;
 import com.epam.digital.data.platform.restapi.core.util.MockEntityContains;
 import java.util.Collections;
 import java.util.List;
-import java.util.UUID;
 import org.jooq.Condition;
 import org.jooq.SelectFieldOrAsterisk;
 import org.jooq.impl.DSL;
 
 public class AbstractSearchHandlerTestImpl extends
-    AbstractSearchHandler<MockEntityContains, UUID> {
+    AbstractSearchHandler<MockEntityContains, MockEntity> {
 
   private String tableName = "table_name";
 
@@ -41,13 +41,13 @@ public class AbstractSearchHandlerTestImpl extends
   }
 
   @Override
-  public Class<UUID> entityType() {
-    return UUID.class;
+  public Class<MockEntity> entityType() {
+    return MockEntity.class;
   }
 
   @Override
   public List<SelectFieldOrAsterisk> selectFields() {
-    return Collections.singletonList(DSL.field("field"));
+    return Collections.singletonList(DSL.field("consent_id"));
   }
 
   public void setTableName(String tableName) {

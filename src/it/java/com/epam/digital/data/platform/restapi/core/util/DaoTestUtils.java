@@ -21,6 +21,7 @@ import com.epam.digital.data.platform.restapi.core.impl.model.TestEntity;
 import com.epam.digital.data.platform.restapi.core.impl.model.TestEntityFile;
 import com.epam.digital.data.platform.restapi.core.impl.model.TestEntityFileArray;
 import com.epam.digital.data.platform.restapi.core.impl.model.TestEntityM2M;
+import com.epam.digital.data.platform.restapi.core.impl.model.TestSingleFieldEntity;
 import com.epam.digital.data.platform.restapi.core.impl.model.TypGender;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -43,6 +44,7 @@ public class DaoTestUtils {
 
   public static final TestEntity TEST_ENTITY = testEntity();
   public static final TestEntity TEST_ENTITY_2 = testEntity2();
+  public static final TestSingleFieldEntity TEST_SINGLE_FIELD_ENTITY = testSingleFieldEntity();
   public static final TestEntityFile TEST_ENTITY_FILE = testEntityFile();
   public static final TestEntityFileArray TEST_ENTITY_FILE_ARRAY = testEntityFileArray();
   public static final TestEntityM2M TEST_ENTITY_M2M = testEntityM2M();
@@ -57,6 +59,12 @@ public class DaoTestUtils {
     r.setPersonPassNumber("AB123456");
     r.setConsentDate(PD_PROCESSING_CONSENT_CONSENT_DATE);
     r.setPersonGender(TypGender.M);
+    return r;
+  }
+
+  public static TestSingleFieldEntity testSingleFieldEntity() {
+    var r = new TestSingleFieldEntity();
+    r.setPersonFullName("John Doe Patronymic");
     return r;
   }
 
