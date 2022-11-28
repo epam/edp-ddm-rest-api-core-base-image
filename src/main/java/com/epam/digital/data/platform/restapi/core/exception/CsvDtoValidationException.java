@@ -18,11 +18,11 @@ package com.epam.digital.data.platform.restapi.core.exception;
 
 import org.springframework.validation.BindingResult;
 
-public class DtoValidationException extends RuntimeException {
+public class CsvDtoValidationException extends RuntimeException {
 
   private final BindingResult bindingResult;
 
-  public DtoValidationException(String message, BindingResult bindingResult) {
+  public CsvDtoValidationException(String message, BindingResult bindingResult) {
     super(message);
     this.bindingResult = bindingResult;
   }
