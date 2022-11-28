@@ -16,7 +16,6 @@
 
 package com.epam.digital.data.platform.restapi.core.filter;
 
-import static com.epam.digital.data.platform.restapi.core.utils.Header.X_ACCESS_TOKEN;
 import static com.epam.digital.data.platform.restapi.core.utils.Header.X_DIGITAL_SIGNATURE;
 import static com.epam.digital.data.platform.restapi.core.utils.Header.X_DIGITAL_SIGNATURE_DERIVED;
 import static org.apache.commons.codec.digest.DigestUtils.sha256Hex;
@@ -31,12 +30,14 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import com.epam.digital.data.platform.model.core.kafka.SecurityContext;
+import com.epam.digital.data.platform.restapi.core.config.WebConfigProperties;
 import com.epam.digital.data.platform.restapi.core.exception.InvalidSignatureException;
 import com.epam.digital.data.platform.restapi.core.service.DigitalSignatureService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.StringReader;
+import java.util.List;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -56,8 +57,6 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 @ExtendWith(SpringExtension.class)
 class DigitalSignatureValidationFilterTest {
-
-  private static final String TOKEN_VALUE = "token";
 
   private static final String X_DIGITAL_SIGNATURE_VALUE = "x-digital-signature-header-value";
   private static final String X_DIGITAL_SIGNATURE_DERIVED_VALUE = "x-digital-signature-derived-header-value";
@@ -83,6 +82,7 @@ class DigitalSignatureValidationFilterTest {
   private DigitalSignatureService digitalSignatureService;
   private ObjectMapper mapper = new ObjectMapper();
 
+  private WebConfigProperties webConfigProperties;
   @Captor
   private ArgumentCaptor<SecurityContext> securityContextCaptor;
   @Captor
@@ -92,7 +92,13 @@ class DigitalSignatureValidationFilterTest {
 
   @BeforeEach
   void init() throws IOException {
-    filter = new DigitalSignatureValidationFilter(digitalSignatureService, mapper, true);
+    webConfigProperties = new WebConfigProperties();
+    webConfigProperties.setFilters(new WebConfigProperties.Filters());
+    webConfigProperties.getFilters().setExclude(List.of("/path"));
+
+    filter =
+        new DigitalSignatureValidationFilter(
+            webConfigProperties, digitalSignatureService, mapper, true);
 
     when(digitalSignatureService.copySignature(any())).thenReturn("");
 
@@ -100,10 +106,10 @@ class DigitalSignatureValidationFilterTest {
         .thenReturn(X_DIGITAL_SIGNATURE_VALUE);
     when(request.getHeader(X_DIGITAL_SIGNATURE_DERIVED.getHeaderName()))
         .thenReturn(X_DIGITAL_SIGNATURE_DERIVED_VALUE);
-    when(request.getHeader(X_ACCESS_TOKEN.getHeaderName())).thenReturn(TOKEN_VALUE);
 
     when(request.getRequestURI()).thenReturn(URL);
     when(request.getContextPath()).thenReturn("/");
+    when(request.getPathInfo()).thenReturn(URL);
     when(request.getMethod()).thenReturn("DELETE");
     when(request.getReader()).thenReturn(new BufferedReader(new StringReader(REQUEST_BODY)));
 
@@ -112,13 +118,11 @@ class DigitalSignatureValidationFilterTest {
     securityContext.setDigitalSignatureChecksum(HASH_OF_EMPTY_STRING);
     securityContext.setDigitalSignatureDerived(X_DIGITAL_SIGNATURE_DERIVED_VALUE);
     securityContext.setDigitalSignatureDerivedChecksum(HASH_OF_EMPTY_STRING);
-    securityContext.setAccessToken(TOKEN_VALUE);
   }
 
   @Test
   void methodGet() throws IOException, ServletException {
     securityContext = new SecurityContext();
-    securityContext.setAccessToken(TOKEN_VALUE);
     when(request.getMethod()).thenReturn("GET");
     filter.doFilter(request, response, filterChain);
 
@@ -171,7 +175,7 @@ class DigitalSignatureValidationFilterTest {
   }
 
   @Test
-  void invalidSignature() throws IOException {
+  void invalidSignature() {
     securityContext.setDigitalSignatureChecksum(null);
     securityContext.setDigitalSignatureDerivedChecksum(null);
     doThrow(InvalidSignatureException.class)
@@ -230,7 +234,9 @@ class DigitalSignatureValidationFilterTest {
   @ParameterizedTest
   @ValueSource(strings = {"POST", "PUT", "PATCH"})
   void skipWhenDisabled(String arg) throws ServletException, IOException {
-    filter = new DigitalSignatureValidationFilter(digitalSignatureService, mapper, false);
+    filter =
+        new DigitalSignatureValidationFilter(
+            webConfigProperties, digitalSignatureService, mapper, false);
     when(request.getMethod()).thenReturn(arg);
 
     filter.doFilter(request, response, filterChain);
@@ -241,7 +247,9 @@ class DigitalSignatureValidationFilterTest {
   @ParameterizedTest
   @ValueSource(strings = {"POST", "PUT", "PATCH"})
   void sameRequestWhenDisabled(String arg) throws ServletException, IOException {
-    filter = new DigitalSignatureValidationFilter(digitalSignatureService, mapper, false);
+    filter =
+        new DigitalSignatureValidationFilter(
+            webConfigProperties, digitalSignatureService, mapper, false);
     when(request.getMethod()).thenReturn(arg);
 
     filter.doFilter(request, response, filterChain);
@@ -253,7 +261,9 @@ class DigitalSignatureValidationFilterTest {
   @ParameterizedTest
   @ValueSource(strings = {"POST", "PUT", "PATCH"})
   void setScEvenWhenDisabled(String arg) throws ServletException, IOException {
-    filter = new DigitalSignatureValidationFilter(digitalSignatureService, mapper, false);
+    filter =
+        new DigitalSignatureValidationFilter(
+            webConfigProperties, digitalSignatureService, mapper, false);
     when(request.getMethod()).thenReturn(arg);
 
     filter.doFilter(request, response, filterChain);
@@ -265,5 +275,18 @@ class DigitalSignatureValidationFilterTest {
 
     assertEquals(X_DIGITAL_SIGNATURE_VALUE, resultSignature);
     assertEquals(X_DIGITAL_SIGNATURE_DERIVED_VALUE, resultDerivedSignature);
+  }
+
+  @Test
+  void skipIfUrlIsExcludedFromFiltering() throws ServletException, IOException {
+    webConfigProperties.getFilters().setExclude(List.of("/some/**"));
+    filter =
+            new DigitalSignatureValidationFilter(
+                    webConfigProperties, digitalSignatureService, mapper, true);
+
+    filter.doFilter(request, response, filterChain);
+
+    verify(request, never()).setAttribute(any(), any());
+    verifyNoInteractions(digitalSignatureService);
   }
 }

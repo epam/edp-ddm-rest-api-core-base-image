@@ -14,14 +14,11 @@
  * limitations under the License.
  */
 
-package com.epam.digital.data.platform.restapi.core.service;
+package com.epam.digital.data.platform.restapi.core.exception;
 
-import com.epam.digital.data.platform.model.core.kafka.File;
-import com.epam.digital.data.platform.model.core.kafka.Request;
+public class CsvFileParsingException extends RuntimeException {
 
-public interface CsvProcessor<T> {
-
-    void validate(Request<File> input);
-
-    T transformFileToEntity(Request<File> input);
+  public CsvFileParsingException(String message, Throwable cause) {
+    super(message, cause);
+  }
 }

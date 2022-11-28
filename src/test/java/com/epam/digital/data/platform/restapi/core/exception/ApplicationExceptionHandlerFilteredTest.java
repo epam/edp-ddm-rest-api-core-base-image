@@ -34,11 +34,13 @@ import com.epam.digital.data.platform.integration.ceph.exception.CephCommunicati
 import com.epam.digital.data.platform.integration.ceph.exception.MisconfigurationException;
 import com.epam.digital.data.platform.restapi.core.config.SecurityConfiguration;
 import com.epam.digital.data.platform.restapi.core.config.TestBeansConfig;
+import com.epam.digital.data.platform.restapi.core.config.WebConfigProperties;
 import com.epam.digital.data.platform.restapi.core.filter.FilterChainExceptionHandler;
 import com.epam.digital.data.platform.restapi.core.service.DigitalSignatureService;
 import com.epam.digital.data.platform.restapi.core.service.TraceProvider;
 import com.epam.digital.data.platform.restapi.core.utils.ResponseCode;
 import java.io.IOException;
+import java.util.List;
 import java.util.UUID;
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.BeforeEach;
@@ -97,10 +99,16 @@ class ApplicationExceptionHandlerFilteredTest {
   private TraceProvider traceProvider;
   @MockBean
   private DigitalSignatureService digitalSignatureService;
+  @MockBean
+  private WebConfigProperties webConfigProperties;
 
   @BeforeEach
   void beforeEach() {
     when(traceProvider.getRequestId()).thenReturn(TRACE_ID);
+
+    var filtersExclude = new WebConfigProperties.Filters();
+    filtersExclude.setExclude(List.of("/"));
+    when(webConfigProperties.getFilters()).thenReturn(filtersExclude);
   }
 
   @Test
