@@ -19,6 +19,7 @@ package com.epam.digital.data.platform.restapi.core.service;
 import com.epam.digital.data.platform.model.core.kafka.Request;
 import com.epam.digital.data.platform.model.core.kafka.Response;
 import com.epam.digital.data.platform.restapi.core.dto.MockEntity;
+import com.epam.digital.data.platform.restapi.core.dto.MockEntityCreateList;
 import org.springframework.boot.test.context.TestComponent;
 
 import java.util.UUID;
@@ -37,6 +38,9 @@ public class MockService {
   }
 
   public Response<Void> create(Request<MockEntity> request) {
+    return mock(Response.class);
+  }
+  public Response<Void> createList(Request<MockEntityCreateList> request) {
     return mock(Response.class);
   }
 

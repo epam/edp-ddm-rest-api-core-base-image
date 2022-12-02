@@ -22,6 +22,7 @@ import com.epam.digital.data.platform.model.core.kafka.SecurityContext;
 import com.epam.digital.data.platform.restapi.core.audit.AuditableController;
 import com.epam.digital.data.platform.restapi.core.annotation.HttpRequestContext;
 import com.epam.digital.data.platform.restapi.core.annotation.HttpSecurityContext;
+import com.epam.digital.data.platform.restapi.core.dto.MockEntityCreateList;
 import com.epam.digital.data.platform.restapi.core.service.MockService;
 import com.epam.digital.data.platform.restapi.core.dto.MockEntity;
 import com.epam.digital.data.platform.restapi.core.utils.ResponseResolverUtil;
@@ -44,7 +45,7 @@ import java.util.UUID;
 @RequestMapping("/mock")
 public class MockController {
 
-  private MockService mockService;
+  private final MockService mockService;
 
   public MockController(MockService mockService) {
     this.mockService = mockService;
@@ -142,6 +143,17 @@ public class MockController {
     mockEntity.setConsentId(id);
     Request<MockEntity> request = new Request<>(mockEntity, context, securityContext);
     var response = mockService.update(request);
+    return ResponseResolverUtil.getHttpResponseFromKafka(response);
+  }
+
+  @AuditableController
+  @PostMapping("/list")
+  public ResponseEntity<Void> createListMockEntity(
+          @Valid @RequestBody MockEntityCreateList mockEntityCreateList,
+          @HttpRequestContext RequestContext context,
+          @HttpSecurityContext SecurityContext securityContext) {
+    Request<MockEntityCreateList> request = new Request<>(mockEntityCreateList, context, securityContext);
+    var response = mockService.createList(request);
     return ResponseResolverUtil.getHttpResponseFromKafka(response);
   }
 }
