@@ -191,11 +191,15 @@ class ControllerAdviceFilteredTest {
 
   @Test
   void shouldNotStoreFilesWhenInputValidationFailed() throws Exception {
-    mockMvc.perform(post(BASE_URL)
-        .headers(MANDATORY_HEADERS)
-        .contentType(MediaType.APPLICATION_JSON)
-        .content("{\"someField\":\"long long String\"}"))
-        .andExpect(status().isUnprocessableEntity());
+    mockMvc
+        .perform(
+            post(BASE_URL)
+                .headers(MANDATORY_HEADERS)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"someField\":\"long long String\"}"))
+        .andExpectAll(
+            status().isUnprocessableEntity(),
+            jsonPath("$.code").value(is(ResponseCode.VALIDATION_ERROR)));
 
     verify(fileService, never()).store(any(), any());
   }

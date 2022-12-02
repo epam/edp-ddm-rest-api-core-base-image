@@ -71,9 +71,6 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
       Status.JWT_INVALID, ResponseCode.JWT_INVALID,
       Status.FORBIDDEN_OPERATION, ResponseCode.FORBIDDEN_OPERATION);
 
-  private static final Map<Class<?>, String> VALIDATION_CONSTRAINT_TO_CODE_MAP =
-      Map.of(Size.class, ResponseCode.LIST_SIZE_VALIDATION_ERROR);
-
   private final Logger log = LoggerFactory.getLogger(ApplicationExceptionHandler.class);
 
   private final TraceProvider traceProvider;
@@ -421,16 +418,16 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
       BindingResult bindingResult, String defaultResponseCode) {
 
     var generalErrorList = bindingResult.getFieldErrors();
-    var validationConstraintType =
-        generalErrorList
-            .get(0)
-            .unwrap(ConstraintViolation.class)
-            .getConstraintDescriptor()
-            .getAnnotation()
-            .annotationType();
-    var code =
-        VALIDATION_CONSTRAINT_TO_CODE_MAP.getOrDefault(
-            validationConstraintType, defaultResponseCode);
+    var validationConstraint = generalErrorList.get(0).unwrap(ConstraintViolation.class);
+    var constraintType =
+        validationConstraint.getConstraintDescriptor().getAnnotation().annotationType();
+    var fieldType = validationConstraint.getInvalidValue().getClass();
+    String code;
+    if (Size.class.equals(constraintType) && fieldType.isArray()) {
+      code = ResponseCode.LIST_SIZE_VALIDATION_ERROR;
+    } else {
+      code = defaultResponseCode;
+    }
     DetailedErrorResponse<FieldsValidationErrorDetails> invalidFieldsResponse =
         newDetailedResponse(code);
     var customErrorsDetails =

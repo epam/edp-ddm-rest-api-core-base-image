@@ -34,6 +34,7 @@ import com.epam.digital.data.platform.restapi.core.audit.RestAuditEventsFacade;
 import com.epam.digital.data.platform.restapi.core.config.SecurityConfiguration;
 import com.epam.digital.data.platform.restapi.core.controller.MockController;
 import com.epam.digital.data.platform.restapi.core.dto.MockEntity;
+import com.epam.digital.data.platform.restapi.core.dto.MockEntityCreateList;
 import com.epam.digital.data.platform.restapi.core.model.DetailedErrorResponse;
 import com.epam.digital.data.platform.restapi.core.model.FieldsValidationErrorDetails;
 import com.epam.digital.data.platform.restapi.core.service.MockService;
@@ -230,6 +231,24 @@ class ApplicationExceptionHandlerTest extends ResponseEntityExceptionHandler {
         .andExpect(response ->
             assertTrue(response.getResolvedException() instanceof MethodArgumentNotValidException))
         .andExpect(content().json(expectedOutputBody));
+  }
+
+  @Test
+  void shouldReturn422WithBodyWhenSizeExceeded() throws Exception {
+    var inputBodyEntry = new MockEntity();
+    inputBodyEntry.setPersonFullName("Valid Name");
+
+    var inputBody = new MockEntityCreateList();
+    inputBody.setEntities(new MockEntity[]{ inputBodyEntry, inputBodyEntry, inputBodyEntry });
+    String inputStringBody = objectMapper.writeValueAsString(inputBody);
+
+    mockMvc.perform(post(BASE_URL + "/list")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(inputStringBody))
+            .andExpectAll(status().isUnprocessableEntity(),
+                    response ->
+                            assertTrue(response.getResolvedException() instanceof MethodArgumentNotValidException),
+                    jsonPath("$.code", is(ResponseCode.LIST_SIZE_VALIDATION_ERROR)));
   }
 
   @Test
