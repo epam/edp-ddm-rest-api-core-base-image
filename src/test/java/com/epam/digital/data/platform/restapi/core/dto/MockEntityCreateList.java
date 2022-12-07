@@ -17,10 +17,12 @@
 package com.epam.digital.data.platform.restapi.core.dto;
 
 import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
 public class MockEntityCreateList {
 
+  @NotNull
   @Size(max = 2)
   @Valid
   private MockEntity[] entities;

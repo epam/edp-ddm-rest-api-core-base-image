@@ -252,6 +252,21 @@ class ApplicationExceptionHandlerTest extends ResponseEntityExceptionHandler {
   }
 
   @Test
+  void shouldReturn422WithNotNullValidationFailure() throws Exception {
+    var inputBody = new MockEntityCreateList();
+    inputBody.setEntities(null);
+    String inputStringBody = objectMapper.writeValueAsString(inputBody);
+
+    mockMvc.perform(post(BASE_URL + "/list")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(inputStringBody))
+            .andExpectAll(status().isUnprocessableEntity(),
+                    response ->
+                            assertTrue(response.getResolvedException() instanceof MethodArgumentNotValidException),
+                    jsonPath("$.code", is(ResponseCode.VALIDATION_ERROR)));
+  }
+
+  @Test
   void shouldReturn422WithBodyWhenDateTimeArgNotValid() throws Exception {
     var expectedResponseObject = new DetailedErrorResponse<FieldsValidationErrorDetails>();
     expectedResponseObject.setTraceId(TRACE_ID);

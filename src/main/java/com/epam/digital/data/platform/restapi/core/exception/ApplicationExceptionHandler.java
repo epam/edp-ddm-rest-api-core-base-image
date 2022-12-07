@@ -421,7 +421,10 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
     var validationConstraint = generalErrorList.get(0).unwrap(ConstraintViolation.class);
     var constraintType =
         validationConstraint.getConstraintDescriptor().getAnnotation().annotationType();
-    var fieldType = validationConstraint.getInvalidValue().getClass();
+    var fieldType =
+        Optional.ofNullable(validationConstraint.getInvalidValue())
+            .map(Object::getClass)
+            .orElse(Object.class);
     String code;
     if (Size.class.equals(constraintType) && fieldType.isArray()) {
       code = ResponseCode.LIST_SIZE_VALIDATION_ERROR;
