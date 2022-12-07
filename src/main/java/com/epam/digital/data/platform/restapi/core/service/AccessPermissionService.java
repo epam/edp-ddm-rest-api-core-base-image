@@ -47,9 +47,8 @@ public class AccessPermissionService {
   public boolean hasReadAccess(
       List<FieldsAccessCheckDto> accessedFieldsDto, JwtClaimsDto userClaims) {
     List<String> userRoles = JwtClaimsUtils.getRoles(userClaims);
-    try {
-      Connection connection = dataSource.getConnection();
-      CallableStatement statement = connection.prepareCall(PERMISSION_CHECK_SQL_STRING);
+    try (Connection connection = dataSource.getConnection();
+         CallableStatement statement = connection.prepareCall(PERMISSION_CHECK_SQL_STRING)) {
       Array userRolesDbArray = connection.createArrayOf("text", userRoles.toArray());
       for (FieldsAccessCheckDto tableFields : accessedFieldsDto) {
         Array searchFieldsDbArray = connection.createArrayOf("text", tableFields.getFields().toArray());
