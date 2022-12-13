@@ -35,7 +35,7 @@
 		<postgresql.version>42.2.18</postgresql.version>
 		<jackson.core.version>2.13.0</jackson.core.version>
 		<spring-security-core.version>5.7.5</spring-security-core.version>
-		<spring-boot-starter-web.version>2.6.6</spring-boot-starter-web.version>		
+		<spring-boot-starter-web.version>2.6.13</spring-boot-starter-web.version>
 		<sonar.coverage.exclusions>
 			**/config/**/*,
 			**/ControllerAuditAspect*,
