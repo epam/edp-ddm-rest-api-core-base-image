@@ -19,24 +19,26 @@ package com.epam.digital.data.platform.restapi.core.service;
 import com.epam.digital.data.platform.model.core.kafka.Request;
 import com.epam.digital.data.platform.model.core.kafka.Response;
 import com.epam.digital.data.platform.model.core.kafka.Status;
+import com.epam.digital.data.platform.model.core.search.SearchConditionPage;
 import com.epam.digital.data.platform.restapi.core.searchhandler.SearchHandler;
-import java.util.List;
 
-public abstract class GenericSearchService<I, O> {
+public abstract class GenericSearchService<I, U, O> {
 
-  private final SearchHandler<I, O> searchHandler;
+  private final SearchHandler<I, U> searchHandler;
 
-  protected GenericSearchService(SearchHandler<I, O> searchHandler) {
+  protected GenericSearchService(SearchHandler<I, U> searchHandler) {
     this.searchHandler = searchHandler;
   }
 
-  public Response<List<O>> request(Request<I> input) {
-    Response<List<O>> response = new Response<>();
+  public Response<O> request(Request<I> input) {
+    Response<O> response = new Response<>();
 
-    List<O> found = searchHandler.search(input);
-    response.setPayload(found);
+    var found = searchHandler.search(input);
+    response.setPayload(getResponsePayload(found));
     response.setStatus(Status.SUCCESS);
 
     return response;
   }
+
+  protected abstract O getResponsePayload(SearchConditionPage<U> page);
 }

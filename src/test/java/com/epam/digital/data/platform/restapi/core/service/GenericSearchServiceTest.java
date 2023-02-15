@@ -24,6 +24,7 @@ import static org.mockito.BDDMockito.given;
 import com.epam.digital.data.platform.model.core.kafka.Request;
 import com.epam.digital.data.platform.model.core.kafka.RequestContext;
 import com.epam.digital.data.platform.model.core.kafka.SecurityContext;
+import com.epam.digital.data.platform.model.core.search.SearchConditionPage;
 import com.epam.digital.data.platform.restapi.core.dto.MockEntity;
 import com.epam.digital.data.platform.restapi.core.service.impl.GenericSearchServiceTestImpl;
 import com.epam.digital.data.platform.restapi.core.searchhandler.AbstractSearchHandler;
@@ -47,8 +48,9 @@ class GenericSearchServiceTest {
   @Test
   void shouldSearchInHandlerWithResult() {
     var c = mockResult();
-
-    given(searchHandler.search(any(Request.class))).willReturn(List.of(c));
+    var scResponse = new SearchConditionPage<MockEntity>();
+    scResponse.setContent(List.of(c));
+    given(searchHandler.search(any(Request.class))).willReturn(scResponse);
 
     var response = instance.request(mockRequest());
 
@@ -59,7 +61,9 @@ class GenericSearchServiceTest {
 
   @Test
   void shouldSearchInHandlerWithEmptyResult() {
-    given(searchHandler.search(any(Request.class))).willReturn(Collections.emptyList());
+    var scResponse = new SearchConditionPage<MockEntity>();
+    scResponse.setContent(Collections.emptyList());
+    given(searchHandler.search(any(Request.class))).willReturn(scResponse);
 
     var response = instance.request(mockRequest());
 

@@ -4,11 +4,11 @@ import static com.epam.digital.data.platform.restapi.core.util.DaoTestUtils.TEST
 import static com.epam.digital.data.platform.restapi.core.util.SearchHandlerTestUtil.mockRequest;
 
 import com.epam.digital.data.platform.model.core.kafka.Request;
+import com.epam.digital.data.platform.model.core.search.SearchConditionPage;
 import com.epam.digital.data.platform.restapi.core.config.TestConfiguration;
 import com.epam.digital.data.platform.restapi.core.impl.model.TestEntityFile;
 import com.epam.digital.data.platform.restapi.core.impl.model.TestEntityFileSearchConditions;
 import com.epam.digital.data.platform.restapi.core.impl.searchhandler.TestEntityFileSearchHandler;
-import java.util.List;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -35,21 +35,21 @@ class TestEntityFileSearchHandlerIT {
 
   @Test
   void shouldFindAllWhenEmptySearchCriteria() {
-    final List<TestEntityFile> allRecords = instance.search(request);
-    Assertions.assertThat(allRecords).hasSize(2);
+    final SearchConditionPage<TestEntityFile> allRecords = instance.search(request);
+    Assertions.assertThat(allRecords.getContent()).hasSize(2);
   }
 
   @Test
   void shouldSearchByMultipleSearchCriteria() {
     searchCriteria.setLegalEntityName(STARTS_WITH);
 
-    final List<TestEntityFile> found = instance.search(request);
+    final SearchConditionPage<TestEntityFile> found = instance.search(request);
 
-    Assertions.assertThat(found).hasSize(1);
-    Assertions.assertThat(found.get(0).getLegalEntityName()).isEqualTo(TEST_ENTITY_FILE.getLegalEntityName());
-    Assertions.assertThat(found.get(0).getScanCopy().getId())
+    Assertions.assertThat(found.getContent()).hasSize(1);
+    Assertions.assertThat(found.getContent().get(0).getLegalEntityName()).isEqualTo(TEST_ENTITY_FILE.getLegalEntityName());
+    Assertions.assertThat(found.getContent().get(0).getScanCopy().getId())
         .isEqualTo(TEST_ENTITY_FILE.getScanCopy().getId());
-    Assertions.assertThat(found.get(0).getScanCopy().getChecksum())
+    Assertions.assertThat(found.getContent().get(0).getScanCopy().getChecksum())
         .isEqualTo(TEST_ENTITY_FILE.getScanCopy().getChecksum());
   }
 }
