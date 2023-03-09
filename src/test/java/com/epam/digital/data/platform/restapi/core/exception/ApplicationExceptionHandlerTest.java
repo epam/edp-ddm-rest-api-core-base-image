@@ -32,7 +32,7 @@ import com.epam.digital.data.platform.model.core.kafka.Response;
 import com.epam.digital.data.platform.model.core.kafka.Status;
 import com.epam.digital.data.platform.restapi.core.audit.RestAuditEventsFacade;
 import com.epam.digital.data.platform.restapi.core.config.SecurityConfiguration;
-import com.epam.digital.data.platform.restapi.core.controller.MockController;
+import com.epam.digital.data.platform.restapi.core.controller.impl.MockController;
 import com.epam.digital.data.platform.restapi.core.dto.MockEntity;
 import com.epam.digital.data.platform.restapi.core.dto.MockEntityCreateList;
 import com.epam.digital.data.platform.restapi.core.model.DetailedErrorResponse;

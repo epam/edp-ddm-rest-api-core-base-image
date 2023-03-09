@@ -18,17 +18,13 @@ package com.epam.digital.data.platform.restapi.core.interceptor;
 
 import com.epam.digital.data.platform.restapi.core.config.SecurityConfiguration;
 import com.epam.digital.data.platform.restapi.core.config.WebConfig;
-import com.epam.digital.data.platform.restapi.core.controller.MockController;
+import com.epam.digital.data.platform.restapi.core.controller.impl.MockController;
 import com.epam.digital.data.platform.restapi.core.service.MockService;
-import com.epam.digital.data.platform.starter.security.PermitAllWebSecurityConfig;
 import com.epam.digital.data.platform.starter.security.config.SecurityProperties;
-import com.epam.digital.data.platform.starter.security.jwt.TokenProvider;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;

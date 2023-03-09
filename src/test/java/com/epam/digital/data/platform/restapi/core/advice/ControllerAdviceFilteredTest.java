@@ -42,7 +42,7 @@ import com.epam.digital.data.platform.model.core.kafka.Status;
 import com.epam.digital.data.platform.restapi.core.config.SecurityConfiguration;
 import com.epam.digital.data.platform.restapi.core.config.TestBeansConfig;
 import com.epam.digital.data.platform.restapi.core.config.WebConfigProperties;
-import com.epam.digital.data.platform.restapi.core.controller.MockFileController;
+import com.epam.digital.data.platform.restapi.core.controller.impl.MockFileController;
 import com.epam.digital.data.platform.restapi.core.dto.MockEntityFile;
 import com.epam.digital.data.platform.restapi.core.exception.ApplicationExceptionHandler;
 import com.epam.digital.data.platform.restapi.core.exception.ChecksumInconsistencyException;

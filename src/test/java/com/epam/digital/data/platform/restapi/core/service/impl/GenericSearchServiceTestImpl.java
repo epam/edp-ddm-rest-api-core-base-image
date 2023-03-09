@@ -20,7 +20,7 @@ import com.epam.digital.data.platform.model.core.search.SearchConditionPage;
 import com.epam.digital.data.platform.restapi.core.dto.MockEntity;
 import com.epam.digital.data.platform.restapi.core.searchhandler.AbstractSearchHandler;
 import com.epam.digital.data.platform.restapi.core.service.GenericSearchService;
-import com.epam.digital.data.platform.restapi.core.util.MockEntityContains;
+import com.epam.digital.data.platform.restapi.core.dto.MockEntityContains;
 import org.springframework.boot.test.context.TestComponent;
 
 import java.util.List;

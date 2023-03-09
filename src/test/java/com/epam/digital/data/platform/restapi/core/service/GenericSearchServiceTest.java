@@ -28,7 +28,7 @@ import com.epam.digital.data.platform.model.core.search.SearchConditionPage;
 import com.epam.digital.data.platform.restapi.core.dto.MockEntity;
 import com.epam.digital.data.platform.restapi.core.service.impl.GenericSearchServiceTestImpl;
 import com.epam.digital.data.platform.restapi.core.searchhandler.AbstractSearchHandler;
-import com.epam.digital.data.platform.restapi.core.util.MockEntityContains;
+import com.epam.digital.data.platform.restapi.core.dto.MockEntityContains;
 import java.util.Collections;
 import java.util.List;
 import org.junit.jupiter.api.Test;

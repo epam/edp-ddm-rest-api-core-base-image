@@ -20,6 +20,9 @@ import static org.mockito.Mockito.mock;
 
 import com.epam.digital.data.platform.restapi.core.service.FileService;
 import com.epam.digital.data.platform.restapi.core.audit.RestAuditEventsFacade;
+import com.epam.digital.data.platform.restapi.core.service.MockFileService;
+import com.epam.digital.data.platform.restapi.core.service.MockService;
+import com.epam.digital.data.platform.restapi.core.service.TraceProvider;
 import com.epam.digital.data.platform.starter.actuator.livenessprobe.LivenessStateHandler;
 import com.epam.digital.data.platform.starter.audit.service.AuditService;
 import com.epam.digital.data.platform.starter.security.config.SecurityProperties;
@@ -71,5 +74,20 @@ public class TestBeansConfig {
   @Bean
   public FileService fileService() {
     return mock(FileService.class);
+  }
+
+  @Bean
+  public MockService mockService() {
+    return mock(MockService.class);
+  }
+
+  @Bean
+  public MockFileService mockFileService() {
+    return mock(MockFileService.class);
+  }
+
+  @Bean
+  public TraceProvider traceProvider() {
+    return mock(TraceProvider.class);
   }
 }

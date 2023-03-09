@@ -25,7 +25,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.epam.digital.data.platform.restapi.core.audit.RestAuditEventsFacade;
 import com.epam.digital.data.platform.restapi.core.config.UnauthorizedRequestHandler;
-import com.epam.digital.data.platform.restapi.core.controller.MockController;
+import com.epam.digital.data.platform.restapi.core.controller.impl.MockController;
 import com.epam.digital.data.platform.restapi.core.exception.ApplicationExceptionHandler;
 import com.epam.digital.data.platform.restapi.core.service.MockService;
 import com.epam.digital.data.platform.restapi.core.service.TraceProvider;

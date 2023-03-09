@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.epam.digital.data.platform.restapi.core.util;
+package com.epam.digital.data.platform.restapi.core.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 

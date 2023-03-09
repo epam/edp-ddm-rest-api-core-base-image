@@ -18,7 +18,7 @@ package com.epam.digital.data.platform.restapi.core.searchhandler;
 
 
 import com.epam.digital.data.platform.restapi.core.dto.MockEntity;
-import com.epam.digital.data.platform.restapi.core.util.MockEntityContains;
+import com.epam.digital.data.platform.restapi.core.dto.MockEntityContains;
 import java.util.Collections;
 import java.util.List;
 import org.jooq.Condition;

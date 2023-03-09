@@ -14,18 +14,18 @@
  * limitations under the License.
  */
 
-package com.epam.digital.data.platform.restapi.core.controller;
+package com.epam.digital.data.platform.restapi.core.controller.impl;
 
 import com.epam.digital.data.platform.model.core.kafka.Request;
 import com.epam.digital.data.platform.model.core.kafka.RequestContext;
 import com.epam.digital.data.platform.model.core.kafka.SecurityContext;
+import com.epam.digital.data.platform.restapi.core.audit.AuditableController;
 import com.epam.digital.data.platform.restapi.core.annotation.HttpRequestContext;
 import com.epam.digital.data.platform.restapi.core.annotation.HttpSecurityContext;
-import com.epam.digital.data.platform.restapi.core.dto.MockEntityFile;
-import com.epam.digital.data.platform.restapi.core.service.MockFileService;
+import com.epam.digital.data.platform.restapi.core.dto.MockEntityCreateList;
+import com.epam.digital.data.platform.restapi.core.service.MockService;
+import com.epam.digital.data.platform.restapi.core.dto.MockEntity;
 import com.epam.digital.data.platform.restapi.core.utils.ResponseResolverUtil;
-import java.util.UUID;
-import javax.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -35,28 +35,34 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.validation.Valid;
+import java.util.UUID;
+
 @RestController
-@RequestMapping("/mock-file")
-public class MockFileController {
+@RequestMapping("/mock")
+public class MockController {
 
-  private MockFileService mockService;
+  private final MockService mockService;
 
-  public MockFileController(MockFileService mockService) {
+  public MockController(MockService mockService) {
     this.mockService = mockService;
   }
 
+  @AuditableController
   @GetMapping
-  public ResponseEntity<MockEntityFile> searchEntity(Object searchConditions,
+  public ResponseEntity<MockEntity> searchEntity(Object searchConditions,
       @HttpRequestContext RequestContext context,
       @HttpSecurityContext SecurityContext securityContext) {
     var response = mockService.search(searchConditions);
     return ResponseResolverUtil.getHttpResponseFromKafka(response);
   }
 
+  @AuditableController
   @GetMapping("/{id}")
-  public ResponseEntity<MockEntityFile> findByIdMockEntity(
+  public ResponseEntity<MockEntity> findByIdMockEntity(
       @PathVariable("id") UUID id,
       @HttpRequestContext RequestContext context,
       @HttpSecurityContext SecurityContext securityContext) {
@@ -65,49 +71,89 @@ public class MockFileController {
     return ResponseResolverUtil.getHttpResponseFromKafka(response);
   }
 
+  @AuditableController
   @PostMapping
   public ResponseEntity<Void> createMockEntity(
-      @Valid @RequestBody MockEntityFile mockEntity,
+      @Valid @RequestBody MockEntity mockEntity,
       @HttpRequestContext RequestContext context,
       @HttpSecurityContext SecurityContext securityContext) {
-    Request<MockEntityFile> request = new Request<>(mockEntity, context, securityContext);
+    Request<MockEntity> request = new Request<>(mockEntity, context, securityContext);
     var response = mockService.create(request);
     return ResponseResolverUtil.getHttpResponseFromKafka(response);
   }
 
+  @AuditableController
   @PutMapping("/{id}")
   public ResponseEntity<Void> updateMockEntity(
       @PathVariable("id") UUID id,
-      @Valid @RequestBody MockEntityFile mockEntity,
+      @Valid @RequestBody MockEntity mockEntity,
       @HttpRequestContext RequestContext context,
       @HttpSecurityContext SecurityContext securityContext) {
-    mockEntity.setId(id);
-    Request<MockEntityFile> request = new Request<>(mockEntity, context, securityContext);
+    mockEntity.setConsentId(id);
+    Request<MockEntity> request = new Request<>(mockEntity, context, securityContext);
     var response = mockService.update(request);
     return ResponseResolverUtil.getHttpResponseFromKafka(response);
   }
 
+  @AuditableController
   @PatchMapping("/{id}")
   public ResponseEntity<Void> patchMockEntity(
       @PathVariable("id") UUID id,
-      @Valid @RequestBody MockEntityFile mockEntity,
+      @Valid @RequestBody MockEntity mockEntity,
       @HttpRequestContext RequestContext context,
       @HttpSecurityContext SecurityContext securityContext) {
-    mockEntity.setId(id);
-    Request<MockEntityFile> request = new Request<>(mockEntity, context, securityContext);
+    mockEntity.setConsentId(id);
+    Request<MockEntity> request = new Request<>(mockEntity, context, securityContext);
     var response = mockService.update(request);
     return ResponseResolverUtil.getHttpResponseFromKafka(response);
   }
 
+  @AuditableController
   @DeleteMapping("/{id}")
   public ResponseEntity<Void> deleteByIdMockEntity(
       @PathVariable("id") UUID id,
       @HttpRequestContext RequestContext context,
       @HttpSecurityContext SecurityContext securityContext) {
-    MockEntityFile mockEntity = new MockEntityFile();
-    mockEntity.setId(id);
-    Request<MockEntityFile> request = new Request<>(mockEntity, context, securityContext);
+    MockEntity mockEntity = new MockEntity();
+    mockEntity.setConsentId(id);
+    Request<MockEntity> request = new Request<>(mockEntity, context, securityContext);
     var response = mockService.delete(request);
+    return ResponseResolverUtil.getHttpResponseFromKafka(response);
+  }
+
+  @AuditableController
+  @RequestMapping(value = "/test/{id}", method = RequestMethod.GET)
+  public ResponseEntity<MockEntity> findById(
+      @PathVariable("id") UUID id,
+      @HttpRequestContext RequestContext context,
+      @HttpSecurityContext SecurityContext securityContext) {
+    Request<UUID> request = new Request<>(id, context, securityContext);
+    var response = mockService.read(request);
+    return ResponseResolverUtil.getHttpResponseFromKafka(response);
+  }
+
+  @AuditableController
+  @PatchMapping("/test/{id}")
+  @PutMapping("/test/{id}")
+  public ResponseEntity<Void> patchPutMockEntity(
+      @PathVariable("id") UUID id,
+      @Valid @RequestBody MockEntity mockEntity,
+      @HttpRequestContext RequestContext context,
+      @HttpSecurityContext SecurityContext securityContext) {
+    mockEntity.setConsentId(id);
+    Request<MockEntity> request = new Request<>(mockEntity, context, securityContext);
+    var response = mockService.update(request);
+    return ResponseResolverUtil.getHttpResponseFromKafka(response);
+  }
+
+  @AuditableController
+  @PostMapping("/list")
+  public ResponseEntity<Void> createListMockEntity(
+          @Valid @RequestBody MockEntityCreateList mockEntityCreateList,
+          @HttpRequestContext RequestContext context,
+          @HttpSecurityContext SecurityContext securityContext) {
+    Request<MockEntityCreateList> request = new Request<>(mockEntityCreateList, context, securityContext);
+    var response = mockService.createList(request);
     return ResponseResolverUtil.getHttpResponseFromKafka(response);
   }
 }
