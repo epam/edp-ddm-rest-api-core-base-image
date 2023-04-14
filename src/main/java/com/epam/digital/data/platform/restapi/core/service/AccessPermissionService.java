@@ -48,11 +48,11 @@ public class AccessPermissionService {
       List<FieldsAccessCheckDto> accessedFieldsDto, JwtClaimsDto userClaims) {
     List<String> userRoles = JwtClaimsUtils.getRoles(userClaims);
     try (Connection connection = dataSource.getConnection();
-         CallableStatement statement = connection.prepareCall(PERMISSION_CHECK_SQL_STRING)) {
+         CallableStatement statement = connection.prepareCall(PERMISSION_CHECK_SQL_STRING)) { //NOSONAR
       Array userRolesDbArray = connection.createArrayOf("text", userRoles.toArray());
       for (FieldsAccessCheckDto tableFields : accessedFieldsDto) {
         Array searchFieldsDbArray = connection.createArrayOf("text", tableFields.getFields().toArray());
-        statement.setString(1, tableFields.getTableName());
+        statement.setString(1, tableFields.getTableName()); //NOSONAR
         statement.setArray(2, userRolesDbArray);
         statement.setString(3, SEARCH_TYPE_OPERATION);
         statement.setArray(4, searchFieldsDbArray);

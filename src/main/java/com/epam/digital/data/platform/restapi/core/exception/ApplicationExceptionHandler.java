@@ -19,6 +19,7 @@ package com.epam.digital.data.platform.restapi.core.exception;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 
+import com.epam.digital.data.platform.dso.client.exception.InvalidSignatureException;
 import com.epam.digital.data.platform.integration.ceph.exception.CephCommunicationException;
 import com.epam.digital.data.platform.integration.ceph.exception.MisconfigurationException;
 import com.epam.digital.data.platform.model.core.kafka.Response;

@@ -29,9 +29,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import com.epam.digital.data.platform.dso.client.exception.InvalidSignatureException;
 import com.epam.digital.data.platform.model.core.kafka.SecurityContext;
 import com.epam.digital.data.platform.restapi.core.config.WebConfigProperties;
-import com.epam.digital.data.platform.restapi.core.exception.InvalidSignatureException;
 import com.epam.digital.data.platform.restapi.core.service.DigitalSignatureService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.BufferedReader;

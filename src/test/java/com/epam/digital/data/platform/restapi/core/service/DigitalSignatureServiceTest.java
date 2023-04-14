@@ -30,6 +30,7 @@ import com.epam.digital.data.platform.dso.api.dto.VerificationResponseDto;
 import com.epam.digital.data.platform.dso.client.DigitalSealRestClient;
 import com.epam.digital.data.platform.dso.client.exception.BadRequestException;
 import com.epam.digital.data.platform.dso.client.exception.InternalServerErrorException;
+import com.epam.digital.data.platform.dso.client.exception.InvalidSignatureException;
 import com.epam.digital.data.platform.integration.ceph.exception.CephCommunicationException;
 import com.epam.digital.data.platform.integration.ceph.exception.MisconfigurationException;
 import com.epam.digital.data.platform.integration.ceph.service.CephService;
@@ -177,6 +178,15 @@ class DigitalSignatureServiceTest {
 
     assertThrows(KepServiceInternalServerErrorException.class, () -> digitalSignatureService
         .checkSignature(DATA, securityContext));
+  }
+
+  @Test
+  void invalidSignatureExceptionFromClientIsThrownFromService() {
+    when(lowcodeCephService.getFormData(X_DIG_SIG_DERIVED)).thenReturn(Optional.of(RESPONSE_FROM_CEPH));
+    when(digitalSealRestClient.verify(any())).thenThrow(InvalidSignatureException.class);
+
+    assertThrows(InvalidSignatureException.class, () -> digitalSignatureService
+            .checkSignature(DATA, securityContext));
   }
 
   @Test
