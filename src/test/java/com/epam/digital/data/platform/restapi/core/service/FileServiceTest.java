@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 EPAM Systems.
+ * Copyright 2023 EPAM Systems.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,10 +19,8 @@ package com.epam.digital.data.platform.restapi.core.service;
 import static com.epam.digital.data.platform.restapi.core.dto.MockEntityFile.FILE_FIELD_NUM;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -31,10 +29,12 @@ import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 
 import com.amazonaws.services.s3.model.AmazonS3Exception;
 import com.epam.digital.data.platform.integration.ceph.exception.CephCommunicationException;
-
-
 import com.epam.digital.data.platform.model.core.kafka.File;
+import com.epam.digital.data.platform.restapi.core.config.FileProcessing;
+import com.epam.digital.data.platform.restapi.core.dto.MockEntity;
+import com.epam.digital.data.platform.restapi.core.dto.MockEntityEnum;
 import com.epam.digital.data.platform.restapi.core.dto.MockEntityFile;
+import com.epam.digital.data.platform.restapi.core.dto.MockEntityNestedFile;
 import com.epam.digital.data.platform.restapi.core.exception.ChecksumInconsistencyException;
 import com.epam.digital.data.platform.restapi.core.utils.ResponseCode;
 import com.epam.digital.data.platform.storage.file.dto.FileDataDto;
@@ -43,16 +43,13 @@ import com.epam.digital.data.platform.storage.file.exception.FileNotFoundExcepti
 import com.epam.digital.data.platform.storage.file.service.FormDataFileKeyProvider;
 import com.epam.digital.data.platform.storage.file.service.FormDataFileKeyProviderImpl;
 import com.epam.digital.data.platform.storage.file.service.FormDataFileStorageService;
-
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
-
-
-import java.util.Optional;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -81,16 +78,18 @@ class FileServiceTest {
   FormDataFileStorageService datafactoryCephService;
 
   FormDataFileKeyProvider fileKeyProvider = new FormDataFileKeyProviderImpl();
+  FileProcessing fileProcessing = new FileProcessing();
 
   FileService instance;
 
   @BeforeEach
   void beforeEach() {
+    fileProcessing.setEnabled(true);
+    fileProcessing.setAllowedPackages(List.of("com.epam.digital.data.platform.restapi.core.dto"));
     instance =
             new FileService(
-                    true,
                     lowcodeCephService,
-                    datafactoryCephService, fileKeyProvider);
+                    datafactoryCephService, fileKeyProvider, fileProcessing);
   }
 
   private File mockFile(String compositeFileId) {
@@ -127,6 +126,26 @@ class FileServiceTest {
         var fileProperties = instance.getFileProperties(e);
 
         assertThat(fileProperties).hasSize(FILE_FIELD_NUM);
+      }
+
+      @Test
+      void findNestedPropertiesWithFileType() {
+        var testFile = new File();
+        var mockEntityNestedFile = new MockEntityNestedFile();
+        var objectWithFile = new MockEntity();
+        objectWithFile.setPersonFullName("testName");
+        objectWithFile.setConsentId(UUID.randomUUID());
+        objectWithFile.setConsentDate(LocalDateTime.now());
+        objectWithFile.setPassportScanCopy(testFile);
+        mockEntityNestedFile.setFile(testFile);
+        mockEntityNestedFile.setFiles(List.of(testFile));
+        mockEntityNestedFile.setMockEntity(objectWithFile);
+        mockEntityNestedFile.setMockEntityArray(new MockEntity[]{objectWithFile});
+        mockEntityNestedFile.setMockEntityEnum(MockEntityEnum.M);
+
+        var fileProperties = instance.getFileProperties(mockEntityNestedFile);
+
+        assertThat(fileProperties).hasSize(4);
       }
 
       @Test
@@ -260,11 +279,11 @@ class FileServiceTest {
 
     @Test
     void expectSkipCephFlowIfFileProcessingDisabled() {
+      fileProcessing.setEnabled(false);
       instance =
               new FileService(
-                      false,
                       lowcodeCephService,
-                      datafactoryCephService, fileKeyProvider);
+                      datafactoryCephService, fileKeyProvider, fileProcessing);
 
       File file = mockFile(FILE_ID);
 
@@ -348,11 +367,11 @@ class FileServiceTest {
 
     @Test
     void expectSkipCephFlowIfFileProcessingDisabled() {
+      fileProcessing.setEnabled(false);
       instance =
               new FileService(
-                      false,
                       lowcodeCephService,
-                      datafactoryCephService, fileKeyProvider);
+                      datafactoryCephService, fileKeyProvider, fileProcessing);
       File file = mockFile(FILE_ID);
 
       instance.retrieve(INSTANCE_ID, file);
