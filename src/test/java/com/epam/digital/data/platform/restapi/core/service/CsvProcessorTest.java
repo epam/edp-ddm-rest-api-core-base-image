@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 EPAM Systems.
+ * Copyright 2023 EPAM Systems.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,17 +29,23 @@ import com.epam.digital.data.platform.storage.file.dto.FileDataDto;
 import com.epam.digital.data.platform.storage.file.service.FormDataFileKeyProvider;
 import com.epam.digital.data.platform.storage.file.service.FormDataFileStorageService;
 import com.fasterxml.jackson.dataformat.csv.CsvReadException;
+
+import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 
+import java.io.InputStream;
 import java.time.LocalDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
+
+import lombok.SneakyThrows;
 
 @SpringBootTest(
     classes = {CsvConfig.class, LocalValidatorFactoryBean.class, CsvProcessorTestImpl.class})
@@ -61,13 +67,11 @@ class CsvProcessorTest {
   @Test
   void expectValidFileProcessedToPayload() {
     when(fileKeyProvider.generateKey(BP_INSTANCE_ID, FILE_ID)).thenReturn(LOWCODE_FILE_ID);
+    String filename = "/csv/mockEntity.csv";
     when(lowcodeCephService.loadByKey(LOWCODE_FILE_ID))
-        .thenReturn(
-            FileDataDto.builder()
-                .content(CsvProcessorTest.class.getResourceAsStream("/csv/mockEntity.csv"))
-                .build());
+        .thenReturn(FileDataDto.builder().content(getFileContent(filename)).build());
 
-    var fileChecksum = "c1ddb12f7cdcdb517d8f489a3733e6e0e7e84fa868efbe7fa8b148b0b8b62eb4";
+    var fileChecksum = getFileChecksum(filename);
 
     var actualPayload = instance.transformFileToEntity(mockRequest(fileChecksum));
 
@@ -90,10 +94,7 @@ class CsvProcessorTest {
   void expectExceptionOnInvalidChecksum() {
     when(fileKeyProvider.generateKey(BP_INSTANCE_ID, FILE_ID)).thenReturn(LOWCODE_FILE_ID);
     when(lowcodeCephService.loadByKey(LOWCODE_FILE_ID))
-            .thenReturn(
-                    FileDataDto.builder()
-                            .content(CsvProcessorTest.class.getResourceAsStream("/csv/mockEntity.csv"))
-                            .build());
+        .thenReturn(FileDataDto.builder().content(getFileContent("/csv/mockEntity.csv")).build());
 
     var request = mockRequest("Invalid checksum");
 
@@ -104,15 +105,11 @@ class CsvProcessorTest {
   @Test
   void expectExceptionOnInvalidEncoding() {
     when(fileKeyProvider.generateKey(BP_INSTANCE_ID, FILE_ID)).thenReturn(LOWCODE_FILE_ID);
+    String filename = "/csv/mockEntityInvalidEncoding.csv";
     when(lowcodeCephService.loadByKey(LOWCODE_FILE_ID))
-        .thenReturn(
-            FileDataDto.builder()
-                .content(
-                    CsvProcessorTest.class.getResourceAsStream(
-                        "/csv/mockEntityInvalidEncoding.csv"))
-                .build());
+        .thenReturn(FileDataDto.builder().content(getFileContent(filename)).build());
 
-    var fileChecksum = "db38b8170f040e08fee5bf916ba8c2cabdae1a9d51e15833a0e1902583781b19";
+    var fileChecksum = getFileChecksum(filename);
     var request = mockRequest(fileChecksum);
 
     assertThrows(
@@ -122,15 +119,11 @@ class CsvProcessorTest {
   @Test
   void expectExceptionOnInvalidCsvContent() {
     when(fileKeyProvider.generateKey(BP_INSTANCE_ID, FILE_ID)).thenReturn(LOWCODE_FILE_ID);
+    String filename = "/csv/mockEntityInvalidCsvFormat.csv";
     when(lowcodeCephService.loadByKey(LOWCODE_FILE_ID))
-        .thenReturn(
-            FileDataDto.builder()
-                .content(
-                    CsvProcessorTest.class.getResourceAsStream(
-                        "/csv/mockEntityInvalidCsvFormat.csv"))
-                .build());
+        .thenReturn(FileDataDto.builder().content(getFileContent(filename)).build());
 
-    var fileChecksum = "c75458aa349fe73263b7217940db9e5a31754d5bad30b0a938eb82002269d313";
+    var fileChecksum = getFileChecksum(filename);
     var request = mockRequest(fileChecksum);
 
     var actualException =
@@ -142,15 +135,11 @@ class CsvProcessorTest {
   @Test
   void expectValidationExceptionOnCsvContentDto() {
     when(fileKeyProvider.generateKey(BP_INSTANCE_ID, FILE_ID)).thenReturn(LOWCODE_FILE_ID);
+    String filename = "/csv/mockEntityInvalidPassFormat.csv";
     when(lowcodeCephService.loadByKey(LOWCODE_FILE_ID))
-        .thenReturn(
-            FileDataDto.builder()
-                .content(
-                    CsvProcessorTest.class.getResourceAsStream(
-                        "/csv/mockEntityInvalidPassFormat.csv"))
-                .build());
+        .thenReturn(FileDataDto.builder().content(getFileContent(filename)).build());
 
-    var fileChecksum = "9928f03dd3346d8e81a1adc8d87a14749a578d3b4fc47339ec2cddeaa0aea0d7";
+    var fileChecksum = getFileChecksum(filename);
     var request = mockRequest(fileChecksum);
 
     var actualException =
@@ -166,5 +155,14 @@ class CsvProcessorTest {
     var requestContext = new RequestContext();
     requestContext.setBusinessProcessInstanceId(BP_INSTANCE_ID);
     return new Request<>(file, requestContext, null);
+  }
+
+  private InputStream getFileContent(String name) {
+    return CsvProcessorTest.class.getResourceAsStream(name);
+  }
+
+  @SneakyThrows
+  private String getFileChecksum(String filename) {
+    return DigestUtils.sha256Hex(IOUtils.toByteArray(getFileContent(filename)));
   }
 }
