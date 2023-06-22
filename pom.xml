@@ -14,7 +14,7 @@
 	<properties>
 		<model.core.version>1.9.4.1</model.core.version>
 		<ddm.starter.kafka.version>1.6.0.2</ddm.starter.kafka.version>
-		<ddm.starter.database.version>1.8.0.1</ddm.starter.database.version>
+		<ddm.starter.database.version>1.8.0.8</ddm.starter.database.version>
 		<ddm.starter.logger.version>1.6.0.9</ddm.starter.logger.version>
 		<ddm.starter.actuator.version>1.6.0.1</ddm.starter.actuator.version>
 		<ddm.starter.swagger.version>1.9.6.1</ddm.starter.swagger.version>
