@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 EPAM Systems.
+ * Copyright 2023 EPAM Systems.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,12 +17,15 @@
 package com.epam.digital.data.platform.restapi.core.advice;
 
 import static com.epam.digital.data.platform.restapi.core.utils.Header.X_SOURCE_BUSINESS_PROCESS_INSTANCE_ID;
-import static java.util.Collections.singletonList;
 
 import com.epam.digital.data.platform.restapi.core.exception.FileNotExistsException;
-import com.epam.digital.data.platform.restapi.core.exception.MandatoryHeaderMissingException;
+import com.epam.digital.data.platform.restapi.core.model.FileProperty;
+import com.epam.digital.data.platform.restapi.core.service.FilePropertiesService;
 import com.epam.digital.data.platform.restapi.core.service.FileService;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import org.springframework.core.MethodParameter;
 import org.springframework.http.MediaType;
 import org.springframework.http.server.ServerHttpRequest;
@@ -34,10 +37,12 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice;
 public class FileResponseBodyAdvice implements ResponseBodyAdvice {
 
   private final FileService fileService;
+  private final FilePropertiesService filePropertiesService;
 
-  public FileResponseBodyAdvice(
-      FileService fileService) {
+  public FileResponseBodyAdvice(FileService fileService,
+      FilePropertiesService filePropertiesService) {
     this.fileService = fileService;
+    this.filePropertiesService = filePropertiesService;
   }
 
   @Override
@@ -53,31 +58,33 @@ public class FileResponseBodyAdvice implements ResponseBodyAdvice {
       return null;
     }
 
-    var notFound = new ArrayList<String>();
-
-    fileService.getFileProperties(body).forEach(
-        f -> {
-          var success = fileService.retrieve(getInstanceId(request), f.getValue());
-          if (!success) {
-            notFound.add(f.getName());
-          }
-        }
-    );
-
-    if (!notFound.isEmpty()) {
-      throw new FileNotExistsException("Files not found in ceph bucket", notFound);
+    var processInstanceId = getProcessInstanceId(request);
+    if (Objects.isNull(processInstanceId)) {
+      filePropertiesService.resetFileProperties(body);
+    } else {
+      var fileProperties = filePropertiesService.getFileProperties(body);
+      storeFilesToLowcodeCephBucket(fileProperties, processInstanceId);
     }
-
     return body;
   }
 
-  private String getInstanceId(ServerHttpRequest request) {
-    var vals = request.getHeaders().get(X_SOURCE_BUSINESS_PROCESS_INSTANCE_ID.getHeaderName());
-    if (vals == null || vals.size() != 1) {
-      // should never happen
-      throw new MandatoryHeaderMissingException(
-          singletonList(X_SOURCE_BUSINESS_PROCESS_INSTANCE_ID.getHeaderName()));
+  private String getProcessInstanceId(ServerHttpRequest request) {
+    return Optional.ofNullable(
+            request.getHeaders().get(X_SOURCE_BUSINESS_PROCESS_INSTANCE_ID.getHeaderName()))
+        .map(val -> val.get(0))
+        .orElse(null);
+  }
+
+  private void storeFilesToLowcodeCephBucket(List<FileProperty> fileProperties, String processInstanceId) {
+    var notFoundFileNames = new ArrayList<String>();
+    fileProperties.forEach(fileProperty -> {
+      var isFileFound = fileService.retrieve(processInstanceId, fileProperty.getValue());
+      if (!isFileFound) {
+        notFoundFileNames.add(fileProperty.getName());
+      }
+    });
+    if (!notFoundFileNames.isEmpty()) {
+      throw new FileNotExistsException("Files not found in ceph bucket", notFoundFileNames);
     }
-    return vals.get(0);
   }
 }

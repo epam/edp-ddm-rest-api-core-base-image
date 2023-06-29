@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 EPAM Systems.
+ * Copyright 2023 EPAM Systems.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,6 +31,7 @@ import com.epam.digital.data.platform.restapi.core.dto.MockEntity;
 import com.epam.digital.data.platform.restapi.core.dto.MockEntityFile;
 import com.epam.digital.data.platform.restapi.core.exception.FileNotExistsException;
 import com.epam.digital.data.platform.restapi.core.model.FileProperty;
+import com.epam.digital.data.platform.restapi.core.service.FilePropertiesService;
 import com.epam.digital.data.platform.restapi.core.service.FileService;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
@@ -48,6 +49,8 @@ class FileRequestBodyAspectTest {
 
   @Mock
   FileService fileService;
+  @Mock
+  FilePropertiesService filePropertiesService;
 
   FileRequestBodyAspect instance;
 
@@ -59,7 +62,7 @@ class FileRequestBodyAspectTest {
 
   @BeforeEach
   void beforeEach() {
-    instance = new FileRequestBodyAspect(fileService);
+    instance = new FileRequestBodyAspect(fileService, filePropertiesService);
 
     scanCopy.setId(FILE_ID);
     mockFile.setScanCopy(scanCopy);
@@ -67,7 +70,7 @@ class FileRequestBodyAspectTest {
 
     requestContext.setBusinessProcessInstanceId("my source bp instance id");
 
-    when(fileService.getFileProperties(any())).thenReturn(List.of(
+    when(filePropertiesService.getFileProperties(any())).thenReturn(List.of(
         new FileProperty(FILE_PROPERTY_NAME, scanCopy),
         new FileProperty(ANOTHER_FILE_PROPERTY_NAME, anotherScanCopy)
     ));
@@ -95,11 +98,11 @@ class FileRequestBodyAspectTest {
 
   @Test
   void expectSkipFlowIfNoFileFields() {
-    when(fileService.getFileProperties(any())).thenReturn(emptyList());
+    when(filePropertiesService.getFileProperties(any())).thenReturn(emptyList());
 
     instance.process(null, new MockEntity(), requestContext, null);
 
-    verify(fileService).getFileProperties(any());
+    verify(filePropertiesService).getFileProperties(any());
     verifyNoMoreInteractions(fileService);
   }
 }

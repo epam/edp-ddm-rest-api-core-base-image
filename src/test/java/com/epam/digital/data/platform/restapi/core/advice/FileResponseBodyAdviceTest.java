@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 EPAM Systems.
+ * Copyright 2023 EPAM Systems.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -30,8 +31,8 @@ import com.epam.digital.data.platform.model.core.kafka.File;
 import com.epam.digital.data.platform.restapi.core.dto.MockEntity;
 import com.epam.digital.data.platform.restapi.core.dto.MockEntityFile;
 import com.epam.digital.data.platform.restapi.core.exception.FileNotExistsException;
-import com.epam.digital.data.platform.restapi.core.exception.MandatoryHeaderMissingException;
 import com.epam.digital.data.platform.restapi.core.model.FileProperty;
+import com.epam.digital.data.platform.restapi.core.service.FilePropertiesService;
 import com.epam.digital.data.platform.restapi.core.service.FileService;
 import com.epam.digital.data.platform.restapi.core.utils.Header;
 import java.util.List;
@@ -54,6 +55,8 @@ class FileResponseBodyAdviceTest {
 
   @Mock
   FileService fileService;
+  @Mock
+  FilePropertiesService filePropertiesService;
 
   @Mock
   ServerHttpRequest req;
@@ -64,7 +67,7 @@ class FileResponseBodyAdviceTest {
 
   @BeforeEach
   void beforeEach() {
-    instance = new FileResponseBodyAdvice(fileService);
+    instance = new FileResponseBodyAdvice(fileService, filePropertiesService);
 
     scanCopy.setId(FILE_ID);
     mockFile.setScanCopy(scanCopy);
@@ -80,6 +83,8 @@ class FileResponseBodyAdviceTest {
     instance.beforeBodyWrite(mockFile, null, null, null, req, null);
 
     verify(fileService, times(2)).retrieve(any(), any());
+    verify(filePropertiesService).getFileProperties(mockFile);
+    verify(filePropertiesService, never()).resetFileProperties(any());
   }
 
   @Test
@@ -97,12 +102,12 @@ class FileResponseBodyAdviceTest {
 
   @Test
   void expectSkipFlowIfNoFileFields() {
-    setupFileProperties();
-    when(fileService.getFileProperties(any())).thenReturn(emptyList());
+    setupInstanceIdHeader();
+    when(filePropertiesService.getFileProperties(any())).thenReturn(emptyList());
 
     instance.beforeBodyWrite(new MockEntity(), null, null, null, req, null);
 
-    verify(fileService).getFileProperties(any());
+    verify(filePropertiesService).getFileProperties(any());
     verifyNoMoreInteractions(fileService);
   }
 
@@ -116,16 +121,19 @@ class FileResponseBodyAdviceTest {
   }
 
   @Test
-  void failIfInstanceIdHeaderMissed() {
-    setupFileProperties();
+  void expectFileFieldsSetToNullIfInstanceIdHeaderMissed() {
+    var mockEntity = new MockEntity();
     when(req.getHeaders()).thenReturn(new HttpHeaders());
 
-    assertThrows(MandatoryHeaderMissingException.class, () -> instance
-        .beforeBodyWrite(mockFile, null, null, null, req, null));
+    instance.beforeBodyWrite(mockEntity, null, null, null, req, null);
+
+    verify(filePropertiesService).resetFileProperties(mockEntity);
+    verify(fileService, never()).retrieve(any(), any());
+    verify(filePropertiesService, never()).getFileProperties(any());
   }
 
   private void setupFileProperties() {
-    when(fileService.getFileProperties(any())).thenReturn(List.of(
+    when(filePropertiesService.getFileProperties(any())).thenReturn(List.of(
         new FileProperty(FILE_PROPERTY_NAME, scanCopy),
         new FileProperty(ANOTHER_FILE_PROPERTY_NAME, anotherScanCopy)
     ));

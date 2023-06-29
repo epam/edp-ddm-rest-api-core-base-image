@@ -16,7 +16,6 @@
 
 package com.epam.digital.data.platform.restapi.core.service;
 
-import static com.epam.digital.data.platform.restapi.core.dto.MockEntityFile.FILE_FIELD_NUM;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -31,10 +30,6 @@ import com.amazonaws.services.s3.model.AmazonS3Exception;
 import com.epam.digital.data.platform.integration.ceph.exception.CephCommunicationException;
 import com.epam.digital.data.platform.model.core.kafka.File;
 import com.epam.digital.data.platform.restapi.core.config.FileProcessing;
-import com.epam.digital.data.platform.restapi.core.dto.MockEntity;
-import com.epam.digital.data.platform.restapi.core.dto.MockEntityEnum;
-import com.epam.digital.data.platform.restapi.core.dto.MockEntityFile;
-import com.epam.digital.data.platform.restapi.core.dto.MockEntityNestedFile;
 import com.epam.digital.data.platform.restapi.core.exception.ChecksumInconsistencyException;
 import com.epam.digital.data.platform.restapi.core.utils.ResponseCode;
 import com.epam.digital.data.platform.storage.file.dto.FileDataDto;
@@ -46,10 +41,7 @@ import com.epam.digital.data.platform.storage.file.service.FormDataFileStorageSe
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.time.LocalDateTime;
-import java.util.Collections;
 import java.util.List;
-import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -106,95 +98,6 @@ class FileServiceTest {
                     .contentType(FILE_CONTENT_TYPE)
                     .filename("filename").build())
             .build();
-  }
-
-  @Nested
-  class GetFileProperties {
-
-    @Nested
-    class ProcessingFieldsFile {
-
-      @Test
-      void skipNulls() {
-        assertThat(instance.getFileProperties(new MockEntityFile())).isEmpty();
-      }
-
-      @Test
-      void findPropertiesWithFileType() {
-        MockEntityFile e = mockEntityFile();
-
-        var fileProperties = instance.getFileProperties(e);
-
-        assertThat(fileProperties).hasSize(FILE_FIELD_NUM);
-      }
-
-      @Test
-      void findNestedPropertiesWithFileType() {
-        var testFile = new File();
-        var mockEntityNestedFile = new MockEntityNestedFile();
-        var objectWithFile = new MockEntity();
-        objectWithFile.setPersonFullName("testName");
-        objectWithFile.setConsentId(UUID.randomUUID());
-        objectWithFile.setConsentDate(LocalDateTime.now());
-        objectWithFile.setPassportScanCopy(testFile);
-        mockEntityNestedFile.setFile(testFile);
-        mockEntityNestedFile.setFiles(List.of(testFile));
-        mockEntityNestedFile.setMockEntity(objectWithFile);
-        mockEntityNestedFile.setMockEntityArray(new MockEntity[]{objectWithFile});
-        mockEntityNestedFile.setMockEntityEnum(MockEntityEnum.M);
-
-        var fileProperties = instance.getFileProperties(mockEntityNestedFile);
-
-        assertThat(fileProperties).hasSize(4);
-      }
-
-      @Test
-      void dealWithCollections() {
-        var list = List.of(mockEntityFile(), mockEntityFile());
-
-        var fileProperties = instance.getFileProperties(list);
-
-        assertThat(fileProperties).hasSize(list.size() * FILE_FIELD_NUM);
-      }
-
-      private MockEntityFile mockEntityFile() {
-        var e = new MockEntityFile();
-        e.setScanCopy(new File());
-        e.setAnotherScanCopy(new File());
-        return e;
-      }
-    }
-
-    @Nested
-    class ProcessingFieldsListOfFiles {
-
-      @Test
-      void skipEmptyLists() {
-        var entity = mockEntityFile();
-        entity.setAnotherPhotos(Collections.EMPTY_LIST);
-
-        assertThat(instance.getFileProperties(entity)).hasSize(4);
-      }
-
-      @Test
-      void dealWithCollections() {
-        var list = List.of(mockEntityFile(), mockEntityFile());
-
-        var fileProperties = instance.getFileProperties(list);
-
-        assertThat(fileProperties).hasSize(14);
-      }
-
-      // 7 files
-      private MockEntityFile mockEntityFile() {
-        var e = new MockEntityFile();
-        e.setScanCopy(new File());
-        e.setAnotherScanCopy(new File());
-        e.setPhotos(List.of(new File(), new File()));
-        e.setAnotherPhotos(List.of(new File(), new File(), new File()));
-        return e;
-      }
-    }
   }
 
   @Nested

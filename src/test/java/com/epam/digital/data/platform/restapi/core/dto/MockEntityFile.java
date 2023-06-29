@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 EPAM Systems.
+ * Copyright 2023 EPAM Systems.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,8 +22,6 @@ import java.util.UUID;
 import javax.validation.constraints.Size;
 
 public class MockEntityFile {
-
-  public static final int FILE_FIELD_NUM = 2;
 
   private UUID id;
   @Size(max = 5)

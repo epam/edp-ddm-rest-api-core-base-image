@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 EPAM Systems.
+ * Copyright 2023 EPAM Systems.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package com.epam.digital.data.platform.restapi.core.config;
 
 import static org.mockito.Mockito.mock;
 
+import com.epam.digital.data.platform.restapi.core.service.FilePropertiesService;
 import com.epam.digital.data.platform.restapi.core.service.FileService;
 import com.epam.digital.data.platform.restapi.core.audit.RestAuditEventsFacade;
 import com.epam.digital.data.platform.restapi.core.service.MockFileService;
@@ -74,6 +75,11 @@ public class TestBeansConfig {
   @Bean
   public FileService fileService() {
     return mock(FileService.class);
+  }
+
+  @Bean
+  public FilePropertiesService filePropertiesService() {
+    return mock(FilePropertiesService.class);
   }
 
   @Bean

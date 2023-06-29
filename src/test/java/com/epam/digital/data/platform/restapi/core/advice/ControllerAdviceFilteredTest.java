@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 EPAM Systems.
+ * Copyright 2023 EPAM Systems.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,6 +50,7 @@ import com.epam.digital.data.platform.restapi.core.exception.KafkaCephResponseNo
 import com.epam.digital.data.platform.restapi.core.filter.FilterChainExceptionHandler;
 import com.epam.digital.data.platform.restapi.core.model.FileProperty;
 import com.epam.digital.data.platform.restapi.core.service.DigitalSignatureService;
+import com.epam.digital.data.platform.restapi.core.service.FilePropertiesService;
 import com.epam.digital.data.platform.restapi.core.service.FileService;
 import com.epam.digital.data.platform.restapi.core.service.MockFileService;
 import com.epam.digital.data.platform.restapi.core.service.TraceProvider;
@@ -122,8 +123,9 @@ class ControllerAdviceFilteredTest {
   @MockBean
   MockFileService mockFileService;
   @MockBean
+  FilePropertiesService filePropertiesService;
+  @MockBean
   FileService fileService;
-
   @MockBean
   DigitalSignatureService digitalSignatureService;
   @MockBean
@@ -140,7 +142,7 @@ class ControllerAdviceFilteredTest {
     filtersExclude.setExclude(List.of("/"));
     when(webConfigProperties.getFilters()).thenReturn(filtersExclude);
 
-    when(fileService.getFileProperties(any())).thenReturn(List.of(
+    when(filePropertiesService.getFileProperties(any())).thenReturn(List.of(
         new FileProperty("scanCopy", new File())
     ));
     when(fileService.store(any(), any())).thenReturn(true);

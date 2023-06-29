@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 EPAM Systems.
+ * Copyright 2023 EPAM Systems.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ package com.epam.digital.data.platform.restapi.core.advice;
 import com.epam.digital.data.platform.model.core.kafka.RequestContext;
 import com.epam.digital.data.platform.model.core.kafka.SecurityContext;
 import com.epam.digital.data.platform.restapi.core.exception.FileNotExistsException;
+import com.epam.digital.data.platform.restapi.core.service.FilePropertiesService;
 import com.epam.digital.data.platform.restapi.core.service.FileService;
 import java.util.ArrayList;
 import org.aspectj.lang.JoinPoint;
@@ -32,9 +33,11 @@ import org.springframework.stereotype.Component;
 public class FileRequestBodyAspect {
 
   private final FileService fileService;
+  private final FilePropertiesService filePropertiesService;
 
-  public FileRequestBodyAspect(FileService fileService) {
+  public FileRequestBodyAspect(FileService fileService, FilePropertiesService filePropertiesService) {
     this.fileService = fileService;
+    this.filePropertiesService = filePropertiesService;
   }
 
   @Pointcut("@within(org.springframework.web.bind.annotation.RestController)")
@@ -63,7 +66,7 @@ public class FileRequestBodyAspect {
 
     var notFound = new ArrayList<String>();
 
-    fileService.getFileProperties(dto).forEach(
+    filePropertiesService.getFileProperties(dto).forEach(
         f -> {
           var success = fileService.store(context.getBusinessProcessInstanceId(), f.getValue());
           if (!success) {
