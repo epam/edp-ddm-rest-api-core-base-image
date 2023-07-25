@@ -22,6 +22,7 @@ import com.epam.digital.data.platform.restapi.core.exception.FileNotExistsExcept
 import com.epam.digital.data.platform.restapi.core.service.FilePropertiesService;
 import com.epam.digital.data.platform.restapi.core.service.FileService;
 import java.util.ArrayList;
+import java.util.Collections;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
@@ -64,16 +65,15 @@ public class FileRequestBodyAspect {
   void process(JoinPoint joinPoint, Object dto, RequestContext context,
       SecurityContext securityContext) {
 
-    var notFound = new ArrayList<String>();
+    var notFound = Collections.synchronizedList(new ArrayList<String>());
 
-    filePropertiesService.getFileProperties(dto).forEach(
-        f -> {
+    filePropertiesService.getFileProperties(dto).parallelStream()
+        .forEach(f -> {
           var success = fileService.store(context.getRootBusinessProcessInstanceId(), f.getValue());
           if (!success) {
             notFound.add(f.getName());
           }
-        }
-    );
+        });
 
     if (!notFound.isEmpty()) {
       throw new FileNotExistsException("Files not found in ceph bucket", notFound);

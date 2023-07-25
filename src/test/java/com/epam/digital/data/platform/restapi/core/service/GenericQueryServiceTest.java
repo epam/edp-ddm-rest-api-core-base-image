@@ -38,7 +38,6 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 class GenericQueryServiceTest {
 
   private static final UUID ENTITY_ID = UUID.fromString("123e4567-e89b-12d3-a456-426655440000");
-  private static final String KEY = "datafactory-key";
 
   @MockBean
   QueryHandlerTestImpl mockQueryHandler;
@@ -73,16 +72,5 @@ class GenericQueryServiceTest {
 
   private Request<UUID> mockInput() {
     return new Request<>(ENTITY_ID, null, null);
-  }
-
-  private Request<MockEntity> mockRequest() {
-    MockEntity mock = new MockEntity();
-    Request<MockEntity> request = new Request<>();
-
-    mock.setConsentId(ENTITY_ID);
-    mock.setPersonFullName("stub");
-    request.setPayload(mock);
-
-    return request;
   }
 }

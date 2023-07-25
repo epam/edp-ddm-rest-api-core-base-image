@@ -2,9 +2,8 @@ package com.epam.digital.data.platform.restapi.core.impl.queryhandler;
 
 import com.epam.digital.data.platform.restapi.core.impl.model.TestEntityFile;
 import com.epam.digital.data.platform.restapi.core.impl.tabledata.TestEntityFileTableDataProvider;
-import com.epam.digital.data.platform.restapi.core.model.FieldsAccessCheckDto;
 import com.epam.digital.data.platform.restapi.core.queryhandler.AbstractQueryHandler;
-import com.epam.digital.data.platform.restapi.core.service.AccessPermissionService;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -18,13 +17,6 @@ public class TestEntityFileQueryHandler extends AbstractQueryHandler<UUID, TestE
   public TestEntityFileQueryHandler(
           TestEntityFileTableDataProvider tableDataProvider) {
     super(tableDataProvider);
-  }
-
-  @Override
-  public List<FieldsAccessCheckDto> getFieldsToCheckAccess() {
-    return List.of(
-        new FieldsAccessCheckDto(
-            "test_entity_file", List.of("id", "legal_entity_name", "scan_copy")));
   }
 
   @Override

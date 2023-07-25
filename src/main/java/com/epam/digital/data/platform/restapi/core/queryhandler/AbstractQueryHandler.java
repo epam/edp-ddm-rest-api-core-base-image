@@ -19,13 +19,9 @@ package com.epam.digital.data.platform.restapi.core.queryhandler;
 import com.epam.digital.data.platform.model.core.kafka.Request;
 import com.epam.digital.data.platform.restapi.core.audit.AuditableDatabaseOperation;
 import com.epam.digital.data.platform.restapi.core.audit.AuditableDatabaseOperation.Operation;
-import com.epam.digital.data.platform.restapi.core.exception.ForbiddenOperationException;
 import com.epam.digital.data.platform.restapi.core.exception.SqlErrorException;
-import com.epam.digital.data.platform.restapi.core.model.FieldsAccessCheckDto;
-import com.epam.digital.data.platform.restapi.core.service.AccessPermissionService;
 import com.epam.digital.data.platform.restapi.core.service.JwtInfoProvider;
 import com.epam.digital.data.platform.restapi.core.tabledata.TableDataProvider;
-import com.epam.digital.data.platform.starter.security.dto.JwtClaimsDto;
 import org.jooq.Condition;
 import org.jooq.DSLContext;
 import org.jooq.SelectFieldOrAsterisk;
@@ -45,8 +41,6 @@ public abstract class AbstractQueryHandler<I, O> implements QueryHandler<I, O> {
   protected DSLContext context;
   @Autowired
   protected JwtInfoProvider jwtInfoProvider;
-  @Autowired
-  protected AccessPermissionService accessPermissionService;
 
   protected final TableDataProvider tableDataProvider;
 
@@ -58,8 +52,6 @@ public abstract class AbstractQueryHandler<I, O> implements QueryHandler<I, O> {
   @Override
   public Optional<O> findById(Request<I> input) {
     log.info("Reading from DB");
-
-    validateAccess(input);
 
     I id = input.getPayload();
     try {
@@ -76,19 +68,9 @@ public abstract class AbstractQueryHandler<I, O> implements QueryHandler<I, O> {
     }
   }
 
-  public void validateAccess(Request<I> input) {
-    JwtClaimsDto userClaims = jwtInfoProvider.getUserClaims(input);
-    if (!accessPermissionService.hasReadAccess(getFieldsToCheckAccess(), userClaims)) {
-      throw new ForbiddenOperationException(
-              "User has invalid role for search by ID from " + tableDataProvider.tableName());
-    }
-  }
-
   public Condition getCommonCondition(Request<I> input) {
     return DSL.noCondition();
   }
-
-  public abstract List<FieldsAccessCheckDto> getFieldsToCheckAccess();
 
   public abstract Class<O> entityType();
 

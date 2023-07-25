@@ -59,6 +59,7 @@ import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.kafka.requestreply.KafkaReplyTimeoutException;
 import org.springframework.kafka.requestreply.ReplyingKafkaTemplate;
 import org.springframework.kafka.requestreply.RequestReplyFuture;
 
@@ -125,13 +126,13 @@ class GenericServiceTest {
       RequestReplyFuture mockReplyFuture = Mockito.mock(RequestReplyFuture.class);
       when(replyingKafkaTemplate.sendAndReceive(any(ProducerRecord.class))).thenReturn(mockReplyFuture);
 
-      Mockito.doThrow(new InterruptedException()).when(mockReplyFuture).get(30L, SECONDS);
+      Mockito.doThrow(new ExecutionException(new KafkaReplyTimeoutException("Reply timed out"))).when(mockReplyFuture).get();
 
       Exception exception = assertThrows(NoKafkaResponseException.class, () -> {
         instance.request(new Request<>(ID, null, null));
       });
 
-      assertThat(exception.getCause()).isInstanceOf(InterruptedException.class);
+      assertThat(exception.getCause()).isInstanceOf(ExecutionException.class);
     }
 
     @Test

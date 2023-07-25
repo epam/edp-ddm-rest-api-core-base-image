@@ -41,6 +41,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.TypeMismatchException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
@@ -86,6 +87,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
       Exception exception) {
     log.error("Exception while communication with ceph", exception);
     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .contentType(MediaType.APPLICATION_JSON)
         .body(newDetailedResponse(ResponseCode.THIRD_PARTY_SERVICE_UNAVAILABLE));
   }
 
@@ -95,6 +97,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
       Exception exception) {
     log.error("Ceph bucket not found", exception);
     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .contentType(MediaType.APPLICATION_JSON)
         .body(newDetailedResponse(ResponseCode.INTERNAL_CONTRACT_VIOLATION));
   }
 
@@ -103,6 +106,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
       KafkaCephResponseNotFoundException exception) {
     log.error("Kafka response does not found in ceph", exception);
     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .contentType(MediaType.APPLICATION_JSON)
         .body(newDetailedResponse(ResponseCode.INTERNAL_CONTRACT_VIOLATION));
   }
 
@@ -112,6 +116,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
       Exception exception) {
     log.error("External digital signature service has internal server error", exception);
     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .contentType(MediaType.APPLICATION_JSON)
         .body(newDetailedResponse(ResponseCode.THIRD_PARTY_SERVICE_UNAVAILABLE));
   }
 
@@ -122,6 +127,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
     log.error("Call to external digital signature service violates an internal contract",
         exception);
     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .contentType(MediaType.APPLICATION_JSON)
         .body(newDetailedResponse(ResponseCode.INTERNAL_CONTRACT_VIOLATION));
   }
 
@@ -131,6 +137,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
       InvalidSignatureException exception) {
     log.error("Digital signature validation failed", exception);
     return ResponseEntity.status(HttpStatus.PRECONDITION_FAILED)
+        .contentType(MediaType.APPLICATION_JSON)
         .body(newDetailedResponse(ResponseCode.SIGNATURE_VIOLATION));
   }
 
@@ -140,6 +147,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
       NoKafkaResponseException exception) {
     log.error("No response from Kafka", exception);
     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .contentType(MediaType.APPLICATION_JSON)
         .body(newDetailedResponse(ResponseCode.TIMEOUT_ERROR));
   }
 
@@ -149,6 +157,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
       AuthenticationException exception) {
     log.error("Authentication failure", exception);
     return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+        .contentType(MediaType.APPLICATION_JSON)
         .body(newDetailedResponse(ResponseCode.AUTHENTICATION_FAILED));
   }
 
@@ -158,6 +167,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
       AccessDeniedException exception) {
     log.error("Access denied", exception);
     return ResponseEntity.status(HttpStatus.FORBIDDEN)
+        .contentType(MediaType.APPLICATION_JSON)
         .body(newDetailedResponse(ResponseCode.FORBIDDEN_OPERATION));
   }
 
@@ -170,6 +180,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
       WebRequest request) {
     log.error("One or more input arguments are not valid", exception);
     return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+        .contentType(MediaType.APPLICATION_JSON)
         .body(getValidationErrorsResponse(exception.getBindingResult(), ResponseCode.VALIDATION_ERROR));
   }
 
@@ -178,6 +189,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
   protected ResponseEntity<Object> handleDtoValidationException(CsvDtoValidationException exception) {
     log.error("Failed validation of input csv dto", exception);
     return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+        .contentType(MediaType.APPLICATION_JSON)
         .body(getValidationErrorsResponse(exception.getBindingResult(), ResponseCode.CSV_VALIDATION_ERROR));
   }
 
@@ -186,6 +198,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
   public ResponseEntity<DetailedErrorResponse<Void>> handleException(Exception exception) {
     log.error("Runtime error occurred", exception);
     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .contentType(MediaType.APPLICATION_JSON)
         .body(newDetailedResponse(ResponseCode.RUNTIME_ERROR));
   }
 
@@ -194,6 +207,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
   public ResponseEntity<DetailedErrorResponse<Void>> handleSqlErrorException(SqlErrorException exception) {
     log.error("sql exception occurred", exception);
     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .contentType(MediaType.APPLICATION_JSON)
         .body(newDetailedResponse(ResponseCode.RUNTIME_ERROR));
   }
 
@@ -202,6 +216,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
   public ResponseEntity<DetailedErrorResponse<Void>> handleForbiddenOperationException(ForbiddenOperationException exception) {
     log.error("User has invalid role", exception);
     return ResponseEntity.status(HttpStatus.FORBIDDEN)
+        .contentType(MediaType.APPLICATION_JSON)
         .body(newDetailedResponse(ResponseCode.FORBIDDEN_OPERATION));
   }
 
@@ -215,11 +230,13 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
     if (parseException.isPresent()) {
       log.error("Can not read some of arguments", exception);
       return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+          .contentType(MediaType.APPLICATION_JSON)
           .body(parseException.get());
     }
 
     log.error("Request body is not readable JSON", exception);
     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+        .contentType(MediaType.APPLICATION_JSON)
         .body(newDetailedResponse(ResponseCode.CLIENT_ERROR));
   }
 
@@ -258,6 +275,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
       WebRequest request) {
     log.error("Payload format is in an unsupported format", ex);
     return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE)
+        .contentType(MediaType.APPLICATION_JSON)
         .body(newDetailedResponse(ResponseCode.UNSUPPORTED_MEDIA_TYPE));
   }
 
@@ -268,6 +286,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
       WebRequest request) {
     log.error("Page not found", exception);
     return ResponseEntity.status(HttpStatus.NOT_FOUND)
+        .contentType(MediaType.APPLICATION_JSON)
         .body(newDetailedResponse(ResponseCode.NOT_FOUND));
   }
 
@@ -281,6 +300,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
         EXTERNAL_ERROR_STATUS_TO_RESPONSE_CODE_MAP
             .getOrDefault(kafkaResponse.getStatus(), ResponseCode.RUNTIME_ERROR);
     return ResponseEntity.status(kafkaInternalServerException.getHttpStatus())
+        .contentType(MediaType.APPLICATION_JSON)
         .body(newDetailedResponse(code));
   }
 
@@ -291,7 +311,9 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
     log.error("Digital signature not found", exception);
     DetailedErrorResponse<Void> responseBody =
         newDetailedResponse(ResponseCode.INVALID_HEADER_VALUE);
-    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseBody);
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+        .contentType(MediaType.APPLICATION_JSON)
+        .body(responseBody);
   }
 
   @AuditableException
@@ -303,6 +325,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
         newDetailedResponse(ResponseCode.FILE_NOT_FOUND);
     responseBody.setDetails(exception.getFieldsWithNotExistsFiles());
     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+        .contentType(MediaType.APPLICATION_JSON)
         .body(responseBody);
   }
 
@@ -316,6 +339,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
         newDetailedResponse(ResponseCode.CONSTRAINT_ERROR);
     responseBody.setDetails(new ConstraintErrorDetails(kafkaResponse.getDetails()));
     return ResponseEntity.status(exception.getHttpStatus())
+        .contentType(MediaType.APPLICATION_JSON)
         .body(responseBody);
   }
 
@@ -327,6 +351,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
     Response<?> kafkaResponse = exception.getKafkaResponse();
     String code = EXTERNAL_ERROR_STATUS_TO_RESPONSE_CODE_MAP.get(kafkaResponse.getStatus());
     return ResponseEntity.status(exception.getHttpStatus())
+        .contentType(MediaType.APPLICATION_JSON)
         .body(newDetailedResponse(code));
   }
 
@@ -336,6 +361,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
       NotFoundException exception) {
     log.error("Resource not found", exception);
     return ResponseEntity.status(HttpStatus.NOT_FOUND)
+        .contentType(MediaType.APPLICATION_JSON)
         .body(newDetailedResponse(ResponseCode.NOT_FOUND));
   }
 
@@ -345,6 +371,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
       Exception exception) {
     log.error("Mandatory header(s) missed", exception);
     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+        .contentType(MediaType.APPLICATION_JSON)
         .body(newDetailedResponse(ResponseCode.HEADERS_ARE_MISSING));
   }
 
@@ -354,6 +381,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
   handleMandatoryAccessTokenClaimMissingException(Exception exception) {
     log.error("Mandatory access token claim(s) missed", exception);
     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+        .contentType(MediaType.APPLICATION_JSON)
         .body(newDetailedResponse(ResponseCode.INVALID_HEADER_VALUE));
   }
 
@@ -362,6 +390,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
       Exception exception) {
     log.error("Path argument is not valid", exception);
     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+        .contentType(MediaType.APPLICATION_JSON)
         .body(newDetailedResponse(ResponseCode.METHOD_ARGUMENT_TYPE_MISMATCH));
   }
 
@@ -371,6 +400,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
       ChecksumInconsistencyException exception) {
     log.error("File was changed between processing stages ", exception);
     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .contentType(MediaType.APPLICATION_JSON)
         .body(newDetailedResponse(ResponseCode.FILE_WAS_CHANGED));
   }
 
@@ -380,7 +410,8 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
           CsvFileEncodingException exception) {
     log.error("Csv file encoding is invalid", exception);
     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-            .body(newDetailedResponse(ResponseCode.CSV_ENCODING_ERROR));
+        .contentType(MediaType.APPLICATION_JSON)
+        .body(newDetailedResponse(ResponseCode.CSV_ENCODING_ERROR));
   }
 
   @AuditableException
@@ -391,12 +422,14 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
     if (parseException.isPresent()) {
       log.error("Validation error on parsing csv", exception);
       return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
-              .body(parseException.get());
+          .contentType(MediaType.APPLICATION_JSON)
+          .body(parseException.get());
     }
 
     log.error("File is not readable csv", exception);
     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-            .body(newDetailedResponse(ResponseCode.CSV_PARSING_ERROR));
+        .contentType(MediaType.APPLICATION_JSON)
+        .body(newDetailedResponse(ResponseCode.CSV_PARSING_ERROR));
   }
 
   @Override
@@ -412,6 +445,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
         = newDetailedResponse(ResponseCode.CLIENT_ERROR);
     invalidFieldsResponse.setDetails(new FieldsValidationErrorDetails(details));
     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+        .contentType(MediaType.APPLICATION_JSON)
         .body(invalidFieldsResponse);
   }
 

@@ -67,6 +67,7 @@ public class ControllerAuditAspect {
   // action
   static final String CREATE = "CREATE ENTITY";
   static final String READ = "READ ENTITY";
+  static final String READ_FILE = "READ ENTITY FILE FIELD";
   static final String UPDATE = "UPDATE ENTITY";
   static final String UPSERT = "UPSERT ENTITY";
   static final String DELETE = "DELETE ENTITY";
@@ -87,7 +88,11 @@ public class ControllerAuditAspect {
   }
 
   @Pointcut("@annotation(com.epam.digital.data.platform.restapi.core.audit.AuditableController)")
-  public void controller() {
+  public void auditableController() {
+  }
+
+  @Pointcut("@annotation(org.springframework.web.bind.annotation.PutMapping) || @annotation(org.springframework.web.bind.annotation.PatchMapping)")
+  public void updateController() {
   }
 
   @AfterReturning(pointcut = "auditableExceptionPointcut()", returning = "response")
@@ -98,20 +103,20 @@ public class ControllerAuditAspect {
     prepareAndSendExceptionAudit(response, auditableExceptionAnnotation);
   }
 
-  @Around("controller() && args(object, context, securityContext)")
+  @Around("auditableController() && args(object, context, securityContext)")
   Object auditGetPostDeletePutUpsert(ProceedingJoinPoint joinPoint, Object object, RequestContext context,
       SecurityContext securityContext) throws Throwable {
 
     var annotation = getAnnotation(joinPoint);
 
     if (annotation.equals(GetMapping.class) && object instanceof UUID) {
-      return prepareAndSendRestAudit(joinPoint, READ, (UUID) object, securityContext);
+      return prepareAndSendRestAudit(joinPoint, READ, object, securityContext);
     } else if (annotation.equals(GetMapping.class)) {
       return prepareAndSendRestAudit(joinPoint, SEARCH, null, securityContext);
     } else if (annotation.equals(PostMapping.class)) {
       return prepareAndSendRestAudit(joinPoint, CREATE, null, securityContext);
     } else if (annotation.equals(DeleteMapping.class) && object instanceof UUID) {
-      return prepareAndSendRestAudit(joinPoint, DELETE, (UUID) object, securityContext);
+      return prepareAndSendRestAudit(joinPoint, DELETE, object, securityContext);
     } else if (annotation.equals(PutMapping.class)) {
       return prepareAndSendRestAudit(joinPoint, UPSERT, null, securityContext);
     } else {
@@ -120,18 +125,17 @@ public class ControllerAuditAspect {
     }
   }
 
-  @Around("controller() && args(id, dto, context, securityContext)")
+  @Around("auditableController() && @annotation(org.springframework.web.bind.annotation.GetMapping) && args(id, fileId, context, securityContext)")
+  Object auditGetFileField(ProceedingJoinPoint joinPoint, Object id, String fileId, RequestContext context,
+                                     SecurityContext securityContext) throws Throwable {
+
+    return prepareAndSendRestAudit(joinPoint, READ_FILE, id, securityContext);
+  }
+
+  @Around("auditableController() && updateController() && args(id, dto, context, securityContext)")
   Object auditPatchPutUpdate(ProceedingJoinPoint joinPoint, UUID id, Object dto, RequestContext context,
       SecurityContext securityContext) throws Throwable {
-
-    var annotation = getAnnotation(joinPoint);
-
-    if (annotation.equals(PutMapping.class) || annotation.equals(PatchMapping.class)) {
-      return prepareAndSendRestAudit(joinPoint, UPDATE, id, securityContext);
-    } else {
-      throw new AuditException("Cannot save audit for this HTTP method. Not supported annotation: @"
-          + annotation.getSimpleName());
-    }
+    return prepareAndSendRestAudit(joinPoint, UPDATE, id, securityContext);
   }
 
   private Class<? extends Annotation> getAnnotation(ProceedingJoinPoint joinPoint) {
@@ -179,7 +183,7 @@ public class ControllerAuditAspect {
     restAuditEventsFacade.sendExceptionAudit(exceptionAuditEvent);
   }
 
-  private Object prepareAndSendRestAudit(ProceedingJoinPoint joinPoint, String action, UUID id,
+  private Object prepareAndSendRestAudit(ProceedingJoinPoint joinPoint, String action, Object id,
       SecurityContext securityContext) throws Throwable {
 
     String methodName = joinPoint.getSignature().getName();

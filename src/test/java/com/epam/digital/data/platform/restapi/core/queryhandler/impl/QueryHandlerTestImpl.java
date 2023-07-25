@@ -17,7 +17,6 @@
 package com.epam.digital.data.platform.restapi.core.queryhandler.impl;
 
 import com.epam.digital.data.platform.restapi.core.dto.MockEntity;
-import com.epam.digital.data.platform.restapi.core.model.FieldsAccessCheckDto;
 import com.epam.digital.data.platform.restapi.core.queryhandler.AbstractQueryHandler;
 import java.util.Arrays;
 import java.util.List;
@@ -32,13 +31,6 @@ import org.springframework.boot.test.context.TestComponent;
 public class QueryHandlerTestImpl extends AbstractQueryHandler<UUID, MockEntity> {
   public QueryHandlerTestImpl(TableDataProvider tableDataProvider) {
     super(tableDataProvider);
-  }
-
-  @Override
-  public List<FieldsAccessCheckDto> getFieldsToCheckAccess() {
-    return List.of(
-        new FieldsAccessCheckDto(
-            "table", List.of("consent_id", "person_full_name", "person_pass_number")));
   }
 
   @Override
@@ -57,14 +49,20 @@ public class QueryHandlerTestImpl extends AbstractQueryHandler<UUID, MockEntity>
   @TestComponent
   public static class TableDataProviderTestImpl implements TableDataProvider {
 
+    private String tableName = "table";
+
     @Override
     public String tableName() {
-      return "table";
+      return tableName;
     }
 
     @Override
     public String pkColumnName() {
       return "id";
+    }
+
+    public void setTableName(String tableName) {
+      this.tableName = tableName;
     }
   }
 }

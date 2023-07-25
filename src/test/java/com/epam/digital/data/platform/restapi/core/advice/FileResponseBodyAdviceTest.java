@@ -84,7 +84,6 @@ class FileResponseBodyAdviceTest {
 
     verify(fileService, times(2)).retrieve(any(), any());
     verify(filePropertiesService).getFileProperties(mockFile);
-    verify(filePropertiesService, never()).resetFileProperties(any());
   }
 
   @Test
@@ -127,7 +126,6 @@ class FileResponseBodyAdviceTest {
 
     instance.beforeBodyWrite(mockEntity, null, null, null, req, null);
 
-    verify(filePropertiesService).resetFileProperties(mockEntity);
     verify(fileService, never()).retrieve(any(), any());
     verify(filePropertiesService, never()).getFileProperties(any());
   }

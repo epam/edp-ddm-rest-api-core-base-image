@@ -22,10 +22,13 @@ import com.epam.digital.data.platform.restapi.core.exception.FileNotExistsExcept
 import com.epam.digital.data.platform.restapi.core.model.FileProperty;
 import com.epam.digital.data.platform.restapi.core.service.FilePropertiesService;
 import com.epam.digital.data.platform.restapi.core.service.FileService;
+
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+
 import org.springframework.core.MethodParameter;
 import org.springframework.http.MediaType;
 import org.springframework.http.server.ServerHttpRequest;
@@ -40,7 +43,7 @@ public class FileResponseBodyAdvice implements ResponseBodyAdvice {
   private final FilePropertiesService filePropertiesService;
 
   public FileResponseBodyAdvice(FileService fileService,
-      FilePropertiesService filePropertiesService) {
+                                FilePropertiesService filePropertiesService) {
     this.fileService = fileService;
     this.filePropertiesService = filePropertiesService;
   }
@@ -52,16 +55,14 @@ public class FileResponseBodyAdvice implements ResponseBodyAdvice {
 
   @Override
   public Object beforeBodyWrite(Object body, MethodParameter returnType,
-      MediaType selectedContentType, Class selectedConverterType, ServerHttpRequest request,
-      ServerHttpResponse response) {
+                                MediaType selectedContentType, Class selectedConverterType, ServerHttpRequest request,
+                                ServerHttpResponse response) {
     if (body == null) {
       return null;
     }
 
     var rootProcessInstanceId = getRootProcessInstanceId(request);
-    if (Objects.isNull(rootProcessInstanceId)) {
-      filePropertiesService.resetFileProperties(body);
-    } else {
+    if (!Objects.isNull(rootProcessInstanceId)) {
       var fileProperties = filePropertiesService.getFileProperties(body);
       storeFilesToLowcodeCephBucket(fileProperties, rootProcessInstanceId);
     }
@@ -76,8 +77,8 @@ public class FileResponseBodyAdvice implements ResponseBodyAdvice {
   }
 
   private void storeFilesToLowcodeCephBucket(List<FileProperty> fileProperties, String rootProcessInstanceId) {
-    var notFoundFileNames = new ArrayList<String>();
-    fileProperties.forEach(fileProperty -> {
+    var notFoundFileNames = Collections.synchronizedList(new ArrayList<String>());
+    fileProperties.parallelStream().forEach(fileProperty -> {
       var isFileFound = fileService.retrieve(rootProcessInstanceId, fileProperty.getValue());
       if (!isFileFound) {
         notFoundFileNames.add(fileProperty.getName());

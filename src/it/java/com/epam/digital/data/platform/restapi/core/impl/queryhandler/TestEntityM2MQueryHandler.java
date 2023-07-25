@@ -2,7 +2,6 @@ package com.epam.digital.data.platform.restapi.core.impl.queryhandler;
 
 import com.epam.digital.data.platform.restapi.core.impl.model.TestEntityM2M;
 import com.epam.digital.data.platform.restapi.core.impl.tabledata.TestEntityM2mTableDataProvider;
-import com.epam.digital.data.platform.restapi.core.model.FieldsAccessCheckDto;
 import com.epam.digital.data.platform.restapi.core.queryhandler.AbstractQueryHandler;
 import java.util.Arrays;
 import java.util.List;
@@ -15,16 +14,6 @@ public class TestEntityM2MQueryHandler extends AbstractQueryHandler<UUID, TestEn
   public TestEntityM2MQueryHandler(
           TestEntityM2mTableDataProvider tableDataProvider) {
     super(tableDataProvider);
-  }
-
-  @Override
-  public List<FieldsAccessCheckDto> getFieldsToCheckAccess() {
-    return Arrays.asList(
-        new FieldsAccessCheckDto("test_entity_m2m", Arrays.asList("id", "name", "entities")),
-        new FieldsAccessCheckDto(
-            "test_entity",
-            Arrays.asList(
-                "id", "consent_date", "person_pass_number", "person_full_name", "person_gender")));
   }
 
   @Override

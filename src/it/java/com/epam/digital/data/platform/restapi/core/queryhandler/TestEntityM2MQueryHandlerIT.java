@@ -10,7 +10,6 @@ import com.epam.digital.data.platform.restapi.core.config.TestConfiguration;
 import com.epam.digital.data.platform.restapi.core.impl.model.TestEntityM2M;
 import com.epam.digital.data.platform.restapi.core.impl.queryhandler.TestEntityM2MQueryHandler;
 import com.epam.digital.data.platform.restapi.core.impl.tabledata.TestEntityM2mTableDataProvider;
-import com.epam.digital.data.platform.restapi.core.service.AccessPermissionService;
 import com.epam.digital.data.platform.restapi.core.service.JwtInfoProvider;
 import com.epam.digital.data.platform.starter.security.jwt.TokenParser;
 import com.nimbusds.jose.JOSEException;
@@ -25,7 +24,6 @@ import org.springframework.boot.test.context.SpringBootTest;
     classes = {
       TestEntityM2MQueryHandler.class,
       TestEntityM2mTableDataProvider.class,
-      AccessPermissionService.class,
       JwtInfoProvider.class,
       TokenParser.class,
       GenericConfig.class

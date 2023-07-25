@@ -26,7 +26,6 @@ import com.epam.digital.data.platform.restapi.core.config.TestConfiguration;
 import com.epam.digital.data.platform.restapi.core.impl.model.TestEntityFileArray;
 import com.epam.digital.data.platform.restapi.core.impl.queryhandler.TestEntityFileArrayQueryHandler;
 import com.epam.digital.data.platform.restapi.core.impl.tabledata.TestEntityFileArrayTableDataProvider;
-import com.epam.digital.data.platform.restapi.core.service.AccessPermissionService;
 import com.epam.digital.data.platform.restapi.core.service.JwtInfoProvider;
 import com.epam.digital.data.platform.starter.security.jwt.TokenParser;
 import com.nimbusds.jose.JOSEException;
@@ -41,7 +40,6 @@ import org.springframework.boot.test.context.SpringBootTest;
     classes = {
       TestEntityFileArrayQueryHandler.class,
       TestEntityFileArrayTableDataProvider.class,
-      AccessPermissionService.class,
       JwtInfoProvider.class,
       TokenParser.class,
       GenericConfig.class
