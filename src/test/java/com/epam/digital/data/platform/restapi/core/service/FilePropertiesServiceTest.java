@@ -107,49 +107,4 @@ class FilePropertiesServiceTest {
         personFullName);
     assertThat(mockEntityNestedFile.getMockEntityArray()[0].getPassportScanCopy()).isNotNull();
   }
-
-  @Test
-  void shouldSetToNullFileFields() {
-    var name = "John";
-    var mockEntity = new MockEntityFile();
-    mockEntity.setSomeField(name);
-    mockEntity.setScanCopy(new File());
-    mockEntity.setAnotherScanCopy(new File());
-    mockEntity.setPhotos(List.of(new File(), new File()));
-
-    instance.resetFileProperties(mockEntity);
-
-    assertThat(mockEntity.getScanCopy()).isNull();
-    assertThat(mockEntity.getAnotherScanCopy()).isNull();
-    assertThat(mockEntity.getPhotos()).isNull();
-    assertThat(mockEntity.getSomeField()).isEqualTo(name);
-  }
-
-  @Test
-  void shouldSetToNullNestedFileFields() {
-    var personFullName = "John";
-    var file = new File("1", "2");
-    var file2 = new File("2", "4");
-    var file3 = new File("3", "6");
-    var file4 = new File("4", "8");
-    var testMockEntity = new MockEntity();
-    testMockEntity.setPassportScanCopy(file3);
-    testMockEntity.setPersonFullName(personFullName);
-    var testMockEntity2 = new MockEntity();
-    testMockEntity2.setPassportScanCopy(file4);
-    var bodyObject = new MockEntityNestedFile();
-    bodyObject.setFile(file);
-    bodyObject.setFiles(List.of(file2));
-    bodyObject.setMockEntity(testMockEntity);
-    bodyObject.setMockEntityEnum(MockEntityEnum.W);
-    bodyObject.setMockEntityArray(new MockEntity[]{testMockEntity2});
-
-    instance.resetFileProperties(bodyObject);
-    assertThat(bodyObject.getFile()).isNull();
-    assertThat(bodyObject.getFiles()).isNull();
-    assertThat(bodyObject.getMockEntity().getPassportScanCopy()).isNull();
-    assertThat(bodyObject.getMockEntity().getPersonFullName()).isEqualTo(personFullName);
-    assertThat(bodyObject.getMockEntityArray()[0].getPassportScanCopy()).isNull();
-    assertThat(bodyObject.getMockEntityEnum()).isEqualTo(MockEntityEnum.W);
-  }
 }

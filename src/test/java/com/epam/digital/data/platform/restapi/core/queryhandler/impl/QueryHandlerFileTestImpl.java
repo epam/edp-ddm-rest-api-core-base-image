@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 EPAM Systems.
+ * Copyright 2023 EPAM Systems.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,53 +16,46 @@
 
 package com.epam.digital.data.platform.restapi.core.queryhandler.impl;
 
-import com.epam.digital.data.platform.restapi.core.dto.MockEntity;
+import com.epam.digital.data.platform.restapi.core.dto.MockEntityFile;
 import com.epam.digital.data.platform.restapi.core.queryhandler.AbstractQueryHandler;
-import java.util.Arrays;
-import java.util.List;
-import java.util.UUID;
-
 import com.epam.digital.data.platform.restapi.core.tabledata.TableDataProvider;
 import org.jooq.SelectFieldOrAsterisk;
 import org.jooq.impl.DSL;
 import org.springframework.boot.test.context.TestComponent;
 
-@TestComponent
-public class QueryHandlerTestImpl extends AbstractQueryHandler<UUID, MockEntity> {
-  public QueryHandlerTestImpl(TableDataProvider tableDataProvider) {
-    super(tableDataProvider);
+import java.util.Arrays;
+import java.util.List;
+import java.util.UUID;
+
+@TestComponent("queryHandlerFileTest")
+public class QueryHandlerFileTestImpl extends AbstractQueryHandler<UUID, MockEntityFile> {
+
+  public QueryHandlerFileTestImpl(TableDataProvider fileTableDataProvider) {
+    super(fileTableDataProvider);
   }
 
   @Override
-  public Class<MockEntity> entityType() {
-    return MockEntity.class;
+  public Class<MockEntityFile> entityType() {
+    return MockEntityFile.class;
   }
 
   @Override
   public List<SelectFieldOrAsterisk> selectFields() {
     return Arrays.asList(
-        DSL.field("consent_id"),
-        DSL.field("person_full_name"),
-        DSL.field("person_pass_number"));
+        DSL.field("scan_copy"));
   }
 
-  @TestComponent
-  public static class TableDataProviderTestImpl implements TableDataProvider {
-
-    private String tableName = "table";
+  @TestComponent("fileTableDataProvider")
+  public static class FileTableDataProviderTestImpl implements TableDataProvider {
 
     @Override
     public String tableName() {
-      return tableName;
+      return "table";
     }
 
     @Override
     public String pkColumnName() {
       return "id";
-    }
-
-    public void setTableName(String tableName) {
-      this.tableName = tableName;
     }
   }
 }

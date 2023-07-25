@@ -281,5 +281,32 @@ class FileServiceTest {
 
       verifyNoInteractions(lowcodeCephService, datafactoryCephService);
     }
+
+    @Test
+    void expectFileDtoWhenFileRetrieveSuccess() throws IOException {
+      InputStream fileContent = new ByteArrayInputStream(FILE_CONTENT);
+      var fileContentDtoFromCeph = createMockCephResponse(fileContent);
+      when(datafactoryCephService.loadByKey(FILE_ID))
+              .thenReturn(fileContentDtoFromCeph);
+
+      File file = mockFile(FILE_ID);
+
+      var actual = instance.retrieve(file);
+
+      assertThat(actual.getContent().readAllBytes()).isEqualTo(FILE_CONTENT);
+      assertThat(actual.getMetadata()).isEqualTo(fileContentDtoFromCeph.getMetadata());
+    }
+
+    @Test
+    void expectErrorWhenChecksumMismatchOnFileRetrieve() {
+      InputStream fileContent = new ByteArrayInputStream("wrong content".getBytes());
+      var fileContentDtoFromCeph = createMockCephResponse(fileContent);
+      when(datafactoryCephService.loadByKey(FILE_ID))
+              .thenReturn(fileContentDtoFromCeph);
+
+      File file = mockFile(FILE_ID);
+
+      assertThrows(ChecksumInconsistencyException.class, () -> instance.retrieve(file));
+    }
   }
 }

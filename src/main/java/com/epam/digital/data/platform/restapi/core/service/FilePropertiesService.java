@@ -51,13 +51,6 @@ public class FilePropertiesService {
     return fileProperties;
   }
 
-  public void resetFileProperties(Object body) {
-    var convertedBody = convertToCollection(body);
-    log.debug("Process-instance-id header is missing, resetting file properties");
-    convertedBody.forEach(this::resetFileFields);
-    log.debug("File properties set to null");
-  }
-
   @SuppressWarnings("unchecked")
   private Collection<Object> convertToCollection(Object obj) {
     Collection<Object> collection;

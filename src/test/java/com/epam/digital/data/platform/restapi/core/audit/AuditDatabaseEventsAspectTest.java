@@ -16,32 +16,17 @@
 
 package com.epam.digital.data.platform.restapi.core.audit;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 import com.epam.digital.data.platform.model.core.kafka.Request;
 import com.epam.digital.data.platform.model.core.kafka.SecurityContext;
 import com.epam.digital.data.platform.restapi.core.config.JooqTestConfig;
 import com.epam.digital.data.platform.restapi.core.converter.EntityConverter;
-import com.epam.digital.data.platform.restapi.core.exception.ForbiddenOperationException;
 import com.epam.digital.data.platform.restapi.core.exception.SqlErrorException;
-import com.epam.digital.data.platform.restapi.core.searchhandler.AbstractSearchHandlerTestImpl;
 import com.epam.digital.data.platform.restapi.core.queryhandler.impl.QueryHandlerTestImpl;
-import com.epam.digital.data.platform.restapi.core.service.AccessPermissionService;
+import com.epam.digital.data.platform.restapi.core.searchhandler.AbstractSearchHandlerTestImpl;
 import com.epam.digital.data.platform.restapi.core.service.JwtInfoProvider;
 import com.epam.digital.data.platform.starter.security.dto.JwtClaimsDto;
 import com.epam.digital.data.platform.starter.security.dto.RolesDto;
 import com.google.common.io.ByteStreams;
-import java.io.IOException;
-import java.sql.CallableStatement;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.List;
-import javax.sql.DataSource;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -53,6 +38,20 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
+
+import javax.sql.DataSource;
+import java.io.IOException;
+import java.sql.CallableStatement;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @Import({AopAutoConfiguration.class})
 @SpringBootTest(
@@ -75,8 +74,9 @@ class AuditDatabaseEventsAspectTest {
   @Autowired
   private AbstractSearchHandlerTestImpl abstractSearchHandlerTest;
 
-  @MockBean
-  private AccessPermissionService accessPermissionService;
+  @Autowired
+  private QueryHandlerTestImpl.TableDataProviderTestImpl tableDataProvider;
+
   @MockBean
   private DatabaseEventsFacade databaseEventsFacade;
   @MockBean
@@ -105,7 +105,6 @@ class AuditDatabaseEventsAspectTest {
 
   @Test
   void expectAuditAspectBeforeAndAfterFindByIdMethodWhenNoException() {
-    when(accessPermissionService.hasReadAccess(any(), any())).thenReturn(true);
     abstractQueryHandler.findById(mockRequest(ACCESS_TOKEN, ENTITY_ID));
 
     verify(databaseEventsFacade, times(2))
@@ -113,9 +112,11 @@ class AuditDatabaseEventsAspectTest {
   }
 
   @Test
+  @DirtiesContext
   void expectAuditAspectOnlyBeforeWhenExceptionOnFindByIdMethod() {
+    tableDataProvider.setTableName(null);
     assertThrows(
-        ForbiddenOperationException.class,
+        SqlErrorException.class,
         () -> abstractQueryHandler.findById(mockRequest(ACCESS_TOKEN, ENTITY_ID)));
 
     verify(databaseEventsFacade)

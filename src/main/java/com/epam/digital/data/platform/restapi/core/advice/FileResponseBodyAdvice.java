@@ -59,9 +59,7 @@ public class FileResponseBodyAdvice implements ResponseBodyAdvice {
     }
 
     var rootProcessInstanceId = getRootProcessInstanceId(request);
-    if (Objects.isNull(rootProcessInstanceId)) {
-      filePropertiesService.resetFileProperties(body);
-    } else {
+    if (!Objects.isNull(rootProcessInstanceId)) {
       var fileProperties = filePropertiesService.getFileProperties(body);
       storeFilesToLowcodeCephBucket(fileProperties, rootProcessInstanceId);
     }

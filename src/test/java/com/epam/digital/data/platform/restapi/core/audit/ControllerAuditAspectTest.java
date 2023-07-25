@@ -19,6 +19,7 @@ package com.epam.digital.data.platform.restapi.core.audit;
 import com.epam.digital.data.platform.model.core.kafka.RequestContext;
 import com.epam.digital.data.platform.model.core.kafka.SecurityContext;
 import com.epam.digital.data.platform.model.core.kafka.Status;
+import com.epam.digital.data.platform.restapi.core.controller.impl.MockFileFieldController;
 import com.epam.digital.data.platform.restapi.core.exception.ApplicationExceptionHandler;
 import com.epam.digital.data.platform.restapi.core.controller.impl.MockController;
 import com.epam.digital.data.platform.restapi.core.dto.MockEntity;
@@ -52,6 +53,7 @@ import static org.mockito.Mockito.when;
 @Import(AopAutoConfiguration.class)
 @SpringBootTest(classes = {
     MockController.class,
+    MockFileFieldController.class,
     ControllerAuditAspectTest.MockNonControllerClient.class,
     ControllerAuditAspect.class,
     ApplicationExceptionHandler.class
@@ -65,6 +67,8 @@ class ControllerAuditAspectTest {
   @Autowired
   private MockController controller;
   @Autowired
+  private MockFileFieldController mockFileFieldController;
+  @Autowired
   private ApplicationExceptionHandler applicationExceptionHandler;
   @Autowired
   private MockNonControllerClient nonControllerClient;
@@ -73,6 +77,8 @@ class ControllerAuditAspectTest {
   private MockService mockService;
   @MockBean
   private RestAuditEventsFacade restAuditEventsFacade;
+  @MockBean
+  private MockFileFieldController.MockReadFileService readFileService;
 
   @Mock
   private RequestContext mockRequestContext;
@@ -111,14 +117,6 @@ class ControllerAuditAspectTest {
     assertThrows(
         AuditException.class,
         () -> controller.findById(ENTITY_ID, mockRequestContext, mockSecurityContext));
-  }
-
-  @Test
-  void expectExceptionWhenControllerHasMoreThenOneMappingAnnotation() {
-    assertThrows(
-        AuditException.class,
-        () -> controller.patchPutMockEntity(
-            ENTITY_ID, mockPayload(), mockRequestContext, mockSecurityContext));
   }
 
   @Test
@@ -242,6 +240,29 @@ class ControllerAuditAspectTest {
 
     verify(restAuditEventsFacade)
         .sendRestAudit(any(), any(), any(), any(), any(), any(), any());
+  }
+
+  @Test
+  void expectAuditAspectBeforeAndAfterGetFileMethodWhenNoException() {
+    when(readFileService.requestDto(any())).thenReturn(mockSuccessResponse());
+
+    mockFileFieldController.findFileDto(ENTITY_ID, "str", mockRequestContext, mockSecurityContext);
+
+    verify(restAuditEventsFacade, times(2))
+            .sendRestAudit(any(), any(), any(), any(), any(), any(), any());
+  }
+
+  @Test
+  void expectAuditAspectOnlyBeforeWhenExceptionOnGetFileMethod() {
+    when(readFileService.requestDto(any())).thenThrow(new RuntimeException());
+
+    assertThrows(
+        RuntimeException.class,
+        () ->
+            mockFileFieldController.findFileDto(
+                ENTITY_ID, "str", mockRequestContext, mockSecurityContext));
+
+    verify(restAuditEventsFacade).sendRestAudit(any(), any(), any(), any(), any(), any(), any());
   }
 
   @Test

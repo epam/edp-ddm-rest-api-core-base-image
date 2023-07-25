@@ -19,20 +19,19 @@ package com.epam.digital.data.platform.restapi.core.service;
 import com.epam.digital.data.platform.model.core.kafka.File;
 import com.epam.digital.data.platform.restapi.core.config.FileProcessing;
 import com.epam.digital.data.platform.restapi.core.exception.ChecksumInconsistencyException;
+import com.epam.digital.data.platform.restapi.core.utils.FileUtils;
 import com.epam.digital.data.platform.storage.file.dto.FileDataDto;
 import com.epam.digital.data.platform.storage.file.exception.FileNotFoundException;
 import com.epam.digital.data.platform.storage.file.service.FormDataFileKeyProvider;
 import com.epam.digital.data.platform.storage.file.service.FormDataFileStorageService;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
+
+import java.io.ByteArrayInputStream;
 
 @Component
 public class FileService {
@@ -69,7 +68,7 @@ public class FileService {
         return false;
       }
 
-      var content = getContent(fileDataDto.getContent());
+      var content = FileUtils.getByteContentFromStream(fileDataDto.getContent());
       var calculatedChecksum = DigestUtils.sha256Hex(content);
 
       if (!StringUtils.equals(calculatedChecksum, file.getChecksum())) {
@@ -98,7 +97,7 @@ public class FileService {
         return false;
       }
 
-      var content = getContent(fileDataDto.getContent());
+      var content = FileUtils.getByteContentFromStream(fileDataDto.getContent());
       var calculatedChecksum = DigestUtils.sha256Hex(content);
 
       if (!StringUtils.equals(calculatedChecksum, file.getChecksum())) {
@@ -116,12 +115,25 @@ public class FileService {
     return true;
   }
 
-  private byte[] getContent(InputStream inputStream) {
-    try {
-      return IOUtils.toByteArray(inputStream);
-    } catch (IOException e) {
-      throw new IllegalArgumentException("Couldn't read returned ceph content from stream", e);
-    }
-  }
+  public FileDataDto retrieve(File file) {
+    log.info("Storing file '{}' from data to lowcode ceph bucket", file.getId());
 
+    FileDataDto fileDataDto = datafactoryFileDataStorageService.loadByKey(file.getId());
+
+    var content = FileUtils.getByteContentFromStream(fileDataDto.getContent());
+    var calculatedChecksum = DigestUtils.sha256Hex(content);
+
+    if (!StringUtils.equals(calculatedChecksum, file.getChecksum())) {
+      log.error(
+          "The checksum stored in the database ({}) and calculated based on the retrieved "
+              + "file object ({}) do not match. File id: '{}'",
+          file.getChecksum(),
+          calculatedChecksum,
+          file.getId());
+      throw new ChecksumInconsistencyException("Valid file not found with id " + file.getId());
+    }
+
+    fileDataDto.setContent(new ByteArrayInputStream(content));
+    return fileDataDto;
+  }
 }

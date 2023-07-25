@@ -126,7 +126,7 @@ public abstract class GenericService<I, O> implements KafkaService<I, O> {
     var replyFuture = replyingKafkaTemplate.sendAndReceive(request);
 
     try {
-      var response = replyFuture.get(30L, TimeUnit.SECONDS);
+      var response = replyFuture.get();
       log.info(
           "Successfully got response from Kafka, topic: {}, key: {}",
           response.topic(),
