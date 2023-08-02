@@ -34,7 +34,7 @@
 		<spring.cloud.version>2021.0.0</spring.cloud.version>
 		<jackson.core.version>2.13.0</jackson.core.version>
 		<spring-security-core.version>5.7.5</spring-security-core.version>
-		<spring-boot-starter-web.version>2.6.13</spring-boot-starter-web.version>
+		<spring-boot-starter-web.version>2.7.14</spring-boot-starter-web.version>
 		<postgresql.version>42.3.3</postgresql.version>
 		<sonar.coverage.exclusions>
 			**/config/**/*,
