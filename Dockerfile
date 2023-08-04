@@ -2,7 +2,7 @@ FROM adoptopenjdk/openjdk11:alpine
 
 ENV USER_UID=1001 \
     USER_NAME=rest-api \
-    MAVEN_VERSION=3.9.3
+    MAVEN_VERSION=3.9.4
 ENV MAVEN_HOME=/opt/apache-maven-$MAVEN_VERSION
 ENV PATH=$PATH:$MAVEN_HOME/bin
 
