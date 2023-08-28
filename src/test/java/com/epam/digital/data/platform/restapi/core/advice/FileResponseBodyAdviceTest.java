@@ -141,7 +141,7 @@ class FileResponseBodyAdviceTest {
 
   private void setupInstanceIdHeader() {
     var headers = new HttpHeaders();
-    headers.add(Header.X_SOURCE_BUSINESS_PROCESS_INSTANCE_ID.getHeaderName(), "instanceId");
+    headers.add(Header.X_SOURCE_ROOT_BUSINESS_PROCESS_INSTANCE_ID.getHeaderName(), "instanceId");
     when(req.getHeaders()).thenReturn(headers);
   }
 }

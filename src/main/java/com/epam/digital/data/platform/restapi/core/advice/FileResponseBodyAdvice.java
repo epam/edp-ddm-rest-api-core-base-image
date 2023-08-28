@@ -16,7 +16,7 @@
 
 package com.epam.digital.data.platform.restapi.core.advice;
 
-import static com.epam.digital.data.platform.restapi.core.utils.Header.X_SOURCE_BUSINESS_PROCESS_INSTANCE_ID;
+import static com.epam.digital.data.platform.restapi.core.utils.Header.X_SOURCE_ROOT_BUSINESS_PROCESS_INSTANCE_ID;
 
 import com.epam.digital.data.platform.restapi.core.exception.FileNotExistsException;
 import com.epam.digital.data.platform.restapi.core.model.FileProperty;
@@ -58,27 +58,27 @@ public class FileResponseBodyAdvice implements ResponseBodyAdvice {
       return null;
     }
 
-    var processInstanceId = getProcessInstanceId(request);
-    if (Objects.isNull(processInstanceId)) {
+    var rootProcessInstanceId = getRootProcessInstanceId(request);
+    if (Objects.isNull(rootProcessInstanceId)) {
       filePropertiesService.resetFileProperties(body);
     } else {
       var fileProperties = filePropertiesService.getFileProperties(body);
-      storeFilesToLowcodeCephBucket(fileProperties, processInstanceId);
+      storeFilesToLowcodeCephBucket(fileProperties, rootProcessInstanceId);
     }
     return body;
   }
 
-  private String getProcessInstanceId(ServerHttpRequest request) {
+  private String getRootProcessInstanceId(ServerHttpRequest request) {
     return Optional.ofNullable(
-            request.getHeaders().get(X_SOURCE_BUSINESS_PROCESS_INSTANCE_ID.getHeaderName()))
+            request.getHeaders().get(X_SOURCE_ROOT_BUSINESS_PROCESS_INSTANCE_ID.getHeaderName()))
         .map(val -> val.get(0))
         .orElse(null);
   }
 
-  private void storeFilesToLowcodeCephBucket(List<FileProperty> fileProperties, String processInstanceId) {
+  private void storeFilesToLowcodeCephBucket(List<FileProperty> fileProperties, String rootProcessInstanceId) {
     var notFoundFileNames = new ArrayList<String>();
     fileProperties.forEach(fileProperty -> {
-      var isFileFound = fileService.retrieve(processInstanceId, fileProperty.getValue());
+      var isFileFound = fileService.retrieve(rootProcessInstanceId, fileProperty.getValue());
       if (!isFileFound) {
         notFoundFileNames.add(fileProperty.getName());
       }

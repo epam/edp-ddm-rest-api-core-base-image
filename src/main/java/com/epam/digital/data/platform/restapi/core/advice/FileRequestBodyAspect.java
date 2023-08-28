@@ -68,7 +68,7 @@ public class FileRequestBodyAspect {
 
     filePropertiesService.getFileProperties(dto).forEach(
         f -> {
-          var success = fileService.store(context.getBusinessProcessInstanceId(), f.getValue());
+          var success = fileService.store(context.getRootBusinessProcessInstanceId(), f.getValue());
           if (!success) {
             notFound.add(f.getName());
           }

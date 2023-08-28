@@ -49,6 +49,8 @@ public class RequestContextResolver implements HandlerMethodArgumentResolver {
         webRequest.getHeader(Header.X_SOURCE_BUSINESS_PROCESS_DEFINITION_ID.getHeaderName()));
     context.setBusinessProcessInstanceId(
         webRequest.getHeader(Header.X_SOURCE_BUSINESS_PROCESS_INSTANCE_ID.getHeaderName()));
+    context.setRootBusinessProcessInstanceId(
+        webRequest.getHeader(Header.X_SOURCE_ROOT_BUSINESS_PROCESS_INSTANCE_ID.getHeaderName()));
 
     context.setBusinessActivity(
         webRequest.getHeader(Header.X_SOURCE_BUSINESS_ACTIVITY.getHeaderName()));

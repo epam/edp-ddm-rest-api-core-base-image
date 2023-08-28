@@ -24,6 +24,7 @@ import static com.epam.digital.data.platform.restapi.core.utils.Header.X_SOURCE_
 import static com.epam.digital.data.platform.restapi.core.utils.Header.X_SOURCE_BUSINESS_PROCESS;
 import static com.epam.digital.data.platform.restapi.core.utils.Header.X_SOURCE_BUSINESS_PROCESS_DEFINITION_ID;
 import static com.epam.digital.data.platform.restapi.core.utils.Header.X_SOURCE_BUSINESS_PROCESS_INSTANCE_ID;
+import static com.epam.digital.data.platform.restapi.core.utils.Header.X_SOURCE_ROOT_BUSINESS_PROCESS_INSTANCE_ID;
 import static com.epam.digital.data.platform.restapi.core.utils.Header.X_SOURCE_SYSTEM;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.any;
@@ -109,6 +110,7 @@ class ControllerAdviceFilteredTest {
       MANDATORY_HEADERS.add(X_SOURCE_APPLICATION.getHeaderName(), "SomeSA");
       MANDATORY_HEADERS.add(X_SOURCE_BUSINESS_PROCESS.getHeaderName(), "SomeBP");
       MANDATORY_HEADERS.add(X_SOURCE_BUSINESS_PROCESS_INSTANCE_ID.getHeaderName(), "SomeIId");
+      MANDATORY_HEADERS.add(X_SOURCE_ROOT_BUSINESS_PROCESS_INSTANCE_ID.getHeaderName(), "SomeRootIId");
       MANDATORY_HEADERS.add(X_SOURCE_BUSINESS_PROCESS_DEFINITION_ID.getHeaderName(), "SomeDId");
     } catch (IOException e) {
       throw new ExceptionInInitializerError(e);

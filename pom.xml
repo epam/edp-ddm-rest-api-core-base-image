@@ -12,7 +12,7 @@
 	<description>REST API classes, which do not require templating</description>
 
 	<properties>
-		<model.core.version>1.9.4.7</model.core.version>
+		<model.core.version>1.9.4.9</model.core.version>
 		<ddm.starter.kafka.version>1.6.0.2</ddm.starter.kafka.version>
 		<ddm.starter.database.version>1.8.0.8</ddm.starter.database.version>
 		<ddm.starter.logger.version>1.6.0.9</ddm.starter.logger.version>
