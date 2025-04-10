@@ -64,23 +64,25 @@ public class FilePropertiesService {
 
   private void fillFilePropertiesFromObject(Object objectFromRequestBody,
       List<FileProperty> fileProperties) {
-    Arrays.stream(objectFromRequestBody.getClass().getDeclaredFields())
-        .forEach(fieldFromObject -> {
-              ReflectionUtils.makeAccessible(fieldFromObject);
-              var fieldFromObjectType = fieldFromObject.getType();
-              var listFromField = FieldProcessingUtils.convertFieldToListByType(fieldFromObject,
-                  objectFromRequestBody, fieldFromObjectType);
-              addFilePropertiesToList(listFromField, fieldFromObject, fileProperties);
-              if (!fieldFromObjectType.isEnum() && Objects.nonNull(listFromField)
-                  && listFromField.isEmpty()) {
-                var fieldValue = ReflectionUtils.getField(fieldFromObject,
-                    objectFromRequestBody);
-                if (Objects.nonNull(fieldValue) && isObjectCanContainFile(fieldValue)) {
-                  fillFilePropertiesFromObject(fieldValue, fileProperties);
+    if (!objectFromRequestBody.getClass().isEnum()) {
+      Arrays.stream(objectFromRequestBody.getClass().getDeclaredFields())
+          .forEach(fieldFromObject -> {
+                ReflectionUtils.makeAccessible(fieldFromObject);
+                var fieldFromObjectType = fieldFromObject.getType();
+                var listFromField = FieldProcessingUtils.convertFieldToListByType(fieldFromObject,
+                    objectFromRequestBody, fieldFromObjectType);
+                addFilePropertiesToList(listFromField, fieldFromObject, fileProperties);
+                if (!fieldFromObjectType.isEnum() && Objects.nonNull(listFromField)
+                    && listFromField.isEmpty()) {
+                  var fieldValue = ReflectionUtils.getField(fieldFromObject,
+                      objectFromRequestBody);
+                  if (Objects.nonNull(fieldValue) && isObjectCanContainFile(fieldValue)) {
+                    fillFilePropertiesFromObject(fieldValue, fileProperties);
+                  }
                 }
               }
-            }
-        );
+          );
+    }
   }
 
   private void resetFileFields(Object objectFromResponseBody) {

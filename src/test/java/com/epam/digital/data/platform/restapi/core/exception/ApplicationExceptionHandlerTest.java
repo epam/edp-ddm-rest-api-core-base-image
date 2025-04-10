@@ -217,11 +217,13 @@ class ApplicationExceptionHandlerTest extends ResponseEntityExceptionHandler {
     String inputStringBody = objectMapper.writeValueAsString(inputBody);
 
     var expectedResponseObject = new DetailedErrorResponse<FieldsValidationErrorDetails>();
+    var fieldError = new FieldsValidationErrorDetails.FieldError(
+        "AA12345", "personPassNumber", "must match \"^[АВЕІКМНОРСТХ]{2}[0-9]{6}$\"");
     expectedResponseObject.setTraceId(TRACE_ID);
     expectedResponseObject.setCode(ResponseCode.VALIDATION_ERROR);
     expectedResponseObject.setDetails(
-        validationDetailsFrom(new FieldsValidationErrorDetails.FieldError(
-            "AA12345", "personPassNumber", "must match \"^[АВЕІКМНОРСТХ]{2}[0-9]{6}$\"")));
+        validationDetailsFrom(fieldError));
+    expectedResponseObject.setMessage("Validation failed for field '" + fieldError.getField() + "': " + fieldError.getMessage());
     String expectedOutputBody = objectMapper.writeValueAsString(expectedResponseObject);
 
     mockMvc.perform(post(BASE_URL)

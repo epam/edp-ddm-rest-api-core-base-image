@@ -20,6 +20,8 @@ import com.epam.digital.data.platform.model.core.kafka.Request;
 import com.epam.digital.data.platform.restapi.core.audit.AuditableDatabaseOperation.Operation;
 import com.epam.digital.data.platform.restapi.core.converter.EntityConverter;
 import com.epam.digital.data.platform.restapi.core.exception.AuditException;
+import com.epam.digital.data.platform.restapi.core.queryhandler.AbstractQueryHandler;
+import com.epam.digital.data.platform.restapi.core.searchhandler.AbstractSearchHandler;
 import com.epam.digital.data.platform.restapi.core.service.JwtInfoProvider;
 import com.epam.digital.data.platform.starter.security.dto.JwtClaimsDto;
 import java.util.Optional;
@@ -72,8 +74,13 @@ public class DatabaseAuditProcessor implements AuditProcessor<Operation> {
 
     var userClaims = jwtInfoProvider.getUserClaims(request);
     var entityId = request.getPayload().toString();
-
-    return prepareAndSendDbAudit(joinPoint, READ, userClaims, null, entityId);
+    Object target = joinPoint.getTarget();
+    String tableName = null;
+    if (target instanceof AbstractQueryHandler) {
+      AbstractQueryHandler searchHandler = (AbstractQueryHandler) target;
+      tableName = searchHandler.tableName();
+    }
+    return prepareAndSendDbAudit(joinPoint, READ, userClaims, tableName, null, entityId);
   }
 
   private Object search(ProceedingJoinPoint joinPoint) throws Throwable {
@@ -81,19 +88,24 @@ public class DatabaseAuditProcessor implements AuditProcessor<Operation> {
 
     JwtClaimsDto userClaims = jwtInfoProvider.getUserClaims(request);
     Set<String> fields = getFields(request.getPayload());
-
-    return prepareAndSendDbAudit(joinPoint, SEARCH, userClaims, fields, null);
+    Object target = joinPoint.getTarget();
+    String tableName = null;
+    if (target instanceof AbstractSearchHandler) {
+      AbstractSearchHandler<?, ?> searchHandler = (AbstractSearchHandler<?, ?>) target;
+      tableName = searchHandler.tableName();
+    }
+    return prepareAndSendDbAudit(joinPoint, SEARCH, userClaims, tableName, fields, null);
   }
 
   private Object prepareAndSendDbAudit(
-      ProceedingJoinPoint joinPoint, String action, JwtClaimsDto userClaims,
+      ProceedingJoinPoint joinPoint, String action, JwtClaimsDto userClaims, String tableName,
       Set<String> fields, String entityId) throws Throwable {
 
     String methodName = joinPoint.getSignature().getName();
 
     log.debug("Sending {} event to Audit", action);
     databaseEventsFacade
-        .sendDbAudit(methodName, null, action, userClaims, BEFORE, entityId, fields, null);
+        .sendDbAudit(methodName, tableName, action, userClaims, BEFORE, entityId, fields, null);
 
     Object result = joinPoint.proceed();
 
@@ -103,7 +115,7 @@ public class DatabaseAuditProcessor implements AuditProcessor<Operation> {
 
     log.debug("Sending {} completed event to Audit", action);
     databaseEventsFacade
-        .sendDbAudit(methodName, null, action, userClaims, AFTER, entityId, fields, null);
+        .sendDbAudit(methodName, tableName, action, userClaims, AFTER, entityId, fields, null);
     return result;
   }
 

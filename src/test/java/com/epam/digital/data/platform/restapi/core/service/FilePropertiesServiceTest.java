@@ -96,6 +96,8 @@ class FilePropertiesServiceTest {
     mockEntityNestedFile.setMockEntity(objectWithFile);
     mockEntityNestedFile.setMockEntityArray(new MockEntity[]{objectWithFile});
     mockEntityNestedFile.setMockEntityEnum(MockEntityEnum.M);
+    mockEntityNestedFile.setMockEntityEnumArray(
+        new MockEntityEnum[]{MockEntityEnum.M, MockEntityEnum.W});
 
     var fileProperties = instance.getFileProperties(mockEntityNestedFile);
 

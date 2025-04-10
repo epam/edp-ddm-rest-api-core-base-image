@@ -26,6 +26,7 @@ public class MockEntityNestedFile {
   private MockEntity mockEntity;
   private MockEntity[] mockEntityArray;
   private MockEntityEnum mockEntityEnum;
+  private MockEntityEnum[] mockEntityEnumArray;
 
   public File getFile() {
     return file;
@@ -53,6 +54,15 @@ public class MockEntityNestedFile {
 
   public MockEntity[] getMockEntityArray() {
     return mockEntityArray;
+  }
+
+  public void setMockEntityEnumArray(
+      MockEntityEnum[] mockEntityEnumArray) {
+    this.mockEntityEnumArray = mockEntityEnumArray;
+  }
+
+  public MockEntityEnum[] getMockEntityEnumArray() {
+    return mockEntityEnumArray;
   }
 
   public void setMockEntityArray(

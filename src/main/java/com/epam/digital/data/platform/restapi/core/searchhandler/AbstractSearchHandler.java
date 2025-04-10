@@ -22,6 +22,7 @@ import com.epam.digital.data.platform.restapi.core.audit.AuditableDatabaseOperat
 import com.epam.digital.data.platform.restapi.core.audit.AuditableDatabaseOperation.Operation;
 import com.epam.digital.data.platform.restapi.core.exception.SqlErrorException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.List;
 import org.apache.commons.collections4.CollectionUtils;
 import org.jooq.Condition;
 import org.jooq.DSLContext;
@@ -30,8 +31,6 @@ import org.jooq.SelectFieldOrAsterisk;
 import org.jooq.impl.DSL;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-
-import java.util.List;
 
 public abstract class AbstractSearchHandler<I, O>
     implements SearchHandler<I, O> {
@@ -91,7 +90,7 @@ public abstract class AbstractSearchHandler<I, O>
 
   protected abstract Condition whereClause(I searchCriteria);
 
-  protected abstract String tableName();
+  public abstract String tableName();
 
   protected abstract Class<O> entityType();
 

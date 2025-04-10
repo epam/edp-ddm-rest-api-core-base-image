@@ -108,6 +108,12 @@ class ExecutionTimeLoggingAspectTest {
     }
 
     @Override
+    public CephObjectMetadata put(String s, String s1, String s2, long l, Map<String, String> map,
+        InputStream inputStream) {
+      return null;
+    }
+
+    @Override
     public void delete(String s, Set<String> set) {}
 
     @Override
@@ -126,7 +132,22 @@ class ExecutionTimeLoggingAspectTest {
     }
 
     @Override
+    public Set<String> getKeys(String s) {
+      return Set.of();
+    }
+
+    @Override
     public List<CephObjectMetadata> getMetadata(String s, Set<String> set) {
+      return null;
+    }
+
+    @Override
+    public List<CephObjectMetadata> getMetadata(String s, String s1) {
+      return List.of();
+    }
+
+    @Override
+    public CephObjectMetadata setUserMetadata(String s, String s1, Map<String, String> map) {
       return null;
     }
   }

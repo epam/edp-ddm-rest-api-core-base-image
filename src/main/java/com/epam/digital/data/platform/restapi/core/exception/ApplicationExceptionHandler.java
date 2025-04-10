@@ -88,7 +88,8 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
     log.error("Exception while communication with ceph", exception);
     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
         .contentType(MediaType.APPLICATION_JSON)
-        .body(newDetailedResponse(ResponseCode.THIRD_PARTY_SERVICE_UNAVAILABLE));
+        .body(newDetailedResponse(ResponseCode.THIRD_PARTY_SERVICE_UNAVAILABLE,
+            exception.getMessage()));
   }
 
   @AuditableException
@@ -98,7 +99,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
     log.error("Ceph bucket not found", exception);
     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
         .contentType(MediaType.APPLICATION_JSON)
-        .body(newDetailedResponse(ResponseCode.INTERNAL_CONTRACT_VIOLATION));
+        .body(newDetailedResponse(ResponseCode.INTERNAL_CONTRACT_VIOLATION, exception.getMessage()));
   }
 
   @ExceptionHandler(KafkaCephResponseNotFoundException.class)
@@ -107,7 +108,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
     log.error("Kafka response does not found in ceph", exception);
     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
         .contentType(MediaType.APPLICATION_JSON)
-        .body(newDetailedResponse(ResponseCode.INTERNAL_CONTRACT_VIOLATION));
+        .body(newDetailedResponse(ResponseCode.INTERNAL_CONTRACT_VIOLATION, exception.getMessage()));
   }
 
   @AuditableException
@@ -117,7 +118,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
     log.error("External digital signature service has internal server error", exception);
     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
         .contentType(MediaType.APPLICATION_JSON)
-        .body(newDetailedResponse(ResponseCode.THIRD_PARTY_SERVICE_UNAVAILABLE));
+        .body(newDetailedResponse(ResponseCode.THIRD_PARTY_SERVICE_UNAVAILABLE, exception.getMessage()));
   }
 
   @AuditableException
@@ -128,7 +129,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
         exception);
     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
         .contentType(MediaType.APPLICATION_JSON)
-        .body(newDetailedResponse(ResponseCode.INTERNAL_CONTRACT_VIOLATION));
+        .body(newDetailedResponse(ResponseCode.INTERNAL_CONTRACT_VIOLATION, exception.getMessage()));
   }
 
   @AuditableException(action = "SIGN_BREACH")
@@ -138,7 +139,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
     log.error("Digital signature validation failed", exception);
     return ResponseEntity.status(HttpStatus.PRECONDITION_FAILED)
         .contentType(MediaType.APPLICATION_JSON)
-        .body(newDetailedResponse(ResponseCode.SIGNATURE_VIOLATION));
+        .body(newDetailedResponse(ResponseCode.SIGNATURE_VIOLATION, exception.getMessage()));
   }
 
   @AuditableException
@@ -148,7 +149,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
     log.error("No response from Kafka", exception);
     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
         .contentType(MediaType.APPLICATION_JSON)
-        .body(newDetailedResponse(ResponseCode.TIMEOUT_ERROR));
+        .body(newDetailedResponse(ResponseCode.TIMEOUT_ERROR, exception.getMessage()));
   }
 
   @AuditableException(userInfoEnabled = false)
@@ -158,7 +159,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
     log.error("Authentication failure", exception);
     return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
         .contentType(MediaType.APPLICATION_JSON)
-        .body(newDetailedResponse(ResponseCode.AUTHENTICATION_FAILED));
+        .body(newDetailedResponse(ResponseCode.AUTHENTICATION_FAILED, exception.getMessage()));
   }
 
   @AuditableException
@@ -168,7 +169,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
     log.error("Access denied", exception);
     return ResponseEntity.status(HttpStatus.FORBIDDEN)
         .contentType(MediaType.APPLICATION_JSON)
-        .body(newDetailedResponse(ResponseCode.FORBIDDEN_OPERATION));
+        .body(newDetailedResponse(ResponseCode.FORBIDDEN_OPERATION, exception.getMessage()));
   }
 
   @AuditableException
@@ -199,7 +200,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
     log.error("Runtime error occurred", exception);
     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
         .contentType(MediaType.APPLICATION_JSON)
-        .body(newDetailedResponse(ResponseCode.RUNTIME_ERROR));
+        .body(newDetailedResponse(ResponseCode.RUNTIME_ERROR, exception.getMessage()));
   }
 
   @AuditableException
@@ -208,7 +209,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
     log.error("sql exception occurred", exception);
     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
         .contentType(MediaType.APPLICATION_JSON)
-        .body(newDetailedResponse(ResponseCode.RUNTIME_ERROR));
+        .body(newDetailedResponse(ResponseCode.RUNTIME_ERROR, exception.getMessage()));
   }
 
   @AuditableException
@@ -217,7 +218,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
     log.error("User has invalid role", exception);
     return ResponseEntity.status(HttpStatus.FORBIDDEN)
         .contentType(MediaType.APPLICATION_JSON)
-        .body(newDetailedResponse(ResponseCode.FORBIDDEN_OPERATION));
+        .body(newDetailedResponse(ResponseCode.FORBIDDEN_OPERATION, exception.getMessage()));
   }
 
   @AuditableException
@@ -237,7 +238,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
     log.error("Request body is not readable JSON", exception);
     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
         .contentType(MediaType.APPLICATION_JSON)
-        .body(newDetailedResponse(ResponseCode.CLIENT_ERROR));
+        .body(newDetailedResponse(ResponseCode.CLIENT_ERROR, exception.getMessage()));
   }
 
   private Optional<DetailedErrorResponse<FieldsValidationErrorDetails>> handleParseException(
@@ -276,7 +277,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
     log.error("Payload format is in an unsupported format", ex);
     return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE)
         .contentType(MediaType.APPLICATION_JSON)
-        .body(newDetailedResponse(ResponseCode.UNSUPPORTED_MEDIA_TYPE));
+        .body(newDetailedResponse(ResponseCode.UNSUPPORTED_MEDIA_TYPE, ex.getMessage()));
   }
 
   @AuditableException
@@ -287,7 +288,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
     log.error("Page not found", exception);
     return ResponseEntity.status(HttpStatus.NOT_FOUND)
         .contentType(MediaType.APPLICATION_JSON)
-        .body(newDetailedResponse(ResponseCode.NOT_FOUND));
+        .body(newDetailedResponse(ResponseCode.NOT_FOUND, exception.getMessage()));
   }
 
   @AuditableException
@@ -301,7 +302,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
             .getOrDefault(kafkaResponse.getStatus(), ResponseCode.RUNTIME_ERROR);
     return ResponseEntity.status(kafkaInternalServerException.getHttpStatus())
         .contentType(MediaType.APPLICATION_JSON)
-        .body(newDetailedResponse(code));
+        .body(newDetailedResponse(code, kafkaInternalServerException.getMessage()));
   }
 
   @AuditableException
@@ -310,7 +311,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
       DigitalSignatureNotFoundException exception) {
     log.error("Digital signature not found", exception);
     DetailedErrorResponse<Void> responseBody =
-        newDetailedResponse(ResponseCode.INVALID_HEADER_VALUE);
+        newDetailedResponse(ResponseCode.INVALID_HEADER_VALUE, exception.getMessage());
     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
         .contentType(MediaType.APPLICATION_JSON)
         .body(responseBody);
@@ -322,7 +323,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
       FileNotExistsException exception) {
     log.error("Some files were not found in ceph", exception);
     DetailedErrorResponse<List<String>> responseBody =
-        newDetailedResponse(ResponseCode.FILE_NOT_FOUND);
+        newDetailedResponse(ResponseCode.FILE_NOT_FOUND, exception.getMessage());
     responseBody.setDetails(exception.getFieldsWithNotExistsFiles());
     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
         .contentType(MediaType.APPLICATION_JSON)
@@ -336,7 +337,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
     log.error("Constraint violation occurred while processing", exception);
     Response<?> kafkaResponse = exception.getKafkaResponse();
     DetailedErrorResponse<ConstraintErrorDetails> responseBody =
-        newDetailedResponse(ResponseCode.CONSTRAINT_ERROR);
+        newDetailedResponse(ResponseCode.CONSTRAINT_ERROR, exception.getMessage());
     responseBody.setDetails(new ConstraintErrorDetails(kafkaResponse.getDetails()));
     return ResponseEntity.status(exception.getHttpStatus())
         .contentType(MediaType.APPLICATION_JSON)
@@ -352,7 +353,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
     String code = EXTERNAL_ERROR_STATUS_TO_RESPONSE_CODE_MAP.get(kafkaResponse.getStatus());
     return ResponseEntity.status(exception.getHttpStatus())
         .contentType(MediaType.APPLICATION_JSON)
-        .body(newDetailedResponse(code));
+        .body(newDetailedResponse(code, exception.getMessage()));
   }
 
   @AuditableException
@@ -362,7 +363,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
     log.error("Resource not found", exception);
     return ResponseEntity.status(HttpStatus.NOT_FOUND)
         .contentType(MediaType.APPLICATION_JSON)
-        .body(newDetailedResponse(ResponseCode.NOT_FOUND));
+        .body(newDetailedResponse(ResponseCode.NOT_FOUND, exception.getMessage()));
   }
 
   @AuditableException
@@ -372,7 +373,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
     log.error("Mandatory header(s) missed", exception);
     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
         .contentType(MediaType.APPLICATION_JSON)
-        .body(newDetailedResponse(ResponseCode.HEADERS_ARE_MISSING));
+        .body(newDetailedResponse(ResponseCode.HEADERS_ARE_MISSING, exception.getMessage()));
   }
 
   @AuditableException
@@ -382,7 +383,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
     log.error("Mandatory access token claim(s) missed", exception);
     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
         .contentType(MediaType.APPLICATION_JSON)
-        .body(newDetailedResponse(ResponseCode.INVALID_HEADER_VALUE));
+        .body(newDetailedResponse(ResponseCode.INVALID_HEADER_VALUE, exception.getMessage()));
   }
 
   @ExceptionHandler(MethodArgumentTypeMismatchException.class)
@@ -391,7 +392,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
     log.error("Path argument is not valid", exception);
     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
         .contentType(MediaType.APPLICATION_JSON)
-        .body(newDetailedResponse(ResponseCode.METHOD_ARGUMENT_TYPE_MISMATCH));
+        .body(newDetailedResponse(ResponseCode.METHOD_ARGUMENT_TYPE_MISMATCH, exception.getMessage()));
   }
 
   @AuditableException
@@ -401,7 +402,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
     log.error("File was changed between processing stages ", exception);
     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
         .contentType(MediaType.APPLICATION_JSON)
-        .body(newDetailedResponse(ResponseCode.FILE_WAS_CHANGED));
+        .body(newDetailedResponse(ResponseCode.FILE_WAS_CHANGED, exception.getMessage()));
   }
 
   @AuditableException
@@ -411,7 +412,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
     log.error("Csv file encoding is invalid", exception);
     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
         .contentType(MediaType.APPLICATION_JSON)
-        .body(newDetailedResponse(ResponseCode.CSV_ENCODING_ERROR));
+        .body(newDetailedResponse(ResponseCode.CSV_ENCODING_ERROR, exception.getMessage()));
   }
 
   @AuditableException
@@ -429,7 +430,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
     log.error("File is not readable csv", exception);
     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
         .contentType(MediaType.APPLICATION_JSON)
-        .body(newDetailedResponse(ResponseCode.CSV_PARSING_ERROR));
+        .body(newDetailedResponse(ResponseCode.CSV_PARSING_ERROR, exception.getMessage()));
   }
 
   @Override
@@ -442,7 +443,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
         .collect(toList());
 
     DetailedErrorResponse<FieldsValidationErrorDetails> invalidFieldsResponse
-        = newDetailedResponse(ResponseCode.CLIENT_ERROR);
+        = newDetailedResponse(ResponseCode.CLIENT_ERROR, ex.getMessage());
     invalidFieldsResponse.setDetails(new FieldsValidationErrorDetails(details));
     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
         .contentType(MediaType.APPLICATION_JSON)
@@ -478,6 +479,10 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
                         error.getDefaultMessage()))
             .collect(toList());
     invalidFieldsResponse.setDetails(new FieldsValidationErrorDetails(customErrorsDetails));
+    if (!customErrorsDetails.isEmpty()) {
+      var firstError = customErrorsDetails.get(0);
+      invalidFieldsResponse.setMessage("Validation failed for field '" + firstError.getField() + "': " + firstError.getMessage());
+    }
     return invalidFieldsResponse;
   }
 
@@ -505,6 +510,14 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
     var response = new DetailedErrorResponse<T>();
     response.setTraceId(traceProvider.getRequestId());
     response.setCode(code);
+    return response;
+  }
+
+  private <T> DetailedErrorResponse<T> newDetailedResponse(String code, String message) {
+    var response = new DetailedErrorResponse<T>();
+    response.setTraceId(traceProvider.getRequestId());
+    response.setCode(code);
+    response.setMessage(message);
     return response;
   }
 }

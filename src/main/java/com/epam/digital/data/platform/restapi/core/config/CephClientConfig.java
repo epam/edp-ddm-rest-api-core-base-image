@@ -16,10 +16,15 @@
 
 package com.epam.digital.data.platform.restapi.core.config;
 
+import com.amazonaws.metrics.RequestMetricCollector;
 import com.epam.digital.data.platform.integration.ceph.config.S3ConfigProperties;
 import com.epam.digital.data.platform.integration.ceph.factory.CephS3Factory;
+import com.epam.digital.data.platform.integration.ceph.metric.MicrometerMetricsCollector;
 import com.epam.digital.data.platform.integration.ceph.service.CephService;
+import io.micrometer.core.instrument.MeterRegistry;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -34,8 +39,20 @@ public class CephClientConfig {
   }
 
   @Bean
-  public CephS3Factory cephS3Factory() {
-    return new CephS3Factory(s3ConfigProperties());
+  public CephS3Factory cephS3Factory(
+      @Autowired(required = false) RequestMetricCollector collector) {
+    return new CephS3Factory(s3ConfigProperties(), collector);
+  }
+
+  @Bean
+  @ConditionalOnProperty(
+      prefix = "s3.config.client.metrics",
+      name = "enabled",
+      havingValue = "true",
+      matchIfMissing = false
+  )
+  public RequestMetricCollector awsSdkMicrometerMetricsCollector(MeterRegistry registry) {
+    return new MicrometerMetricsCollector(registry);
   }
 
   @Bean

@@ -23,6 +23,7 @@ public class DetailedErrorResponse<T> {
 
   private String traceId;
   private String code;
+  private String message;
   private T details;
 
   public String getTraceId() {
@@ -39,6 +40,14 @@ public class DetailedErrorResponse<T> {
 
   public void setCode(String code) {
     this.code = code;
+  }
+
+  public String getMessage() {
+    return message;
+  }
+
+  public void setMessage(String message) {
+    this.message = message;
   }
 
   @JsonInclude(Include.NON_NULL)

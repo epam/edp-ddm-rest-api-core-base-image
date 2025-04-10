@@ -72,6 +72,10 @@ public abstract class AbstractQueryHandler<I, O> implements QueryHandler<I, O> {
     return DSL.noCondition();
   }
 
+  public String tableName(){
+    return tableDataProvider.tableName();
+  };
+
   public abstract Class<O> entityType();
 
   public abstract List<SelectFieldOrAsterisk> selectFields();

@@ -45,7 +45,7 @@ public final class ResponseResolverUtil {
                       new KafkaSecurityValidationFailedException(
                           "One of security validations failed for operation on kafka side", response, httpStatus),
               HttpStatus.NOT_FOUND,
-                  (response, httpStatus) -> new NotFoundException(response.getDetails()));
+                  (response, httpStatus) -> new NotFoundException(response.getDetails() != null ? response.getDetails() : "Resource not found"));
 
   private ResponseResolverUtil() {
   }

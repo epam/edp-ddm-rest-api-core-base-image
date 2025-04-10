@@ -108,10 +108,13 @@ public class ControllerAuditAspect {
       SecurityContext securityContext) throws Throwable {
 
     var annotation = getAnnotation(joinPoint);
+    var methodName = ((MethodSignature) joinPoint.getSignature()).getMethod().getName();
 
     if (annotation.equals(GetMapping.class) && object instanceof UUID) {
       return prepareAndSendRestAudit(joinPoint, READ, object, securityContext);
     } else if (annotation.equals(GetMapping.class)) {
+      return prepareAndSendRestAudit(joinPoint, SEARCH, null, securityContext);
+    } else if (annotation.equals(PostMapping.class) && methodName.equals("searchPost")) {
       return prepareAndSendRestAudit(joinPoint, SEARCH, null, securityContext);
     } else if (annotation.equals(PostMapping.class)) {
       return prepareAndSendRestAudit(joinPoint, CREATE, null, securityContext);
